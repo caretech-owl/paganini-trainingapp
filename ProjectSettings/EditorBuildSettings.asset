@@ -8,6 +8,12 @@ EditorBuildSettings:
   - enabled: 0
     path: 
     guid: 00000000000000000000000000000000
+  - enabled: 1
+    path: Assets/Scenes/DevUI.unity
+    guid: 69b668c862f33f843ad439bb78a4fbf1
+  - enabled: 1
+    path: Assets/Scenes/ARGPS Example.unity
+    guid: f605f50066a4c2c4c8b901dab209ac89
   m_configObjects:
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 94009097ddd01a74cb199a2bee03b1c0,
       type: 2}
