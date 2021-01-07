@@ -73,3 +73,6 @@ Packages/com.kyrylokuzyk.arfoundationremote
 
 #AR+GPS Framework Assets
 /[Aa]ssets/[Aa][Rr[Ll]ocation/*
+
+#Stylize Water Texture filter
+/[Aa]ssets/[Ss]tylize [Ww]ater [Tt]exture*
