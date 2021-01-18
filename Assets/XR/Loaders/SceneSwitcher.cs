@@ -8,7 +8,7 @@ public class SceneSwitcher : MonoBehaviour
         // Check if Back was pressed this frame
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
+            GoBack();
         }
         
     }
@@ -20,5 +20,13 @@ public class SceneSwitcher : MonoBehaviour
     public void GotoMenuScene()
     {
         SceneManager.LoadScene("DevUI");
+    }
+    public void GotoProfileScene()
+    {
+        SceneManager.LoadScene("ProfileScene");
+    }
+    public void GoBack()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
     }
 }

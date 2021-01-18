@@ -14,6 +14,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/ARGPS Example.unity
     guid: f605f50066a4c2c4c8b901dab209ac89
+  - enabled: 1
+    path: Assets/Scenes/ProfileScene.unity
+    guid: 31edf13606bcd5744a78256916b0a1ca
   m_configObjects:
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 94009097ddd01a74cb199a2bee03b1c0,
       type: 2}
