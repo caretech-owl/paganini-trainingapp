@@ -70,6 +70,7 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 Packages/com.kyrylokuzyk.arfoundationremote
+/[Aa]ssets/[Pp]lugins/ARFoundationRemote/*
 
 #AR+GPS Framework Assets
 /[Aa]ssets/[Aa][Rr[Ll]ocation/*
