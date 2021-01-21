@@ -10,6 +10,13 @@ using UnityEngine.Networking;
 /// </summary>
 public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
 {
+    #region [Request Type]
+    public enum Requesttype
+    {
+        GET,POST,DELETE
+    }
+    #endregion
+
     #region [Server Communication]
 
     /// <summary>
@@ -18,10 +25,12 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
     /// <param name="url">API url.</param>
     /// <param name="callbackOnSuccess">Callback on success.</param>
     /// <param name="callbackOnFail">Callback on fail.</param>
+    /// <param name="type">Type of Request to Send</param>
+    /// <param name="payload">Payload to send with Post Request</param>
     /// <typeparam name="T">Data Model Type.</typeparam>
-    private void SendRequest<T>(string url, UnityAction<T> callbackOnSuccess, UnityAction<string> callbackOnFail,string request="get")
+    private void SendRequest<T>(string url, UnityAction<T> callbackOnSuccess, UnityAction<string> callbackOnFail,Requesttype type = Requesttype.GET, string payload = "")
     {
-        StartCoroutine(RequestCoroutine(url, callbackOnSuccess, callbackOnFail));
+        StartCoroutine(RequestCoroutine(url, callbackOnSuccess, callbackOnFail,type,payload));
     }
 
     /// <summary>
@@ -31,11 +40,27 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
     /// <param name="url">API url.</param>
     /// <param name="callbackOnSuccess">Callback on success.</param>
     /// <param name="callbackOnFail">Callback on fail.</param>
+    /// <param name="type">Type of Request to Send</param>
+    /// <param name="payload">Payload to send with Post Request</param>
     /// <typeparam name="T">Data Model Type.</typeparam>
-    private IEnumerator RequestCoroutine<T>(string url, UnityAction<T> callbackOnSuccess, UnityAction<string> callbackOnFail)
+    private IEnumerator RequestCoroutine<T>(string url, UnityAction<T> callbackOnSuccess, UnityAction<string> callbackOnFail,Requesttype type, string payload)
     {
-
-        var www = UnityWebRequest.Get(url);
+        UnityWebRequest www;
+        switch (type)
+        {
+            case Requesttype.GET:
+                www = UnityWebRequest.Get(url);
+                break;
+            case Requesttype.POST:
+                www = UnityWebRequest.Post(url, payload);
+                break;
+            case Requesttype.DELETE:
+                www = UnityWebRequest.Delete(url);
+                break;
+            default:
+                www = UnityWebRequest.Get(url);
+                break;
+        }
         //certificat workaround
         www.certificateHandler = new ForceAcceptAll();
         www.SetRequestHeader("apitoken", "123");
