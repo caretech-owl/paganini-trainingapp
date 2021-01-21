@@ -28,7 +28,6 @@ public class ProfileLoader : MonoBehaviour
             userProfile = readProfile;
         }
         DisplayProfile();
-        Debug.Log("nothing to restore");
     }
 
     /// <summary>
@@ -48,7 +47,6 @@ public class ProfileLoader : MonoBehaviour
     {
         profilesting = JsonUtility.ToJson(userProfile);
         PlayerPrefs.SetString("userProfile", profilesting);
-        Debug.Log(profilesting);
     }
     public void LoginToServer()
     {

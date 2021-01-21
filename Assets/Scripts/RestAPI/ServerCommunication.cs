@@ -73,7 +73,6 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
         }
         else
         {
-            Debug.Log(www.downloadHandler.text);
             ParseResponse(www.downloadHandler.text, callbackOnSuccess, callbackOnFail);
         }
     }
