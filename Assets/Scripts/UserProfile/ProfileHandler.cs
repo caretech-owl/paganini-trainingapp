@@ -2,31 +2,38 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
-public class ProfileLoader : MonoBehaviour
+/// <summary>
+/// This class is responsible for handling The Local UserProfile Data
+/// </summary>
+public class ProfileHandler : MonoBehaviour
 {
+    /// <summary>
+    /// Game Object to Display Profile in
+    /// </summary>
     public GameObject ProfileSection;
+    /// <summary>
+    /// Object with the Current userProfile
+    /// </summary>
     public UserProfile userProfile;
 
-    private string profilesting;
     // Start is called before the first frame update
     void Start()
     {
-        userProfile = new UserProfile();
+        DBConnector.Instance.Startup();
         RestoreUserData();
     }
 
+
     /// <summary>
-    /// Reads back in the Profile from Playerprefs and Saves it in the Object
+    /// Reads back in the Profile from SQLite and Saves it in the Object
     /// </summary>
     void RestoreUserData()
     {
-        profilesting = PlayerPrefs.GetString("userProfile");
-        UserProfile readProfile = JsonUtility.FromJson<UserProfile>(profilesting);
-        if (readProfile != null)
-        {
-            userProfile = readProfile;
-        }
+        List<UserProfile> profile = DBConnector.Instance.GetConnection().Query<UserProfile>("Select * FROM UserProfile");
+        if (profile.Capacity > 0)
+            userProfile = profile[0];
+        else
+            userProfile = null;
         DisplayProfile();
     }
 
@@ -35,19 +42,22 @@ public class ProfileLoader : MonoBehaviour
     /// </summary>
     public void DeleteUserData()
     {
-        PlayerPrefs.DeleteKey("userProfile");
+        DBConnector.Instance.GetConnection().DeleteAll<UserProfile>();
         userProfile = new UserProfile();
         RestoreUserData();
     }
 
     /// <summary>
-    /// Saves userProfile zo PlayerPrefs
+    /// Saves userProfile to SQLite
     /// </summary>
     void SaveUserData()
     {
-        profilesting = JsonUtility.ToJson(userProfile);
-        PlayerPrefs.SetString("userProfile", profilesting);
+        if (userProfile != null)
+            DBConnector.Instance.GetConnection().Insert(userProfile);
     }
+    /// <summary>
+    /// Calls Rest API to get current UserProfile
+    /// </summary>
     public void LoginToServer()
     {
         ServerCommunication.Instance.GetUserProfile(APICallSucceed, APICallFailed);
@@ -57,9 +67,9 @@ public class ProfileLoader : MonoBehaviour
     /// Request was successful
     /// </summary>
     /// <param name="userProfile">UserProfile Object</param>
-    private void APICallSucceed(UserProfile userProfile)
+    private void APICallSucceed(UserProfileAPI userProfile)
     {
-        this.userProfile = userProfile;
+        this.userProfile = new UserProfile(userProfile);
         SaveUserData();
         RestoreUserData();
     }
@@ -86,19 +96,19 @@ public class ProfileLoader : MonoBehaviour
                 switch (df.name)
                 {
                     case "DFUserID":
-                        if (userProfile.ben_id != 0)
+                        if (userProfile != null)
                             df.text = userProfile.ben_id.ToString();
                         else
                             df.text = null;
                         break;
                     case "DFUsername":
-                        if (userProfile.ben_id != 0)
+                        if (userProfile != null)
                             df.text = userProfile.ben_benutzername;
                         else
                             df.text = null;
                         break;
                     case "DFMnemonic":
-                        if (userProfile.ben_id != 0)
+                        if (userProfile != null)
                             df.text = userProfile.ben_mnemonic_token;
                         else
                             df.text = null;

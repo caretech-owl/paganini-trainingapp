@@ -106,7 +106,7 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
     /// </summary>
     /// <param name="callbackOnSuccess">Callback on success.</param>
     /// <param name="callbackOnFail">Callback on fail.</param>
-    public void GetUserProfile(UnityAction<UserProfile> callbackOnSuccess, UnityAction<string> callbackOnFail)
+    public void GetUserProfile(UnityAction<UserProfileAPI> callbackOnSuccess, UnityAction<string> callbackOnFail)
     {
         SendRequest(PaganiniRestAPI.getUserProfile, callbackOnSuccess, callbackOnFail);
     }
