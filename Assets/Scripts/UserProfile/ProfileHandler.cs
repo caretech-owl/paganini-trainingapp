@@ -53,7 +53,7 @@ public class ProfileHandler : MonoBehaviour
     void SaveUserData()
     {
         if (userProfile != null)
-            DBConnector.Instance.GetConnection().Insert(userProfile);
+            DBConnector.Instance.GetConnection().InsertOrReplace(userProfile);
     }
     /// <summary>
     /// Calls Rest API to get current UserProfile
