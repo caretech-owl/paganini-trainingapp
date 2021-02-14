@@ -896,7 +896,7 @@ MonoBehaviour:
     MinDistanceBetweenUpdates: 0
     AccuracyRadius: 25
     MaxNumberOfUpdates: 0
-  MockLocationData: {fileID: 11400000, guid: 44da2c24051bbdc439f20bb80fe53851, type: 2}
+  MockLocationData: {fileID: 0}
   MaxWaitTime: 200
   StartUpDelay: 0
   DebugMode: 1
@@ -924,7 +924,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f8509790efa844279ea4b7b19529fd4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Camera: {fileID: 0}
+  Camera: {fileID: 1837517269}
   WaitForARTrackingToStart: 1
   RestartWhenARTrackingIsRestored: 0
   SetTargetFrameRateTo60Mhz: 1

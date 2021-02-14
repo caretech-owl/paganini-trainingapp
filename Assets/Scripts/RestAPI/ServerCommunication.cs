@@ -13,7 +13,12 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
     #region [Request Type]
     public enum Requesttype
     {
-        GET,POST,DELETE
+        GET, POST, DELETE
+    }
+    public struct Header
+    {
+        public string name;
+        public string value;
     }
     #endregion
 
@@ -28,9 +33,9 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
     /// <param name="type">Type of Request to Send</param>
     /// <param name="payload">Payload to send with Post Request</param>
     /// <typeparam name="T">Data Model Type.</typeparam>
-    private void SendRequest<T>(string url, UnityAction<T> callbackOnSuccess, UnityAction<string> callbackOnFail,Requesttype type = Requesttype.GET, string payload = "")
+    private void SendRequest<T>(string url, UnityAction<T> callbackOnSuccess, UnityAction<string> callbackOnFail, Header[] header, Requesttype type = Requesttype.GET, string payload = "")
     {
-        StartCoroutine(RequestCoroutine(url, callbackOnSuccess, callbackOnFail,type,payload));
+        StartCoroutine(RequestCoroutine(url, callbackOnSuccess, callbackOnFail, header, type, payload));
     }
 
     /// <summary>
@@ -43,7 +48,7 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
     /// <param name="type">Type of Request to Send</param>
     /// <param name="payload">Payload to send with Post Request</param>
     /// <typeparam name="T">Data Model Type.</typeparam>
-    private IEnumerator RequestCoroutine<T>(string url, UnityAction<T> callbackOnSuccess, UnityAction<string> callbackOnFail,Requesttype type, string payload)
+    private IEnumerator RequestCoroutine<T>(string url, UnityAction<T> callbackOnSuccess, UnityAction<string> callbackOnFail, Header[] header, Requesttype type, string payload)
     {
         UnityWebRequest www;
         switch (type)
@@ -63,7 +68,13 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
         }
         //certificat workaround
         www.certificateHandler = new ForceAcceptAll();
-        www.SetRequestHeader("apitoken", "123");
+
+        //set http header
+        foreach (Header h in header)
+        {
+            www.SetRequestHeader(h.name, h.value);
+        }
+
         yield return www.SendWebRequest();
 
         if (www.isNetworkError || www.isHttpError)
@@ -76,7 +87,7 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
             ParseResponse(www.downloadHandler.text, callbackOnSuccess, callbackOnFail);
         }
     }
-   //workaround bis certifikat trusted
+    //workaround bis certifikat trusted
     public class ForceAcceptAll : CertificateHandler
     {
         protected override bool ValidateCertificate(byte[] certificateData)
@@ -106,9 +117,12 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
     /// </summary>
     /// <param name="callbackOnSuccess">Callback on success.</param>
     /// <param name="callbackOnFail">Callback on fail.</param>
-    public void GetUserProfile(UnityAction<UserProfile> callbackOnSuccess, UnityAction<string> callbackOnFail)
+    public void GetUserProfile(UnityAction<UserProfileAPI> callbackOnSuccess, UnityAction<string> callbackOnFail, string apitoken)
     {
-        SendRequest(PaganiniRestAPI.getUserProfile, callbackOnSuccess, callbackOnFail);
+        Header[] header = new Header[1];
+        header[0].name = "apitoken";
+        header[0].value = apitoken;
+        SendRequest(PaganiniRestAPI.getUserProfile, callbackOnSuccess, callbackOnFail, header);
     }
 
     #endregion
