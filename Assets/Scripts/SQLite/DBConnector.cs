@@ -22,9 +22,9 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
     }
 
     public SQLiteConnection GetConnection()
-        {
-            return this.connection;
-        }
+    {
+        return this.connection;
+    }
 
     private void ConnectToDatabase(string dbPath)
     {
@@ -33,17 +33,21 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
 
     private void CreateTables()
     {
-       this.connection.CreateTable<UserProfile>();
+        this.connection.CreateTable<UserProfile>();
+        this.connection.CreateTable<AuthToken>();
+
     }
 
     private void TruncateTables()
     {
-       this.connection.DeleteAll<UserProfile>();
+        this.connection.DeleteAll<UserProfile>();
+        this.connection.DeleteAll<AuthToken>();
     }
 
     private void DropTables()
     {
         this.connection.DropTable<UserProfile>();
+        this.connection.DropTable<AuthToken>();
     }
     #endregion
 }

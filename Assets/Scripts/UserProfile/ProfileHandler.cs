@@ -15,14 +15,32 @@ public class ProfileHandler : MonoBehaviour
     /// Object with the Current userProfile
     /// </summary>
     public UserProfile userProfile;
+    /// <summary>
+    /// Object with the Current userProfile
+    /// </summary>
+    public AuthToken authToken;
 
     // Start is called before the first frame update
     void Start()
     {
         DBConnector.Instance.Startup();
+        //Mock
+        Login();
         RestoreUserData();
     }
 
+    void Login()
+    {
+        List<AuthToken> token = DBConnector.Instance.GetConnection().Query<AuthToken>("Select * FROM AuthToken");
+        if (token.Capacity > 0)
+            authToken = token[0];
+        else
+        {
+            authToken = new AuthToken();
+            authToken.ben_authtoken = "123";
+            DBConnector.Instance.GetConnection().InsertOrReplace(authToken);
+        }
+    }
 
     /// <summary>
     /// Reads back in the Profile from SQLite and Saves it in the Object
@@ -60,7 +78,7 @@ public class ProfileHandler : MonoBehaviour
     /// </summary>
     public void LoginToServer()
     {
-        ServerCommunication.Instance.GetUserProfile(APICallSucceed, APICallFailed);
+        ServerCommunication.Instance.GetUserProfile(APICallSucceed, APICallFailed, authToken.ben_authtoken);
     }
 
     /// <summary>
@@ -113,7 +131,12 @@ public class ProfileHandler : MonoBehaviour
                         else
                             df.text = null;
                         break;
-
+                    case "DFAuth":
+                        if (authToken != null)
+                            df.text = authToken.ben_authtoken;
+                        else
+                            df.text = null;
+                        break;
 
                 }
 
