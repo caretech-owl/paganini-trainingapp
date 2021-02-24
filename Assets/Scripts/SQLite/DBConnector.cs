@@ -26,6 +26,11 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
         return this.connection;
     }
 
+    public void TruncateTable<t>()
+    {
+        this.connection.DeleteAll<t>();
+    }
+
     private void ConnectToDatabase(string dbPath)
     {
         this.connection = new SQLiteConnection(dbPath, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create);
@@ -34,6 +39,7 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
     private void CreateTables()
     {
         this.connection.CreateTable<UserProfile>();
+        this.connection.CreateTable<Wegpunkt>();
         this.connection.CreateTable<AuthToken>();
 
     }
@@ -42,12 +48,13 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
     {
         this.connection.DeleteAll<UserProfile>();
         this.connection.DeleteAll<AuthToken>();
+        this.connection.DeleteAll<Wegpunkt>();
     }
 
     private void DropTables()
     {
-        this.connection.DropTable<UserProfile>();
-        this.connection.DropTable<AuthToken>();
+        this.connection.DeleteAll<UserProfile>();
+        this.connection.DeleteAll<AuthToken>();
     }
     #endregion
 }

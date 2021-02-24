@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine.UI;
 using System;
+using System.Collections.Generic;
 
 public class BegehungsLocationService : MonoBehaviour
 {
@@ -24,8 +25,14 @@ public class BegehungsLocationService : MonoBehaviour
     private 
     IEnumerator Start()
     {
+        //connect to sqlite
+        DBConnector.Instance.Startup();
+
+        //initialize list
+        updateWegpunktList();
+
 #if UNITY_EDITOR
-                yield return new WaitWhile(() => !UnityEditor.EditorApplication.isRemoteConnected);
+        yield return new WaitWhile(() => !UnityEditor.EditorApplication.isRemoteConnected);
                 yield return new WaitForSecondsRealtime(5f);
         this.rights = true;
 #elif UNITY_ANDROID
@@ -54,6 +61,8 @@ public class BegehungsLocationService : MonoBehaviour
 #endif
         // Start service before querying location
         startLocationService();
+
+        
 
         // Wait until service initializes
         int maxWait = 15;
@@ -186,7 +195,6 @@ public class BegehungsLocationService : MonoBehaviour
     }
 
 
-    private int id = 0;
     private double last = 0;
     private int interval = 5;
     /// <summary>
@@ -203,10 +211,44 @@ public class BegehungsLocationService : MonoBehaviour
         //check if last position newer than last check
         if (UnityEngine.Input.location.lastData.timestamp == last)return;
 
-
+        
         last = UnityEngine.Input.location.lastData.timestamp;
-        addentry(id++, UnityEngine.Input.location.lastData.longitude, UnityEngine.Input.location.lastData.latitude, System.DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+        //punkt in db schreiben
+        DBConnector.Instance.GetConnection().Insert(getCurrentWegpunkt());
+
+        updateWegpunktList();
     }
+
+    private void updateWegpunktList()
+    {
+        clearList();
+        List<Wegpunkt> punkte = DBConnector.Instance.GetConnection().Query<Wegpunkt>("Select * FROM Wegpunkt");
+        foreach (Wegpunkt p in punkte)
+        {
+            addentry(p.wegp_id, p.wegp_longitude, p.wegp_latitude, p.wegp_timestamp);
+        }
+    }
+
+    /// <summary>
+    /// neuen wegpunkt anlegen
+    /// </summary>
+    private Wegpunkt getCurrentWegpunkt()
+    {
+        Wegpunkt punkt = new Wegpunkt();
+        punkt.wegp_longitude = UnityEngine.Input.location.lastData.longitude;
+        punkt.wegp_latitude = UnityEngine.Input.location.lastData.latitude;
+        punkt.wegp_altitude = UnityEngine.Input.location.lastData.altitude;
+        punkt.wegp_accuracy = UnityEngine.Input.location.lastData.horizontalAccuracy;
+        punkt.wegp_timestamp = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        punkt.wegp_idPOI = false;
+        return punkt;
+    }
+
+    private void clearList()
+    {
+        content.transform.DetachChildren();
+    }
+
 
     /// <summary>
     /// Starts the Tracking Service Again
@@ -246,8 +288,16 @@ public class BegehungsLocationService : MonoBehaviour
         }
     }
 
-   
-    public void addentry(int id, Double lon, Double lat, long timestamp)
+    /// <summary>
+    /// Trunkates Local Wegepunk table
+    /// </summary>
+    public void resetBegehung()
+    {
+        DBConnector.Instance.TruncateTable<Wegpunkt>();
+        clearList();
+    }
+
+    private void addentry(int id, Double lon, Double lat, long timestamp)
     {
         var neu = Instantiate(GeoPosPrefab);
         if (content != null)

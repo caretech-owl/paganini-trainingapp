@@ -27,7 +27,7 @@ public class SceneSwitcher : MonoBehaviour
     }
     public void GotoErstbegehungScene()
     {
-        SceneManager.LoadScene("Dokumentierte Erstbegehung");
+        SceneManager.LoadScene("DokumentierteErstbegehung");
     }
     public void GoBack()
     {
