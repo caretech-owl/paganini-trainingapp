@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class SceneSwitcher : MonoBehaviour
 {
@@ -27,7 +29,26 @@ public class SceneSwitcher : MonoBehaviour
     }
     public void GotoErstbegehungScene()
     {
+        //get button id
+        var list=EventSystem.current.currentSelectedGameObject.GetComponentsInChildren<Text>();
+        foreach (var df in list)
+        {
+            switch (df.name)
+            {
+                case "ID":
+                    AppState.SelectedBegehung = int.Parse(df.text);
+                    break;
+            }
+        }
         SceneManager.LoadScene("DokumentierteErstbegehung");
+    }
+    public void GotoErstbegehungDev()
+    {
+        SceneManager.LoadScene("DokumentierteErstbegehungDev");
+    }
+    public void GotoMeineBegehungen()
+    {
+        SceneManager.LoadScene("MeineBegehungen");
     }
     public void GoBack()
     {

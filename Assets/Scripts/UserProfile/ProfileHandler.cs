@@ -16,7 +16,7 @@ public class ProfileHandler : MonoBehaviour
     /// </summary>
     public UserProfile userProfile;
     /// <summary>
-    /// Object with the Current userProfile
+    /// Object with the Authtoken userProfile
     /// </summary>
     public AuthToken authToken;
 
@@ -33,12 +33,18 @@ public class ProfileHandler : MonoBehaviour
     {
         List<AuthToken> token = DBConnector.Instance.GetConnection().Query<AuthToken>("Select * FROM AuthToken");
         if (token.Capacity > 0)
+        {
             authToken = token[0];
+            AppState.authtoken = token[0].ben_authtoken;
+        }
         else
         {
+            ///Debug part
+            AppState.authtoken = "1234";
             authToken = new AuthToken();
-            authToken.ben_authtoken = "123";
+            authToken.ben_authtoken = "1234";
             DBConnector.Instance.GetConnection().InsertOrReplace(authToken);
+            /////
         }
     }
 

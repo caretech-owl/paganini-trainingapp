@@ -2,6 +2,7 @@
 public class WegpunktAPI
 {
 	public int wegp_id;
+	public int beg_id;
 	public float wegp_longitude;
 	public float wegp_latitude;
 	public float wegp_altitude;

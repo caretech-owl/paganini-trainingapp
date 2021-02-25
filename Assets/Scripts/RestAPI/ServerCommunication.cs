@@ -125,5 +125,18 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
         SendRequest(PaganiniRestAPI.getUserProfile, callbackOnSuccess, callbackOnFail, header);
     }
 
+    /// <summary>
+    /// This method call server API to get the userProfile fir
+    /// </summary>
+    /// <param name="callbackOnSuccess">Callback on success.</param>
+    /// <param name="callbackOnFail">Callback on fail.</param>
+    public void GetUserBegehungen(UnityAction<BegehungAPIList> callbackOnSuccess, UnityAction<string> callbackOnFail, string apitoken)
+    {
+        Header[] header = new Header[1];
+        header[0].name = "apitoken";
+        header[0].value = apitoken;
+        SendRequest(PaganiniRestAPI.getUserBegehungen, callbackOnSuccess, callbackOnFail, header);
+    }
+
     #endregion
 }

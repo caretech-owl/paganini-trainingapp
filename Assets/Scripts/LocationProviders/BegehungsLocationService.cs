@@ -28,6 +28,15 @@ public class BegehungsLocationService : MonoBehaviour
         //connect to sqlite
         DBConnector.Instance.Startup();
 
+        if (AppState.SelectedBegehung != -1)
+        {
+            var list=DBConnector.Instance.GetConnection().Query<Begehung>("Select * from Begehung where beg_id=" + AppState.SelectedBegehung);
+            foreach(Begehung b in list)
+            {
+                GameObject.Find("BegehungName").GetComponent<Text>().text = b.beg_name;
+            }
+        }
+
         //initialize list
         updateWegpunktList();
 
@@ -222,7 +231,7 @@ public class BegehungsLocationService : MonoBehaviour
     private void updateWegpunktList()
     {
         clearList();
-        List<Wegpunkt> punkte = DBConnector.Instance.GetConnection().Query<Wegpunkt>("Select * FROM Wegpunkt");
+        List<Wegpunkt> punkte = DBConnector.Instance.GetConnection().Query<Wegpunkt>("Select * FROM Wegpunkt where beg_id="+AppState.SelectedBegehung);
         foreach (Wegpunkt p in punkte)
         {
             addentry(p.wegp_id, p.wegp_longitude, p.wegp_latitude, p.wegp_timestamp);
@@ -235,6 +244,7 @@ public class BegehungsLocationService : MonoBehaviour
     private Wegpunkt getCurrentWegpunkt()
     {
         Wegpunkt punkt = new Wegpunkt();
+        punkt.beg_id = AppState.SelectedBegehung;
         punkt.wegp_longitude = UnityEngine.Input.location.lastData.longitude;
         punkt.wegp_latitude = UnityEngine.Input.location.lastData.latitude;
         punkt.wegp_altitude = UnityEngine.Input.location.lastData.altitude;
@@ -246,7 +256,10 @@ public class BegehungsLocationService : MonoBehaviour
 
     private void clearList()
     {
-        content.transform.DetachChildren();
+        foreach (Transform child in content.transform)
+        {
+            Destroy(child.gameObject);
+        }
     }
 
 

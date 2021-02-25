@@ -41,6 +41,7 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
         this.connection.CreateTable<UserProfile>();
         this.connection.CreateTable<Wegpunkt>();
         this.connection.CreateTable<AuthToken>();
+        this.connection.CreateTable<Begehung>();
 
     }
 
@@ -49,12 +50,15 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
         this.connection.DeleteAll<UserProfile>();
         this.connection.DeleteAll<AuthToken>();
         this.connection.DeleteAll<Wegpunkt>();
+        this.connection.CreateTable<Begehung>();
     }
 
     private void DropTables()
     {
         this.connection.DeleteAll<UserProfile>();
         this.connection.DeleteAll<AuthToken>();
+        this.connection.CreateTable<Wegpunkt>();
+        this.connection.CreateTable<Begehung>();
     }
     #endregion
 }
