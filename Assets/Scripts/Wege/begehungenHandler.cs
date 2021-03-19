@@ -5,7 +5,7 @@ using UnityEngine.UI;
 /// <summary>
 /// This class is responsible for handling The Local Begehungen 
 /// </summary>
-public class begehungsHandler : MonoBehaviour
+public class begehungenHandler : MonoBehaviour
 {
     /// <summary>
     /// Game Object to Display Profile in
@@ -60,11 +60,11 @@ public class begehungsHandler : MonoBehaviour
     void SaveUserData()
     {
         if (begehungen != null)
-            foreach(Begehung b in begehungen)
+            foreach (Begehung b in begehungen)
             {
                 DBConnector.Instance.GetConnection().InsertOrReplace(b);
             }
-            
+
     }
     /// <summary>
     /// Calls Rest API to get user begehungen
@@ -72,7 +72,7 @@ public class begehungsHandler : MonoBehaviour
     public void getBegehungen()
     {
 
-        ServerCommunication.Instance.GetUserBegehungen(getBegehungenSucceed, getBegehungenFailed, AppState.authtoken);
+        ServerCommunication.Instance.GetUserBegehungen(getBegehungenSucceed, getBegehungenFailed, AppState.authtoken, AppState.SelectedWeg);
     }
 
     /// <summary>

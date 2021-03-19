@@ -11,9 +11,6 @@ public class BegehungsLocationService : MonoBehaviour
     /// </summary>
     public GameObject LocationSection;
 
-    public GameObject content;
-    public GameObject GeoPosPrefab;
-
     private Boolean running = false;
     private Boolean rights = false;
 
@@ -25,8 +22,9 @@ public class BegehungsLocationService : MonoBehaviour
     private 
     IEnumerator Start()
     {
-        //connect to sqlite
-        DBConnector.Instance.Startup();
+        DisplayLocation();
+    //connect to sqlite
+    DBConnector.Instance.Startup();
 
         if (AppState.SelectedBegehung != -1)
         {
@@ -36,9 +34,6 @@ public class BegehungsLocationService : MonoBehaviour
                 GameObject.Find("BegehungName").GetComponent<Text>().text = b.beg_name;
             }
         }
-
-        //initialize list
-        updateWegpunktList();
 
 #if UNITY_EDITOR
         yield return new WaitWhile(() => !UnityEditor.EditorApplication.isRemoteConnected);
@@ -197,46 +192,35 @@ public class BegehungsLocationService : MonoBehaviour
                             df.text = "";
                         }
                         break;
+                    case "DFGetracktePunkte":
+                        df.text=count.ToString();
+                        break;
                 }
 
             }
         }
     }
 
-
+    private int count = 0;
     private double last = 0;
-    private int interval = 5;
     /// <summary>
     /// Prints theGeolocation to the GUI
     /// </summary>
     private void Update()
     {
         DisplayLocation();
-
         //check if tracking on
         if (!this.running) return;
         //check if tracking mode is running
         if (UnityEngine.Input.location.status != LocationServiceStatus.Running) return;
         //check if last position newer than last check
-        if (UnityEngine.Input.location.lastData.timestamp == last)return;
-
-        
+        if (UnityEngine.Input.location.lastData.timestamp == last)return;        
         last = UnityEngine.Input.location.lastData.timestamp;
         //punkt in db schreiben
         DBConnector.Instance.GetConnection().Insert(getCurrentWegpunkt());
-
-        updateWegpunktList();
+        count=DBConnector.Instance.GetConnection().Query<Wegpunkt>("SELECT * FROM Wegpunkt where beg_id=?", AppState.SelectedBegehung.ToString()).Count;
     }
 
-    private void updateWegpunktList()
-    {
-        clearList();
-        List<Wegpunkt> punkte = DBConnector.Instance.GetConnection().Query<Wegpunkt>("Select * FROM Wegpunkt where beg_id="+AppState.SelectedBegehung);
-        foreach (Wegpunkt p in punkte)
-        {
-            addentry(p.wegp_id, p.wegp_longitude, p.wegp_latitude, p.wegp_timestamp);
-        }
-    }
 
     /// <summary>
     /// neuen wegpunkt anlegen
@@ -249,17 +233,10 @@ public class BegehungsLocationService : MonoBehaviour
         punkt.wegp_latitude = UnityEngine.Input.location.lastData.latitude;
         punkt.wegp_altitude = UnityEngine.Input.location.lastData.altitude;
         punkt.wegp_accuracy = UnityEngine.Input.location.lastData.horizontalAccuracy;
+        punkt.wegp_POIType = -1;
         punkt.wegp_timestamp = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        punkt.wegp_idPOI = false;
+        punkt.wegp_lernstand = -1;
         return punkt;
-    }
-
-    private void clearList()
-    {
-        foreach (Transform child in content.transform)
-        {
-            Destroy(child.gameObject);
-        }
     }
 
 
@@ -306,36 +283,8 @@ public class BegehungsLocationService : MonoBehaviour
     /// </summary>
     public void resetBegehung()
     {
-        DBConnector.Instance.TruncateTable<Wegpunkt>();
-        clearList();
-    }
-
-    private void addentry(int id, Double lon, Double lat, long timestamp)
-    {
-        var neu = Instantiate(GeoPosPrefab);
-        if (content != null)
-        {
-            var list = neu.GetComponentsInChildren<Text>();
-            foreach (var df in list)
-            {
-                switch (df.name)
-                {
-                    case "id":
-                        df.text =id.ToString();
-                        break;
-                    case "lon":
-                        df.text =lon.ToString();
-                        break;
-                    case "lat":
-                        df.text =lat.ToString();
-                        break;
-                    case "timestamp":
-                        df.text =timestamp.ToString();
-                        break;
-
-                }
-            }
-            neu.transform.SetParent(content.transform);
-        }
+        DBConnector.Instance.GetConnection().Execute("Delete FROM Wegpunkt where beg_id=?",AppState.SelectedBegehung);
+        count = 0;
+        last = 0;
     }
 }

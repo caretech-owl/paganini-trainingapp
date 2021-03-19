@@ -113,7 +113,7 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
     #region [API]
 
     /// <summary>
-    /// This method call server API to get the userProfile fir
+    /// This method call server API to get the userProfile
     /// </summary>
     /// <param name="callbackOnSuccess">Callback on success.</param>
     /// <param name="callbackOnFail">Callback on fail.</param>
@@ -126,16 +126,29 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
     }
 
     /// <summary>
-    /// This method call server API to get the userProfile fir
+    /// This method call server API to get the wege for the local user
     /// </summary>
     /// <param name="callbackOnSuccess">Callback on success.</param>
     /// <param name="callbackOnFail">Callback on fail.</param>
-    public void GetUserBegehungen(UnityAction<BegehungAPIList> callbackOnSuccess, UnityAction<string> callbackOnFail, string apitoken)
+    public void GetUserWege(UnityAction<WegAPIList> callbackOnSuccess, UnityAction<string> callbackOnFail, string apitoken)
     {
         Header[] header = new Header[1];
         header[0].name = "apitoken";
         header[0].value = apitoken;
-        SendRequest(PaganiniRestAPI.getUserBegehungen, callbackOnSuccess, callbackOnFail, header);
+        SendRequest(PaganiniRestAPI.getUserWege, callbackOnSuccess, callbackOnFail, header);
+    }
+
+    /// <summary>
+    /// This method call server API to get the begehungen for a specific weg 
+    /// </summary>
+    /// <param name="callbackOnSuccess">Callback on success.</param>
+    /// <param name="callbackOnFail">Callback on fail.</param>
+    public void GetUserBegehungen(UnityAction<BegehungAPIList> callbackOnSuccess, UnityAction<string> callbackOnFail, string apitoken, int wegId)
+    {
+        Header[] header = new Header[1];
+        header[0].name = "apitoken";
+        header[0].value = apitoken;
+        SendRequest(PaganiniRestAPI.getUserBegehungen(wegId), callbackOnSuccess, callbackOnFail, header);
     }
 
     #endregion

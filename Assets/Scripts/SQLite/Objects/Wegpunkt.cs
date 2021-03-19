@@ -9,12 +9,13 @@ public class Wegpunkt
 	public float wegp_latitude { set; get; }
 	public float wegp_altitude { set; get; }
 	public float wegp_accuracy { set; get; }
+	public int wegp_POIType { set; get; }
 	public long wegp_timestamp { set; get; }
-	public bool wegp_idPOI { set; get; }
+	public int wegp_lernstand { set; get; }
 
 	public override string ToString()
 	{
-		return string.Format("[Wegpunkt: wegp_id={0}, beg_id={1}, wegp_longitude={2},  wegp_latitude={3},  wegp_altitude={4},  wegp_accuracy={5},  wegp_timestamp={6},  wegp_isPOI={7}",wegp_id,beg_id,wegp_longitude,wegp_latitude,wegp_altitude,wegp_accuracy,wegp_timestamp,wegp_idPOI);
+		return string.Format("[Wegpunkt: wegp_id={0}, beg_id={1}, wegp_longitude={2},  wegp_latitude={3},  wegp_altitude={4},  wegp_accuracy={5},  wegp_POIType={6}, wegp_timestamp={7},  wegp_lernstand={8}]", wegp_id,beg_id,wegp_longitude,wegp_latitude,wegp_altitude,wegp_accuracy,wegp_POIType, wegp_timestamp,wegp_lernstand);
 	}
 
 	public Wegpunkt() { }
@@ -26,8 +27,9 @@ public class Wegpunkt
 		this.wegp_latitude = wegpunkt.wegp_latitude;
 		this.wegp_altitude = wegpunkt.wegp_altitude;
 		this.wegp_accuracy = wegpunkt.wegp_accuracy;
+		this.wegp_POIType = wegpunkt.wegp_POIType;
 		this.wegp_timestamp = wegpunkt.wegp_timestamp;
-		this.wegp_idPOI = wegpunkt.wegp_idPOI;
+		this.wegp_lernstand = wegpunkt.wegp_lernstand;
 	}
 
 	public WegpunktAPI toAPI()
@@ -39,8 +41,9 @@ public class Wegpunkt
 		wegpunkt.wegp_latitude = this.wegp_latitude;
 		wegpunkt.wegp_altitude = this.wegp_altitude;
 		wegpunkt.wegp_accuracy = this.wegp_accuracy;
+		wegpunkt.wegp_POIType = this.wegp_POIType;
 		wegpunkt.wegp_timestamp = this.wegp_timestamp;
-		wegpunkt.wegp_idPOI = this.wegp_idPOI;
+		wegpunkt.wegp_lernstand = this.wegp_lernstand;
 		return wegpunkt;
 	}
 }

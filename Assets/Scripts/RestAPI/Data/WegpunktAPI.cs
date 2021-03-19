@@ -7,6 +7,7 @@ public class WegpunktAPI
 	public float wegp_latitude;
 	public float wegp_altitude;
 	public float wegp_accuracy;
+	public int wegp_POIType;
 	public long wegp_timestamp;
-	public bool wegp_idPOI;
+	public int wegp_lernstand;
 }

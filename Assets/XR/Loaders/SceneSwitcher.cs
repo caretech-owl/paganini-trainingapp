@@ -48,7 +48,22 @@ public class SceneSwitcher : MonoBehaviour
     }
     public void GotoMeineBegehungen()
     {
+        //get button id
+        var list = EventSystem.current.currentSelectedGameObject.GetComponentsInChildren<Text>();
+        foreach (var df in list)
+        {
+            switch (df.name)
+            {
+                case "ID":
+                    AppState.SelectedWeg = int.Parse(df.text);
+                    break;
+            }
+        }
         SceneManager.LoadScene("MeineBegehungen");
+    }
+    public void GotoMeineWege()
+    {
+        SceneManager.LoadScene("MeineWege");
     }
     public void GoBack()
     {

@@ -26,6 +26,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/DokumentierteErstbegehung.unity
     guid: e4f07f625e6c9d84f9d60bbc7a217e74
+  - enabled: 1
+    path: Assets/Scenes/MeineWege.unity
+    guid: 836ca4fc26fd9224da2f704385175702
   m_configObjects:
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 94009097ddd01a74cb199a2bee03b1c0,
       type: 2}
