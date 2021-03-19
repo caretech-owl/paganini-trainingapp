@@ -80,3 +80,11 @@ Assets/ARLocation.meta
 #Stylize Water Texture filter
 /[Aa]ssets/[Ss]tylize [Ww]ater [Tt]exture*
 Assets/TextMesh Pro/
+
+#NatCorder
+Assets/NatSuite/
+Assets/NatSuite.meta
+
+#SerialPortUtility
+Assets/SerialPortUtilityPro.meta
+Assets/SerialPortUtilityPro/
