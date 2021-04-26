@@ -17,6 +17,7 @@ public class BegehungsLocationService : MonoBehaviour
     private void startLocationService()
     {
         this.running = true;
+        AppState.recording = true;
         UnityEngine.Input.location.Start(5, 1);
     }
     private 
@@ -64,9 +65,8 @@ public class BegehungsLocationService : MonoBehaviour
         }
 #endif
         // Start service before querying location
-        startLocationService();
+        UnityEngine.Input.location.Start(5, 1);
 
-        
 
         // Wait until service initializes
         int maxWait = 15;
@@ -275,16 +275,16 @@ public class BegehungsLocationService : MonoBehaviour
         if (this.running == true) { 
         UnityEngine.Input.location.Stop();
         this.running = false;
+            AppState.recording = false;
         }
     }
 
     /// <summary>
     /// Trunkates Local Wegepunk table
     /// </summary>
-    public void resetBegehung()
+    public void endBegehung()
     {
-        DBConnector.Instance.GetConnection().Execute("Delete FROM Wegpunkt where beg_id=?",AppState.SelectedBegehung);
-        count = 0;
-        last = 0;
+        Stop();
+        AppState.wrapBegehung = true;
     }
 }

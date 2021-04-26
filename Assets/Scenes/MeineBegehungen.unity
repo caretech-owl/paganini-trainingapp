@@ -1224,6 +1224,9 @@ MonoBehaviour:
   BegehungList: {fileID: 197403605}
   BegehungPrefab: {fileID: 2712957443333111086, guid: 0bb83e6b98e182e438c0f693e26f4ee4,
     type: 3}
+  UI: {fileID: 1762637318}
+  PinPopupPrefab: {fileID: 8654083344930763955, guid: 6efc15c5a83ddc74a8baf5f6bab6f828,
+    type: 3}
 --- !u!4 &1266725306
 Transform:
   m_ObjectHideFlags: 0

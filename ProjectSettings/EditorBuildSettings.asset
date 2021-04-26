@@ -18,9 +18,6 @@ EditorBuildSettings:
     path: Assets/Scenes/ProfileScene.unity
     guid: 31edf13606bcd5744a78256916b0a1ca
   - enabled: 1
-    path: Assets/Scenes/DokumentierteErstbegehungDev.unity
-    guid: 2f94909dc69c92349b7aaf3e69a0548f
-  - enabled: 1
     path: Assets/Scenes/MeineBegehungen.unity
     guid: cff0d4b22af399b4cb62d872573db802
   - enabled: 1

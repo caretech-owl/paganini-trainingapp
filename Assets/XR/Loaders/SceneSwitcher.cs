@@ -29,17 +29,6 @@ public class SceneSwitcher : MonoBehaviour
     }
     public void GotoErstbegehungScene()
     {
-        //get button id
-        var list=EventSystem.current.currentSelectedGameObject.GetComponentsInChildren<Text>();
-        foreach (var df in list)
-        {
-            switch (df.name)
-            {
-                case "ID":
-                    AppState.SelectedBegehung = int.Parse(df.text);
-                    break;
-            }
-        }
         SceneManager.LoadScene("DokumentierteErstbegehung");
     }
     public void GotoErstbegehungDev()
