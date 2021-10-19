@@ -33,7 +33,7 @@ public class SceneSwitcher : MonoBehaviour
     }
     public void GotoErstbegehungDev()
     {
-        SceneManager.LoadScene("DokumentierteErstbegehungDev");
+        SceneManager.LoadScene("DokumentierteErstbegehung");
     }
     public void GotoMeineBegehungen()
     {
