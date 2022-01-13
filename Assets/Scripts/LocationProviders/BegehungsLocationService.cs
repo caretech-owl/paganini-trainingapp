@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Android;
 using System.Collections;
 using UnityEngine.UI;
 using System;
@@ -14,14 +15,8 @@ public class BegehungsLocationService : MonoBehaviour
     private Boolean running = false;
     private Boolean rights = false;
 
-    private void startLocationService()
-    {
-        this.running = true;
-        AppState.recording = true;
-        UnityEngine.Input.location.Start(5, 1);
-    }
-    private 
-    IEnumerator Start()
+  
+    private  void Start()
     {
         DisplayLocation();
     //connect to sqlite
@@ -35,82 +30,37 @@ public class BegehungsLocationService : MonoBehaviour
                 GameObject.Find("BegehungName").GetComponent<Text>().text = b.beg_name;
             }
         }
-
-#if UNITY_EDITOR
-        yield return new WaitWhile(() => !UnityEditor.EditorApplication.isRemoteConnected);
-                yield return new WaitForSecondsRealtime(5f);
-        this.rights = true;
-#elif UNITY_ANDROID
-        if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.CoarseLocation)) {
-            UnityEngine.Android.Permission.RequestUserPermission(UnityEngine.Android.Permission.CoarseLocation);
+#if UNITY_ANDROID
+        if (!Permission.HasUserAuthorizedPermission(Permission.FineLocation))
+        {
+            Permission.RequestUserPermission(Permission.FineLocation);
         }
-
-        // First, check if user has location service enabled
-        if (!UnityEngine.Input.location.isEnabledByUser) {
-            // TODO Failure
-            Debug.LogFormat("Android and Location not enabled");
-            yield break;
-        }else{
         this.rights = true;
-        }
-
 #elif UNITY_IOS
-        if (!UnityEngine.Input.location.isEnabledByUser) {
-            // TODO Failure
-            Debug.LogFormat("IOS and Location not enabled");
-            yield break;
-        }
-        else{
-        this.rights = true;
-        }
+                  PlayerSettings.iOS.locationUsageDescription = "Details to use location";
 #endif
-        // Start service before querying location
-        UnityEngine.Input.location.Start(5, 1);
-
-
-        // Wait until service initializes
-        int maxWait = 15;
-#if UNITY_EDITOR
-       while (UnityEngine.Input.location.status == LocationServiceStatus.Stopped && maxWait > 0)
-#elif UNITY_ANDROID
-       while (UnityEngine.Input.location.status == LocationServiceStatus.Initializing && maxWait > 0)
-#endif
-
+        StartCoroutine(StartLocationService());
+    }
+    private IEnumerator StartLocationService()
+    {
+        if (!Input.location.isEnabledByUser)
         {
-            yield return new WaitForSecondsRealtime(1);
-            maxWait--;
-        }
-
-        // Service didn't initialize in 15 seconds
-        if (maxWait < 1)
-        {
-            // TODO Failure
-            this.running = false;
-            Debug.LogFormat("Timed out");
+            Debug.Log("User has not enabled location");
             yield break;
         }
-
-        // Connection has failed
-        if (UnityEngine.Input.location.status != LocationServiceStatus.Running)
+        Input.location.Start(5, 1);
+        while (Input.location.status == LocationServiceStatus.Initializing)
         {
-            // TODO Failure
-            Debug.LogFormat("Unable to determine device location. Failed with status {0}", UnityEngine.Input.location.status);
+            yield return new WaitForSeconds(1);
+        }
+        if (Input.location.status == LocationServiceStatus.Failed)
+        {
+            Debug.Log("Unable to determine device location");
             yield break;
         }
-        else
-        {
-            Debug.LogFormat("Location service live. status {0}", UnityEngine.Input.location.status);
-            // Access granted and location value could be retrieved
-            Debug.LogFormat("Location: "
-                + UnityEngine.Input.location.lastData.latitude + " "
-                + UnityEngine.Input.location.lastData.longitude + " "
-                + UnityEngine.Input.location.lastData.altitude + " "
-                + UnityEngine.Input.location.lastData.horizontalAccuracy + " "
-                + UnityEngine.Input.location.lastData.timestamp);
-            // TODO success do something with location
-        }
-
-
+        Debug.Log("Latitude : " + Input.location.lastData.latitude);
+        Debug.Log("Longitude : " + Input.location.lastData.longitude);
+        Debug.Log("Altitude : " + Input.location.lastData.altitude);
     }
 
     /// <summary>
@@ -217,7 +167,7 @@ public class BegehungsLocationService : MonoBehaviour
         if (UnityEngine.Input.location.lastData.timestamp == last)return;        
         last = UnityEngine.Input.location.lastData.timestamp;
         //punkt in db schreiben
-        DBConnector.Instance.GetConnection().Insert(getCurrentWegpunkt());
+        DBConnector.Instance.GetConnection().Insert(GetCurrentWegpunkt());
         count=DBConnector.Instance.GetConnection().Query<Wegpunkt>("SELECT * FROM Wegpunkt where beg_id=?", AppState.SelectedBegehung.ToString()).Count;
     }
 
@@ -225,7 +175,7 @@ public class BegehungsLocationService : MonoBehaviour
     /// <summary>
     /// neuen wegpunkt anlegen
     /// </summary>
-    private Wegpunkt getCurrentWegpunkt()
+    private Wegpunkt GetCurrentWegpunkt()
     {
         Wegpunkt punkt = new Wegpunkt();
         punkt.beg_id = AppState.SelectedBegehung;
@@ -238,12 +188,20 @@ public class BegehungsLocationService : MonoBehaviour
         punkt.wegp_lernstand = -1;
         return punkt;
     }
-
+    /// <summary>
+    /// neuen wegpunkt mit poi marker anlegen
+    /// </summary>
+    public void MarkPOI(int poiType)
+    {
+        Wegpunkt currentLocation = GetCurrentWegpunkt();
+        currentLocation.wegp_POIType = poiType;
+        DBConnector.Instance.GetConnection().Insert(currentLocation);
+    }
 
     /// <summary>
     /// Starts the Tracking Service Again
     /// </summary>
-    public void restartTracking()
+    public void RestartTracking()
     {
 #if UNITY_ANDROID
         if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.CoarseLocation))
@@ -263,8 +221,9 @@ public class BegehungsLocationService : MonoBehaviour
             this.rights = true;
         }
 #endif
-        if(this.running==false&&this.rights==true)
-        startLocationService();
+        if (this.running == false && this.rights == true)
+            this.running = true;
+        StartCoroutine(StartLocationService());
     }
 
     /// <summary>
@@ -275,14 +234,13 @@ public class BegehungsLocationService : MonoBehaviour
         if (this.running == true) { 
         UnityEngine.Input.location.Stop();
         this.running = false;
-            AppState.recording = false;
         }
     }
 
     /// <summary>
     /// Trunkates Local Wegepunk table
     /// </summary>
-    public void endBegehung()
+    public void EndBegehung()
     {
         Stop();
         AppState.wrapBegehung = true;

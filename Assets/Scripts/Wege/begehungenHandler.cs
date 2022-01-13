@@ -45,7 +45,7 @@ public class begehungenHandler : MonoBehaviour
     /// </summary>
     void Restorebegehungen()
     {
-        List<Begehung> begehungen = DBConnector.Instance.GetConnection().Query<Begehung>("Select * FROM Begehung");
+        List<Begehung> begehungen = DBConnector.Instance.GetConnection().Query<Begehung>("Select * FROM Begehung where Begehung.weg_id="+AppState.SelectedWeg);
         if (begehungen.Capacity > 0)
             this.begehungen = begehungen;
         else
