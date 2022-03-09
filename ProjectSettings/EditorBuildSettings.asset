@@ -8,24 +8,45 @@ EditorBuildSettings:
   - enabled: 0
     path: 
     guid: 00000000000000000000000000000000
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/DevUI.unity
     guid: 69b668c862f33f843ad439bb78a4fbf1
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/ARGPS Example.unity
     guid: f605f50066a4c2c4c8b901dab209ac89
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/ProfileScene.unity
     guid: 31edf13606bcd5744a78256916b0a1ca
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/MeineBegehungen.unity
     guid: cff0d4b22af399b4cb62d872573db802
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/DokumentierteErstbegehung.unity
     guid: e4f07f625e6c9d84f9d60bbc7a217e74
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/MeineWege.unity
     guid: 836ca4fc26fd9224da2f704385175702
+  - enabled: 1
+    path: Assets/Scenes/01Start.unity
+    guid: 959c4dd49ab6f464e9ab56a177613273
+  - enabled: 1
+    path: Assets/Scenes/02AllOk.unity
+    guid: 48aa2db212e7e7b478884726f81c2adf
+  - enabled: 1
+    path: "Assets/Scenes/03Wegef\xFChrung.unity"
+    guid: a570c2ed22ef0944cb95afe80cceb276
+  - enabled: 1
+    path: Assets/Scenes/04Paused.unity
+    guid: 1511efa969ab64e46835f89120bc7e0a
+  - enabled: 1
+    path: Assets/Scenes/05ZielErreicht.unity
+    guid: f56a89eaca814f548aa03b5b09222b0f
+  - enabled: 1
+    path: Assets/Scenes/06VideoHelp.unity
+    guid: db5b3bec7e23b1c4b8b9bcc66fc76d05
+  - enabled: 1
+    path: Assets/Scenes/07Settings.unity
+    guid: 459a6dd4ab4fc344d9516b42b7a1f393
   m_configObjects:
     AR Foundation RemoteARFoundationRemoteLoaderSettings: {fileID: 11400000, guid: 846186ea58b4a5444a5449294a5ad001,
       type: 2}
