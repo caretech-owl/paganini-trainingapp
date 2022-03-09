@@ -5,7 +5,7 @@ using UnityEngine;
 public class StartScene : MonoBehaviour
 {
 
-    public SettingButton settingButton;
+    // public SettingButton settingButton;
 
     public WayList wayList;
 
@@ -13,6 +13,10 @@ public class StartScene : MonoBehaviour
     void Start()
     {
         this.DisplayWayList(GetListOfWays());
+
+        // Set current scene to last scene for navigation
+        AppState.lastScene = AppState.currentScene;
+        AppState.currentScene = AppState.startScene;
     }
 
     // Update is called once per frame

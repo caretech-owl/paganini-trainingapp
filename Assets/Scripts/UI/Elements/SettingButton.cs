@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class SettingButton : MonoBehaviour
 {
@@ -10,7 +11,9 @@ public class SettingButton : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        settingButton.onClick.AddListener(() => this.SettingsButtonOnClick());
 
+        AppState.lastScene = AppState.currentScene;
     }
 
     // Update is called once per frame
@@ -18,4 +21,11 @@ public class SettingButton : MonoBehaviour
     {
 
     }
+
+    private void SettingsButtonOnClick()
+    {
+        SceneManager.LoadScene(AppState.settingsScene);
+    }
+
+
 }

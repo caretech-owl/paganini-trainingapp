@@ -29,6 +29,10 @@ public class AllOkScene : MonoBehaviour
         this.startButton.Disable();
         this.runChecksCoroutine = this.UpdateCheckList();
         StartCoroutine(this.runChecksCoroutine);
+
+        // Set current scene to last scene for navigation
+        AppState.lastScene = AppState.currentScene;
+        AppState.currentScene = AppState.allOkScene;
     }
 
     // Update is called once per frame

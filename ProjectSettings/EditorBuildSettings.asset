@@ -44,6 +44,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/06VideoHelp.unity
     guid: db5b3bec7e23b1c4b8b9bcc66fc76d05
+  - enabled: 1
+    path: Assets/Scenes/07Settings.unity
+    guid: 459a6dd4ab4fc344d9516b42b7a1f393
   m_configObjects:
     AR Foundation RemoteARFoundationRemoteLoaderSettings: {fileID: 11400000, guid: 846186ea58b4a5444a5449294a5ad001,
       type: 2}

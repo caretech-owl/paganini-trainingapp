@@ -19,6 +19,10 @@ public class GoalReached : MonoBehaviour
         this.mainMenu.DisableInkognitoButton();
 
         this.doneButton.onClick.AddListener(() => this.DoneButtonOnClick());
+
+        // Set current scene to last scene for navigation
+        AppState.lastScene = AppState.currentScene;
+        AppState.currentScene = AppState.goalReachedScene;
     }
 
     // Update is called once per frame

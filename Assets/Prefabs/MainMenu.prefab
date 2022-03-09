@@ -419,7 +419,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 4cc3df83e326c8241ab5ac713a38284c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 5ef959762c3c31b418fd4883f31d00f1, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -587,8 +587,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0aec61122f2f674589d3a9a73cb426f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  phoneButton: {fileID: 8183097724866528620}
-  pauseButton: {fileID: 8183097724744880946}
-  muteButton: {fileID: 8183097724912594067}
-  inkognitoButton: {fileID: 8183097724055497184}
+  phoneButton: {fileID: 8183097724866528610}
+  pauseButton: {fileID: 8183097724744880944}
+  muteButton: {fileID: 8183097724912594065}
+  inkognitoButton: {fileID: 8183097724055497190}
   playButtonImage: {fileID: 21300000, guid: acc2e055a81b0f045bf63c10b07dfd1a, type: 3}
+  mutedIcon: {fileID: 21300000, guid: 5ef959762c3c31b418fd4883f31d00f1, type: 3}
+  notMutedIcon: {fileID: 21300000, guid: 8282c017b40903643bff754efaae96b3, type: 3}
+  incognitoIcon: {fileID: 21300000, guid: f373f42ffae698d42a1bb155f882ae50, type: 3}
+  notIncognitoIcon: {fileID: 21300000, guid: 326619be849be8042bca77c48dafb394, type: 3}

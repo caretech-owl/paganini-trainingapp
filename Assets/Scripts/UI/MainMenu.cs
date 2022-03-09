@@ -7,35 +7,34 @@ using UnityEngine.UI;
 public class MainMenu : MonoBehaviour
 {
 
-    public GameObject phoneButton;
+    public Button phoneButton;
 
-    public GameObject pauseButton;
+    public Button pauseButton;
 
-    public GameObject muteButton;
+    public Button muteButton;
 
-    public GameObject inkognitoButton;
+    public Button inkognitoButton;
 
     public Sprite playButtonImage;
+
+    public Sprite mutedIcon;
+
+    public Sprite notMutedIcon;
+
+    public Sprite incognitoIcon;
+
+    public Sprite notIncognitoIcon;
 
     // Start is called before the first frame update
     void Start()
     {
-        this.phoneButton = gameObject.transform.Find("CallButton").gameObject;
-        this.pauseButton = gameObject.transform.Find("PauseButton").gameObject;
-        this.muteButton = gameObject.transform.Find("MuteButton").gameObject;
-        this.inkognitoButton = gameObject.transform.Find("InkognitoButton").gameObject;
+        this.phoneButton.onClick.AddListener(() => this.PhoneButtonOnClick());
+        this.pauseButton.onClick.AddListener(() => this.PauseButtonOnClick(false));
+        this.muteButton.onClick.AddListener(() => this.MuteButtonOnClick());
+        this.inkognitoButton.onClick.AddListener(() => this.InkognitoButtonOnClick());
 
-        var button = this.phoneButton.GetComponentsInChildren<Button>();
-        button[0].onClick.AddListener(() => this.PhoneButtonOnClick());
-
-        button = this.pauseButton.GetComponentsInChildren<Button>();
-        button[0].onClick.AddListener(() => this.PauseButtonOnClick(false));
-
-        button = this.muteButton.GetComponentsInChildren<Button>();
-        button[0].onClick.AddListener(() => this.MuteButtonOnClick());
-
-        button = this.inkognitoButton.GetComponentsInChildren<Button>();
-        button[0].onClick.AddListener(() => this.InkognitoButtonOnClick());
+        this.UpdateMuteButtonIcon(AppState.isMute);
+        this.UpdateIncocnitoButtonIcon(AppState.isIncognito);
     }
 
     // Update is called once per frame
@@ -132,15 +131,42 @@ public class MainMenu : MonoBehaviour
         }
     }
 
+    private void UpdateMuteButtonIcon(bool state)
+    {
+        if (state)
+        {
+            this.muteButton.GetComponent<Image>().sprite = mutedIcon;
+
+        }
+        else
+        {
+            this.muteButton.GetComponent<Image>().sprite = notMutedIcon;
+        }
+    }
+    private void UpdateIncocnitoButtonIcon(bool state)
+    {
+        if (state)
+        {
+            this.inkognitoButton.GetComponent<Image>().sprite = incognitoIcon;
+
+        }
+        else
+        {
+            this.inkognitoButton.GetComponent<Image>().sprite = notIncognitoIcon;
+        }
+    }
+
     private void MuteButtonOnClick()
     {
-        Debug.Log("MuteButtonOnClick");
-
+        AppState.isMute = !AppState.isMute;
+        this.UpdateMuteButtonIcon(AppState.isMute);
+        Debug.Log("MuteButtonOnClick: " + AppState.isMute.ToString());
     }
 
     private void InkognitoButtonOnClick()
     {
-        Debug.Log("InkognitoButtonOnClick");
-
+        AppState.isIncognito = !AppState.isIncognito;
+        this.UpdateIncocnitoButtonIcon(AppState.isIncognito);
+        Debug.Log("InkognitoButtonOnClick: " + AppState.isIncognito.ToString());
     }
 }

@@ -20,6 +20,10 @@ public class PausedView : MonoBehaviour
 
         MainMenu main = gameObject.GetComponentInChildren<MainMenu>();
         main.ChangePauseToContinueButton();
+
+        // Set current scene to last scene for navigation
+        AppState.lastScene = AppState.currentScene;
+        AppState.currentScene = AppState.pausedScene;
     }
 
     // Update is called once per frame

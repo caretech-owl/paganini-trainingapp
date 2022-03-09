@@ -23,6 +23,10 @@ public class VideoHelp : MonoBehaviour
         this.mainMenu.DisablePauseButton();
         this.mainMenu.DisableCallButton();
         this.endCallButton.onClick.AddListener(() => HangUpButtonOnClick());
+
+        // Set current scene to last scene for navigation
+        AppState.lastScene = AppState.currentScene;
+        AppState.currentScene = AppState.videoHelpScene;
     }
 
     // Update is called once per frame

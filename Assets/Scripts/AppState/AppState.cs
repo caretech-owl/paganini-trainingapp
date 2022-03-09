@@ -14,7 +14,11 @@
     public static string picturePath = "";
     public static float connectionCheckIntervall = 3.0f;
 
-    // Screnes
+    public static bool isMute = false;
+
+    public static bool isIncognito = false;
+
+    // Scenes
     public static string startScene = "01Start";
     public static string allOkScene = "02AllOk";
     public static string wegeFührungScene = "03Wegeführung";
@@ -25,5 +29,11 @@
 
     public static string videoHelpScene = "06VideoHelp";
 
+    public static string settingsScene = "07Settings";
+
+    // Current State
+
+    public static string currentScene = "";
+    public static string lastScene = "";
 
 }
