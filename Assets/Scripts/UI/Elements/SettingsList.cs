@@ -32,8 +32,7 @@ public class SettingsList : MonoBehaviour
 
     private void ShowProfileOnClick()
     {
-        // TODO Navigate to Profile
-        Debug.Log("Show Profile selected");
+        SceneManager.LoadScene(AppState.startScene);
     }
 
     private void DeleteProfileOnClick()

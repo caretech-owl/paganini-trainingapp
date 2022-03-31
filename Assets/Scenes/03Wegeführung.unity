@@ -394,7 +394,7 @@ PrefabInstance:
     - target: {fileID: 6021027565608311127, guid: 5eb141837d6113a47a001868248d32d8,
         type: 3}
       propertyPath: m_RootOrder
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6021027565608311127, guid: 5eb141837d6113a47a001868248d32d8,
         type: 3}
@@ -613,6 +613,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22f37ed50f906344fb8a13a64bdfc261, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mainMenue: {fileID: 8183097723435731964}
+  nextStep: {fileID: 2408923116846938214}
 --- !u!1001 &2408923116846938213
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -633,7 +635,7 @@ PrefabInstance:
     - target: {fileID: 2408923117094041665, guid: 50cd23ae03e5d9f49b7c9e75b3c4d522,
         type: 3}
       propertyPath: m_RootOrder
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2408923117094041665, guid: 50cd23ae03e5d9f49b7c9e75b3c4d522,
         type: 3}
@@ -770,7 +772,7 @@ PrefabInstance:
     - target: {fileID: 8183097725049383507, guid: cfd8af9e6bbc23c438c6193a6a043d70,
         type: 3}
       propertyPath: m_RootOrder
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8183097725049383507, guid: cfd8af9e6bbc23c438c6193a6a043d70,
         type: 3}
@@ -892,3 +894,7 @@ MonoBehaviour:
   muteButton: {fileID: 0}
   inkognitoButton: {fileID: 0}
   playButtonImage: {fileID: 0}
+  mutedIcon: {fileID: 0}
+  notMutedIcon: {fileID: 0}
+  incognitoIcon: {fileID: 0}
+  notIncognitoIcon: {fileID: 0}

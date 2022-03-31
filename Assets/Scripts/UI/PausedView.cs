@@ -8,6 +8,10 @@ using UnityEngine.UI;
 public class PausedView : MonoBehaviour
 {
 
+    public GameObject mainMenue;
+
+    public GameObject nextStep;
+
     public GameObject continueButton;
 
     // Start is called before the first frame update
