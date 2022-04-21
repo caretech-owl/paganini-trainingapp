@@ -4,6 +4,12 @@ using UnityEngine;
 
 public class WegeführungScene : MonoBehaviour
 {
+
+    public GameObject mainMenue;
+
+    public GameObject nextStep;
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -17,4 +23,5 @@ public class WegeführungScene : MonoBehaviour
     {
 
     }
+
 }

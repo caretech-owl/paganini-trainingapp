@@ -98,19 +98,18 @@ public class AllOkScene : MonoBehaviour
 
     private bool DoCheckServer()
     {
-        // TODO
+        // TODO Placeholder
         if (this.TEMP_CallNumber1 >= 3)
         {
             return true;
         }
-        // TODO
         this.TEMP_CallNumber1++;
         return false;
     }
 
     private bool DoCheckGPS()
     {
-        // TODO
+        // TODO Placeholder
         if (this.TEMP_CallNumber >= 2)
         {
             return true;
@@ -121,7 +120,7 @@ public class AllOkScene : MonoBehaviour
 
     private bool DoCheckAkku()
     {
-        // TODO
+        // TODO Placeholder
         return true;
     }
 }

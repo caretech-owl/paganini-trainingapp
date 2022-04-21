@@ -26,6 +26,30 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MeineWege.unity
     guid: 836ca4fc26fd9224da2f704385175702
+  - enabled: 0
+    path: Assets/Scenes/01Start.unity
+    guid: 959c4dd49ab6f464e9ab56a177613273
+  - enabled: 0
+    path: Assets/Scenes/02AllOk.unity
+    guid: 48aa2db212e7e7b478884726f81c2adf
+  - enabled: 0
+    path: "Assets/Scenes/03Wegef\xFChrung.unity"
+    guid: a570c2ed22ef0944cb95afe80cceb276
+  - enabled: 0
+    path: Assets/Scenes/04Paused.unity
+    guid: 1511efa969ab64e46835f89120bc7e0a
+  - enabled: 0
+    path: Assets/Scenes/05ZielErreicht.unity
+    guid: f56a89eaca814f548aa03b5b09222b0f
+  - enabled: 0
+    path: Assets/Scenes/06VideoHelp.unity
+    guid: db5b3bec7e23b1c4b8b9bcc66fc76d05
+  - enabled: 0
+    path: Assets/Scenes/07Settings.unity
+    guid: 459a6dd4ab4fc344d9516b42b7a1f393
+  - enabled: 0
+    path: Assets/Scenes/08ShowProfile.unity
+    guid: 0898d9991dc8163429fd7966977271b8
   m_configObjects:
     AR Foundation RemoteARFoundationRemoteLoaderSettings: {fileID: 11400000, guid: 846186ea58b4a5444a5449294a5ad001,
       type: 2}

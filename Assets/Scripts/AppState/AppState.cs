@@ -32,6 +32,8 @@
 
     public static string settingsScene = "07Settings";
 
+    public static string profileScene = "08ShowProfile";
+
     // Current State
 
     public static string currentScene = "";
