@@ -5,7 +5,7 @@ using UnityEngine.UI;
 /// <summary>
 /// This class is responsible for handling The Local Wege 
 /// </summary>
-public class wegeHandler : MonoBehaviour
+public class WegeHandler : MonoBehaviour
 {
     /// <summary>
     /// Game Object to Display Wege in
@@ -69,22 +69,24 @@ public class wegeHandler : MonoBehaviour
     /// <summary>
     /// Calls Rest API to get user wege
     /// </summary>
-    public void getWege()
+    public void GetWege()
     {
 
-        ServerCommunication.Instance.GetUserWege(getWegeSucceed, getWegeFailed, AppState.authtoken);
+        ServerCommunication.Instance.GetUserWege(GetWegeSucceed, GetWegeFailed, AppState.authtoken);
     }
 
     /// <summary>
     /// Request was successful
     /// </summary>
     /// <param name="wege">List of WegAPI objects</param>
-    private void getWegeSucceed(WegAPIList wege)
+    private void GetWegeSucceed(WegAPIList wege)
     {
+        DeleteLocalData();
         this.wege = new List<Weg>();
         foreach (WegAPI w in wege.wege)
         {
             this.wege.Add(new Weg(w));
+            Debug.Log(new Weg(w));
         }
         SaveUserData();
         Restorewege();
@@ -94,7 +96,7 @@ public class wegeHandler : MonoBehaviour
     /// There were some problems with request.
     /// </summary>
     /// <param name="errorMessage">Error message.</param>
-    private void getWegeFailed(string errorMessage)
+    private void GetWegeFailed(string errorMessage)
     {
         Debug.LogError(errorMessage);
     }

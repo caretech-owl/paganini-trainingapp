@@ -135,6 +135,7 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
         Header[] header = new Header[1];
         header[0].name = "apitoken";
         header[0].value = apitoken;
+        Debug.Log(PaganiniRestAPI.getUserWege);
         SendRequest(PaganiniRestAPI.getUserWege, callbackOnSuccess, callbackOnFail, header);
     }
 
@@ -148,7 +149,7 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
         Header[] header = new Header[1];
         header[0].name = "apitoken";
         header[0].value = apitoken;
-        SendRequest(PaganiniRestAPI.getUserBegehungen(wegId), callbackOnSuccess, callbackOnFail, header);
+        SendRequest(PaganiniRestAPI.GetUserBegehungen(wegId), callbackOnSuccess, callbackOnFail, header);
     }
 
     #endregion

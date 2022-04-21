@@ -7,7 +7,7 @@ using UnityEngine.UI;
 /// <summary>
 /// This class is responsible for handling The Local Begehungen 
 /// </summary>
-public class begehungenHandler : MonoBehaviour
+public class BegehungenHandler : MonoBehaviour
 {
     /// <summary>
     /// Game Object to display Begehungen in
@@ -79,18 +79,19 @@ public class begehungenHandler : MonoBehaviour
     /// <summary>
     /// Calls Rest API to get user begehungen
     /// </summary>
-    public void getBegehungen()
+    public void GetBegehungen()
     {
 
-        ServerCommunication.Instance.GetUserBegehungen(getBegehungenSucceed, getBegehungenFailed, AppState.authtoken, AppState.SelectedWeg);
+        ServerCommunication.Instance.GetUserBegehungen(GetBegehungenSucceed, GetBegehungenFailed, AppState.authtoken, AppState.SelectedWeg);
     }
 
     /// <summary>
     /// Request was successful
     /// </summary>
     /// <param name="userProfile">UserProfile Object</param>
-    private void getBegehungenSucceed(BegehungAPIList begehungen)
+    private void GetBegehungenSucceed(BegehungAPIList begehungen)
     {
+        DeleteLocalData();
         this.begehungen = new List<Begehung>();
         foreach (BegehungAPI b in begehungen.begehungen)
         {
@@ -105,7 +106,7 @@ public class begehungenHandler : MonoBehaviour
     /// There were some problems with request.
     /// </summary>
     /// <param name="errorMessage">Error message.</param>
-    private void getBegehungenFailed(string errorMessage)
+    private void GetBegehungenFailed(string errorMessage)
     {
         Debug.LogError(errorMessage);
     }

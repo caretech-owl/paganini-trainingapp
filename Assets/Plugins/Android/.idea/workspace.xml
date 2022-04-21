@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="2d147b93-5331-446f-b36a-d135551fffa3" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../../Scenes/DevUI.unity" beforeDir="false" afterPath="$PROJECT_DIR$/../../Scenes/DevUI.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Scenes/DokumentierteErstbegehung.unity" beforeDir="false" afterPath="$PROJECT_DIR$/../../Scenes/DokumentierteErstbegehung.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../ProjectSettings/ProjectSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../../../ProjectSettings/ProjectSettings.asset" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../.." />
+  </component>
+  <component name="ProjectId" id="27jfubU6BxbBAi4OMXo0eVOdpW5" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="2d147b93-5331-446f-b36a-d135551fffa3" name="Default Changelist" comment="" />
+      <created>1649838638917</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1649838638917</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="584" y="425" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1649838738355">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="584" y="425" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.2560.1400/3840.0.2560.1400/-3840.0.1536.824@0.0.2560.1400" timestamp="1649838738355" />
+  </component>
+</project>

@@ -6,6 +6,7 @@ using NatSuite.Recorders.Clocks;
 using NatSuite.Recorders.Inputs;
 #if PLATFORM_ANDROID
 using UnityEngine.Android;
+using System.IO;
 #endif
 public class PhoneCam : MonoBehaviour
 {
@@ -19,13 +20,11 @@ public class PhoneCam : MonoBehaviour
     public bool recordMicrophone;
 
     private MP4Recorder recorder;
-    private CameraInput cameraInput;
     private AudioInput audioInput;
     private AudioSource microphoneSource;
     private WebCamTexture webCamTexture;
     private Color32[] pixelBuffer;
     private RealtimeClock clock;
-    private bool recording = false;
 
     private IEnumerator Start()
     {
@@ -84,7 +83,7 @@ public class PhoneCam : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (recording && webCamTexture.didUpdateThisFrame)
+        if (AppState.recording && webCamTexture.didUpdateThisFrame && !AppState.pausedRec)
         {
             webCamTexture.GetPixels32(pixelBuffer);
             recorder.CommitFrame(pixelBuffer, clock.timestamp);
@@ -93,42 +92,80 @@ public class PhoneCam : MonoBehaviour
 
     public void StartRecording()
     {
-        // Start recording
-        var sampleRate = recordMicrophone ? AudioSettings.outputSampleRate : 0;
-        var channelCount = recordMicrophone ? (int)AudioSettings.speakerMode : 0;
-        clock = new RealtimeClock();
-        recorder = new MP4Recorder(videoWidth, videoHeight, fps, sampleRate, channelCount, audioBitRate: 96_000);
-        // Create recording inputs
-        pixelBuffer = webCamTexture.GetPixels32();
-        audioInput = recordMicrophone ? new AudioInput(recorder, clock, microphoneSource, true) : null;
-        // Unmute microphone
-        microphoneSource.mute = audioInput == null;
-        recording = true;
+        if (!AppState.recording)
+        {
+            Directory.Delete(Path.Combine(Application.persistentDataPath, GameObject.Find("BegehungName").GetComponent<Text>().text),true);
+            // Start recording
+            var sampleRate = recordMicrophone ? AudioSettings.outputSampleRate : 0;
+            var channelCount = recordMicrophone ? (int)AudioSettings.speakerMode : 0;
+            clock = new RealtimeClock();
+            recorder = new MP4Recorder(videoWidth, videoHeight, fps, sampleRate, channelCount, audioBitRate: 96_000);
+            // Create recording inputs
+            pixelBuffer = webCamTexture.GetPixels32();
+            audioInput = recordMicrophone ? new AudioInput(recorder, clock, microphoneSource, true) : null;
+            // Unmute microphone
+            microphoneSource.mute = audioInput == null;
+            AppState.recording = true;
+        }
     }
 
     public async void StopRecording()
     {
-        recording = false;
-        // Mute microphone
-        microphoneSource.mute = true;
-        // Stop recording
-        audioInput?.Dispose();
-        var path = await recorder.FinishWriting();
-        // Playback recording
-        Debug.Log($"Saved recording to: {path}");
+        if (AppState.recording)
+        {
+            AppState.recording = false;
+            // Mute microphone
+            microphoneSource.mute = true;
+            // Stop recording
+            audioInput?.Dispose();
+            var path = await recorder.FinishWriting();
+            // Playback recording
+            Debug.LogWarning($"Saved recording to: {path}");
+            string[] split = path.Split('/');
+            string filename = "/"+split[split.Length - 1] + ".mp4";
+
+            string VidDir= Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, GameObject.Find("BegehungName").GetComponent<Text>().text + "/Videos/")).FullName;
+            File.Move(path, VidDir+filename);
+     
+        }
     }
 
     public async void TakePicture()
     {
-        JPGRecorder rec = new JPGRecorder(videoWidth, videoHeight);
-        rec.CommitFrame(pixelBuffer);
-        var path = await rec.FinishWriting();
-        Debug.Log($"Saved recording to: {path}");
+        if (AppState.recording)
+        {
+            string ImgDir = Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, GameObject.Find("BegehungName").GetComponent<Text>().text + "/Fotos/")).FullName;
+            JPGRecorder rec = new JPGRecorder(videoWidth, videoHeight);
+            rec.CommitFrame(pixelBuffer);
+            var path = await rec.FinishWriting();
+            Debug.LogWarning($"Saved recording to: {path}");
+            string[] split = path.Split('/');
+            string filename = split[split.Length - 1]+".jpg";
+            string[] fotos=Directory.GetFiles(path);
+            foreach (string foto in fotos)
+            {
+                File.Move(foto, Path.Combine(ImgDir, filename));
+            }
+            Directory.Delete(path, true);
+        }
     }
 
     public void TogglePause()
     {
         clock.paused = !clock.paused;
-        recording = !recording;
+        AppState.pausedRec = !AppState.pausedRec;
+        if (clock.paused)
+        {
+            audioInput.Dispose();
+        }
+        else
+        {
+            audioInput = recordMicrophone ? new AudioInput(recorder, clock, microphoneSource, true) : null;
+
+        }
+
+
+
+
     }
 }

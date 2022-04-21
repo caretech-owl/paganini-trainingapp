@@ -167,8 +167,11 @@ public class BegehungsLocationService : MonoBehaviour
         if (UnityEngine.Input.location.lastData.timestamp == last)return;        
         last = UnityEngine.Input.location.lastData.timestamp;
         //punkt in db schreiben
-        DBConnector.Instance.GetConnection().Insert(GetCurrentWegpunkt());
-        count=DBConnector.Instance.GetConnection().Query<Wegpunkt>("SELECT * FROM Wegpunkt where beg_id=?", AppState.SelectedBegehung.ToString()).Count;
+        if (AppState.recording&&!AppState.pausedRec)
+        {
+            DBConnector.Instance.GetConnection().Insert(GetCurrentWegpunkt());
+            count = DBConnector.Instance.GetConnection().Query<Wegpunkt>("SELECT * FROM Wegpunkt where beg_id=?", AppState.SelectedBegehung.ToString()).Count;
+        }
     }
 
 
@@ -203,27 +206,12 @@ public class BegehungsLocationService : MonoBehaviour
     /// </summary>
     public void RestartTracking()
     {
-#if UNITY_ANDROID
-        if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.CoarseLocation))
-        {
-            UnityEngine.Android.Permission.RequestUserPermission(UnityEngine.Android.Permission.CoarseLocation);
-        }
 
-        // First, check if user has location service enabled
-        if (!UnityEngine.Input.location.isEnabledByUser)
-        {
-            // TODO Failure
-            Debug.LogFormat("Android and Location not enabled");
-            this.rights = false;
-        }
-        else
-        {
-            this.rights = true;
-        }
-#endif
-        if (this.running == false && this.rights == true)
+        
+        DBConnector.Instance.GetConnection().Execute("DELETE FROM Wegpunkt where beg_id=?", AppState.SelectedBegehung.ToString());
+      
             this.running = true;
-        StartCoroutine(StartLocationService());
+      
     }
 
     /// <summary>
