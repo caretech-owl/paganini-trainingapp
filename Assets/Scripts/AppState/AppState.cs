@@ -39,4 +39,6 @@
     public static string currentScene = "";
     public static string lastScene = "";
 
+    public static string currentBegehung = "";
+
 }

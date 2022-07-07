@@ -18,6 +18,7 @@ public class PhoneCam : MonoBehaviour
     public int videoHeight = 480;
     public int fps = 12;
     public bool recordMicrophone;
+    public ExploringRouteManager erm;
 
     private MP4Recorder recorder;
     private AudioInput audioInput;
@@ -40,7 +41,10 @@ public class PhoneCam : MonoBehaviour
             Permission.RequestUserPermission(Permission.Camera);
         }
 #endif
-        WebCamDevice[] devices = WebCamTexture.devices;
+
+        erm.BegehungName = AppState.currentBegehung;
+
+       WebCamDevice[] devices = WebCamTexture.devices;
         if (devices.Length == 0)
         {
             Debug.Log("no Cam Detected");
@@ -94,7 +98,9 @@ public class PhoneCam : MonoBehaviour
     {
         if (!AppState.recording)
         {
-            Directory.Delete(Path.Combine(Application.persistentDataPath, GameObject.Find("BegehungName").GetComponent<Text>().text),true);
+            if (Directory.Exists(Path.Combine(Application.persistentDataPath, erm.BegehungName)))
+                Directory.Delete(Path.Combine(Application.persistentDataPath, erm.BegehungName),true);
+
             // Start recording
             var sampleRate = recordMicrophone ? AudioSettings.outputSampleRate : 0;
             var channelCount = recordMicrophone ? (int)AudioSettings.speakerMode : 0;
@@ -124,17 +130,19 @@ public class PhoneCam : MonoBehaviour
             string[] split = path.Split('/');
             string filename = "/"+split[split.Length - 1] + ".mp4";
 
-            string VidDir= Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, GameObject.Find("BegehungName").GetComponent<Text>().text + "/Videos/")).FullName;
+            string VidDir= Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, erm.BegehungName + "/Videos/")).FullName;
             File.Move(path, VidDir+filename);
      
         }
+
+        Debug.Log(Application.persistentDataPath);
     }
 
     public async void TakePicture()
     {
         if (AppState.recording)
         {
-            string ImgDir = Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, GameObject.Find("BegehungName").GetComponent<Text>().text + "/Fotos/")).FullName;
+            string ImgDir = Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, erm.BegehungName + "/Fotos/")).FullName;
             JPGRecorder rec = new JPGRecorder(videoWidth, videoHeight);
             rec.CommitFrame(pixelBuffer);
             var path = await rec.FinishWriting();
@@ -163,9 +171,5 @@ public class PhoneCam : MonoBehaviour
             audioInput = recordMicrophone ? new AudioInput(recorder, clock, microphoneSource, true) : null;
 
         }
-
-
-
-
     }
 }

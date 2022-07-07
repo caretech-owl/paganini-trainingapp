@@ -6,7 +6,7 @@ using SQLite4Unity3d;
 public class DBConnector : PersistentLazySingleton<DBConnector>
 {
     private SQLiteConnection connection;
-    public string databaseName = "wegetraining.db";
+    public string databaseName = "wegetraining2.db";
 
 
     #region [Databaseoperations]

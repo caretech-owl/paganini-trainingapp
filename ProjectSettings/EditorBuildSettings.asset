@@ -8,22 +8,28 @@ EditorBuildSettings:
   - enabled: 0
     path: 
     guid: 00000000000000000000000000000000
-  - enabled: 1
+  - enabled: 0
+    path: Assets/Scenes/00Login.unity
+    guid: 36db97542fd4bda4a848c922977c32ec
+  - enabled: 0
+    path: Assets/Scenes/09Overview.unity
+    guid: fb5fe123e6a99fe45a0e977a108d10b8
+  - enabled: 0
     path: Assets/Scenes/DevUI.unity
     guid: 69b668c862f33f843ad439bb78a4fbf1
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/ARGPS Example.unity
     guid: f605f50066a4c2c4c8b901dab209ac89
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/ProfileScene.unity
     guid: 31edf13606bcd5744a78256916b0a1ca
   - enabled: 1
     path: Assets/Scenes/MeineBegehungen.unity
     guid: cff0d4b22af399b4cb62d872573db802
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/DokumentierteErstbegehung.unity
     guid: e4f07f625e6c9d84f9d60bbc7a217e74
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/MeineWege.unity
     guid: 836ca4fc26fd9224da2f704385175702
   - enabled: 0
@@ -50,6 +56,9 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/08ShowProfile.unity
     guid: 0898d9991dc8163429fd7966977271b8
+  - enabled: 1
+    path: Assets/Scenes/14ExploringTraining.unity
+    guid: 47740b3442471614a8b1b85ba147310d
   m_configObjects:
     AR Foundation RemoteARFoundationRemoteLoaderSettings: {fileID: 11400000, guid: 846186ea58b4a5444a5449294a5ad001,
       type: 2}

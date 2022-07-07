@@ -33,7 +33,7 @@ public class SceneSwitcher : MonoBehaviour
     }
     public void GotoErstbegehungDev()
     {
-        SceneManager.LoadScene("DokumentierteErstbegehung");
+        SceneManager.LoadScene("14ExploringTraining");
     }
     public void GotoMeineBegehungen()
     {
@@ -57,5 +57,10 @@ public class SceneSwitcher : MonoBehaviour
     public void GoBack()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
+    }
+
+    public void GotoOverview()
+    {
+        SceneManager.LoadScene("MeineBegehungen");
     }
 }
