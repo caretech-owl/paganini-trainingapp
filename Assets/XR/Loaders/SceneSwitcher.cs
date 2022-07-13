@@ -61,6 +61,6 @@ public class SceneSwitcher : MonoBehaviour
 
     public void GotoOverview()
     {
-        SceneManager.LoadScene("MeineBegehungen");
+        SceneManager.LoadScene("09Overview");
     }
 }

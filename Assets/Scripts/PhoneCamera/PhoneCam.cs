@@ -62,6 +62,7 @@ public class PhoneCam : MonoBehaviour
         {
             Debug.Log("unable to find Cam");
         }
+
         webCamTexture.Play();
         rawImage.texture = webCamTexture;
         aspectRatioFitter.aspectRatio = (float)webCamTexture.width / webCamTexture.height;

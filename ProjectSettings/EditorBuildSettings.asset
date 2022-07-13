@@ -11,7 +11,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/00Login.unity
     guid: 36db97542fd4bda4a848c922977c32ec
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/09Overview.unity
     guid: fb5fe123e6a99fe45a0e977a108d10b8
   - enabled: 0
@@ -23,7 +23,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/ProfileScene.unity
     guid: 31edf13606bcd5744a78256916b0a1ca
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/MeineBegehungen.unity
     guid: cff0d4b22af399b4cb62d872573db802
   - enabled: 0
