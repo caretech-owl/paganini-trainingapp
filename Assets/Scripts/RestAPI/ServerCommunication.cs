@@ -126,6 +126,19 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
     }
 
     /// <summary>
+    /// This method call server API to login via PIN 
+    /// </summary>
+    /// <param name="callbackOnSuccess">Callback on success.</param>
+    /// <param name="callbackOnFail">Callback on fail.</param>
+    public void GetUserAuthentification(UnityAction<APIToken> callbackOnSuccess, UnityAction<string> callbackOnFail, int pin)
+    {
+        Header[] header = new Header[1];
+        header[0].name = "pin";
+        header[0].value = pin.ToString();
+        SendRequest(PaganiniRestAPI.getAuthToken, callbackOnSuccess, callbackOnFail, header);
+    }
+
+    /// <summary>
     /// This method call server API to get the wege for the local user
     /// </summary>
     /// <param name="callbackOnSuccess">Callback on success.</param>
@@ -151,6 +164,8 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
         header[0].value = apitoken;
         SendRequest(PaganiniRestAPI.GetUserBegehungen(wegId), callbackOnSuccess, callbackOnFail, header);
     }
+
+
 
     #endregion
 }

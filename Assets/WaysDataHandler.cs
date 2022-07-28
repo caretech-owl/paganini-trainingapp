@@ -56,7 +56,7 @@ public class WaysDataHandler : MonoBehaviour
     /// </summary>
     void Restorewege()
     {
-        List<Way> wege = DBConnector.Instance.GetConnection().Query<Way>("Select * FROM Weg");
+        List<Way> wege = DBConnector.Instance.GetConnection().Query<Way>("Select * FROM Way");
         Debug.Log("Restorewege -> Capacity: " + wege.Count);
 
         if (wege.Count > 0)
