@@ -12,7 +12,7 @@ public class WaysDataHandler : MonoBehaviour
 
     public GameObject WegePrefab;
 
-    private List<Weg> wege;
+    private List<Way> ways;
 
     private int LastWegeId;
 
@@ -42,9 +42,9 @@ public class WaysDataHandler : MonoBehaviour
     {
         AppState.SelectedWeg = -1;
         ///debug
-        if (AppState.authtoken == "")
+        if (AppState.currentUser == null)
         {
-            AppState.authtoken = "1234";
+            
         }
         DBConnector.Instance.Startup();
         Restorewege();
@@ -56,34 +56,34 @@ public class WaysDataHandler : MonoBehaviour
     /// </summary>
     void Restorewege()
     {
-        List<Weg> wege = DBConnector.Instance.GetConnection().Query<Weg>("Select * FROM Weg");
+        List<Way> wege = DBConnector.Instance.GetConnection().Query<Way>("Select * FROM Weg");
         Debug.Log("Restorewege -> Capacity: " + wege.Count);
 
         if (wege.Count > 0)
-            this.wege = wege;
+            this.ways = wege;
         else
-            this.wege = null;
+            this.ways = null;
 
         DisplayWege();
     }
 
     /// <summary>
-    /// Deletes Wege Data
+    /// Deletes ways Data
     /// </summary>
     public void DeleteLocalData()
     {
-        DBConnector.Instance.GetConnection().DeleteAll<Weg>();
-        wege = null;
+        DBConnector.Instance.GetConnection().DeleteAll<Way>();
+        ways = null;
         Restorewege();
     }
 
     /// <summary>
-    /// Saves Wege to SQLite
+    /// Saves ways to SQLite
     /// </summary>
     void SaveUserData()
     {
-        if (wege != null)
-            foreach (Weg w in wege)
+        if (ways != null)
+            foreach (Way w in ways)
             {
                 DBConnector.Instance.GetConnection().InsertOrReplace(w);
             }
@@ -95,7 +95,7 @@ public class WaysDataHandler : MonoBehaviour
     public void GetWege()
     {
 
-        ServerCommunication.Instance.GetUserWege(GetWegeSucceed, GetWegeFailed, AppState.authtoken);
+        ServerCommunication.Instance.GetUserWege(GetWegeSucceed, GetWegeFailed, AppState.currentUser.Apitoken);
     }
 
     /// <summary>
@@ -103,27 +103,28 @@ public class WaysDataHandler : MonoBehaviour
     /// </summary>
     public void AddWay()
     {
-        var w = new Weg();
+        var w = new Way
+        {
+            Name = WegName.text,
+            Start = WegStartType,
+            Description = WegStart.text + "->" + WegZiel.text,
+            Destination = WegZielType
+        };
 
-        w.weg_name = WegName.text;
-        w.start = WegStartType;
-        w.weg_beschreibung = WegStart.text + "->" + WegZiel.text;
-        w.ziel = WegZielType;
-
-        if (wege == null) { 
-            wege = new List<Weg>();
-            w.weg_id = 1;
+        if (ways == null) { 
+            ways = new List<Way>();
+            w.Id = 1;
         }
         else
         {
-            w.weg_id = LastWegeId + 1;
+            w.Id = LastWegeId + 1;
         }
 
-        wege.Add(w);
+        ways.Add(w);
         SaveUserData();
         Restorewege();
 
-        AppState.currentBegehung = w.weg_name;
+        AppState.currentBegehung = w.Name;
     }
 
     /// <summary>
@@ -190,11 +191,11 @@ public class WaysDataHandler : MonoBehaviour
     private void GetWegeSucceed(WegAPIList wege)
     {
         DeleteLocalData();
-        this.wege = new List<Weg>();
-        foreach (WegAPI w in wege.wege)
+        this.ways = new List<Way>();
+        foreach (WayAPI w in wege.wege)
         {
-            this.wege.Add(new Weg(w));
-            Debug.Log(new Weg(w));
+            this.ways.Add(new Way(w));
+            Debug.Log(new Way(w));
         }
         SaveUserData();
         Restorewege();
@@ -214,7 +215,7 @@ public class WaysDataHandler : MonoBehaviour
     /// </summary>
     private void DisplayWege()
     {
-        if (this.wege != null)
+        if (this.ways != null)
         {
             //deletes list
             foreach (Transform child in WegeList.transform)
@@ -224,7 +225,7 @@ public class WaysDataHandler : MonoBehaviour
 
             if (WegePrefab != null)
             {
-                foreach (Weg w in wege)
+                foreach (Way w in ways)
                 {
                     var neu = Instantiate(WegePrefab);
                     if (WegeList != null)
@@ -235,19 +236,19 @@ public class WaysDataHandler : MonoBehaviour
                             switch (df.name)
                             {
                                 case "Name":
-                                    df.text = w.weg_name;
+                                    df.text = w.Name;
                                     break;
                                 case "Start":
-                                    df.text = w.start.ToString();
+                                    df.text = w.Start.ToString();
                                     break;
                                 case "Ziel":
-                                    df.text = w.ziel.ToString();
+                                    df.text = w.Destination.ToString();
                                     break;
                                 case "Beschreibung":
-                                    df.text = w.weg_beschreibung;
+                                    df.text = w.Description;
                                     break;
                                 case "ID":
-                                    df.text = w.weg_id.ToString();
+                                    df.text = w.Id.ToString();
                                     break;
 
                             }
@@ -257,7 +258,7 @@ public class WaysDataHandler : MonoBehaviour
                         neu.transform.localPosition = new Vector3(neu.transform.localPosition.x, neu.transform.localPosition.y, 1);
                     }
 
-                    LastWegeId = w.weg_id;
+                    LastWegeId = w.Id;
                 }
             }
         }

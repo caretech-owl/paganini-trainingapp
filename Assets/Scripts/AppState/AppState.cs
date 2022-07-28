@@ -1,7 +1,7 @@
 ﻿public static class AppState
 {
 
-    public static string authtoken = "";
+    public static User currentUser=null;
 
 
 

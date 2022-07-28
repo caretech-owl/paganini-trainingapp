@@ -23,22 +23,22 @@ public class WayList : MonoBehaviour
 
     }
 
-    public void CreateWayEntry(Weg way, Vector3 position)
+    public void CreateWayEntry(Way way, Vector3 position)
     {
         WayItem item = this.CreateWayItem(this.wayItemPrefab, way);
         item.transform.SetParent(this.content.transform, false);
     }
 
-    private WayItem CreateWayItem(GameObject wayItemPrefab, Weg way)
+    private WayItem CreateWayItem(GameObject wayItemPrefab, Way way)
     {
         WayItem item = Instantiate(wayItemPrefab).GetComponent<WayItem>();
-        item.name = way.weg_id.ToString();
+        item.name = way.Id.ToString();
 
         //set Info Text
-        item.info.text = way.start.ToString() + " bis " + way.ziel.ToString();
+        item.info.text = way.Start.ToString() + " bis " + way.Destination.ToString();
 
         // store wege id in gameobject
-        item.infoContainer.name = way.weg_id.ToString();
+        item.infoContainer.name = way.Id.ToString();
 
         // onClick
         item.infoContainer.onClick.AddListener(() => item.ListElementOnClick(item.infoContainer));

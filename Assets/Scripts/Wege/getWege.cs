@@ -13,7 +13,7 @@ public class getWege : MonoBehaviour
 
     public GameObject wegItem;
 
-    private List<Weg> wege;
+    private List<Way> wege;
 
     // Start is called before the first frame update
     void Start()
@@ -27,11 +27,11 @@ public class getWege : MonoBehaviour
 
         //List<GameObject> wegeList = new List<GameObject>();
 
-        foreach (Weg weg in this.wege)
+        foreach (Way weg in this.wege)
         {
             //Create Item
             var item = Instantiate(wegItem, transform);
-            item.name = weg.weg_id.ToString();
+            item.name = weg.Id.ToString();
             var buttons = item.GetComponentsInChildren(typeof(Button));
             var infoContainer = buttons[0] as Button;
             var infoButton = buttons[1] as Button;
@@ -39,10 +39,10 @@ public class getWege : MonoBehaviour
             var infoText = infoContainer.GetComponentInChildren<Text>() as Text;
 
             //set Info Text
-            infoText.text = weg.start.ToString() + " bis " + weg.ziel.ToString();
+            infoText.text = weg.Start.ToString() + " bis " + weg.Destination.ToString();
 
             // store wege id in gameobject
-            infoContainer.name = weg.weg_id.ToString();
+            infoContainer.name = weg.Id.ToString();
 
             // onClick
             infoButton.onClick.AddListener(() => this.ListElementOnClick(infoButton));
@@ -81,20 +81,20 @@ public class getWege : MonoBehaviour
         SceneManager.LoadScene(AppState.allOkScene);
     }
 
-    private List<Weg> GetWege()
+    private List<Way> GetWege()
     {
         // TEMP Placeholder for sqlite querey
-        List<Weg> wegeList = new List<Weg>();
+        List<Way> wegeList = new List<Way>();
 
         //wegeList.Add(new Weg() { weg_id = "Test Id1", start = "Bielefeld", ziel = "Paris", weg_name = "Test Name", weg_beschreibung = "Dies ist eine super Beschreibung" });
         //wegeList.Add(new Weg() { weg_id = "Test Id2", start = "Bielefeld", ziel = "Berlin", weg_name = "Test Name", weg_beschreibung = "Dies ist eine super Beschreibung" });
         //wegeList.Add(new Weg() { weg_id = "Test Id3", start = "Paris", ziel = "Bielefeld", weg_name = "Test Name", weg_beschreibung = "Dies ist eine super Beschreibung" });
         //wegeList.Add(new Weg() { weg_id = "Test Id4", start = "Berlin", ziel = "Bielefeld", weg_name = "Test Name", weg_beschreibung = "Dies ist eine super Beschreibung" });
 
-        wegeList.Add(new Weg() { weg_id = 1, start = 1, ziel = 2, weg_name = "Test Name", weg_beschreibung = "Dies ist eine super Beschreibung" });
-        wegeList.Add(new Weg() { weg_id = 2, start = 3, ziel = 4, weg_name = "Test Name", weg_beschreibung = "Dies ist eine super Beschreibung" });
-        wegeList.Add(new Weg() { weg_id = 3, start = 5, ziel = 6, weg_name = "Test Name", weg_beschreibung = "Dies ist eine super Beschreibung" });
-        wegeList.Add(new Weg() { weg_id = 4, start = 7, ziel = 8, weg_name = "Test Name", weg_beschreibung = "Dies ist eine super Beschreibung" });
+        wegeList.Add(new Way() { Id = 1, Start = 1, Destination = 2, Name = "Test Name", Description = "Dies ist eine super Beschreibung" });
+        wegeList.Add(new Way() { Id = 2, Start = 3, Destination = 4, Name = "Test Name", Description = "Dies ist eine super Beschreibung" });
+        wegeList.Add(new Way() { Id = 3, Start = 5, Destination = 6, Name = "Test Name", Description = "Dies ist eine super Beschreibung" });
+        wegeList.Add(new Way() { Id = 4, Start = 7, Destination = 8, Name = "Test Name", Description = "Dies ist eine super Beschreibung" });
 
 
         return wegeList;

@@ -63,4 +63,13 @@ public class SceneSwitcher : MonoBehaviour
     {
         SceneManager.LoadScene("09Overview");
     }
+
+    public void GotoUserLogin()
+    {
+        SceneManager.LoadScene("000UserLogin");
+    }
+    public void GotoSWLogin()
+    {
+        SceneManager.LoadScene("00Login");
+    }
 }

@@ -38,29 +38,29 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
 
     private void CreateTables()
     {
-        this.connection.CreateTable<UserProfile>();
-        this.connection.CreateTable<Wegpunkt>();
+        this.connection.CreateTable<User>();
+        this.connection.CreateTable<Pathpoint>();
         this.connection.CreateTable<AuthToken>();
-        this.connection.CreateTable<Begehung>();
-        this.connection.CreateTable<Weg>();
-        this.connection.CreateTable<Adresse>();
+        this.connection.CreateTable<ExploratoryRouteWalk>();
+        this.connection.CreateTable<Way>();
+        this.connection.CreateTable<Address>();
     }
 
     public void TruncateTables()
     {
-        this.connection.DeleteAll<UserProfile>();
+        this.connection.DeleteAll<User>();
         this.connection.DeleteAll<AuthToken>();
-        this.connection.DeleteAll<Wegpunkt>();
-        this.connection.DeleteAll<Begehung>();
-        this.connection.DeleteAll<Weg>();
-        this.connection.DeleteAll<Adresse>();
+        this.connection.DeleteAll<Pathpoint>();
+        this.connection.DeleteAll<ExploratoryRouteWalk>();
+        this.connection.DeleteAll<Way>();
+        this.connection.DeleteAll<Address>();
     }
 
     public void DropTables()
     {
         try
         {
-            this.connection.DropTable<UserProfile>();
+            this.connection.DropTable<User>();
         }
         catch { }
         try
@@ -70,22 +70,22 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
         catch { }
         try
         {
-            this.connection.DropTable<Wegpunkt>();
+            this.connection.DropTable<Pathpoint>();
         }
         catch { }
         try
         {
-            this.connection.DropTable<Begehung>();
+            this.connection.DropTable<ExploratoryRouteWalk>();
         }
         catch { }
         try
         {
-            this.connection.DropTable<Weg>();
+            this.connection.DropTable<Way>();
         }
         catch { }
         try
         {
-            this.connection.DropTable<Adresse>();
+            this.connection.DropTable<Address>();
         }
         catch { }
         }

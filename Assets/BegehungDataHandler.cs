@@ -26,16 +26,16 @@ public class BegehungDataHandler : MonoBehaviour
 
     private int expectedPin = 0;
 
-    private List<Begehung> begehungen;
+    private List<ExploratoryRouteWalk> begehungen;
 
     // Start is called before the first frame update
     void Start()
     {
         AppState.SelectedBegehung = -1;
         ///debug
-        if (AppState.authtoken == "")
+        if (AppState.currentUser == null)
         {
-            AppState.authtoken = "1234";
+
         }
         DBConnector.Instance.Startup();
         Restorebegehungen();
@@ -47,7 +47,7 @@ public class BegehungDataHandler : MonoBehaviour
     /// </summary>
     void Restorebegehungen()
     {
-        List<Begehung> begehungen = DBConnector.Instance.GetConnection().Query<Begehung>("Select * FROM Begehung");
+        List<ExploratoryRouteWalk> begehungen = DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * FROM Begehung");
         if (begehungen.Capacity > 0)
             this.begehungen = begehungen;
         else
@@ -61,7 +61,7 @@ public class BegehungDataHandler : MonoBehaviour
     /// </summary>
     public void DeleteLocalData()
     {
-        DBConnector.Instance.GetConnection().DeleteAll<Begehung>();
+        DBConnector.Instance.GetConnection().DeleteAll<ExploratoryRouteWalk>();
         begehungen = null;
 
         Restorebegehungen();
@@ -73,7 +73,7 @@ public class BegehungDataHandler : MonoBehaviour
     void SaveUserData()
     {
         if (begehungen != null)
-            foreach (Begehung b in begehungen)
+            foreach (ExploratoryRouteWalk b in begehungen)
             {
                 DBConnector.Instance.GetConnection().InsertOrReplace(b);
             }
@@ -85,7 +85,7 @@ public class BegehungDataHandler : MonoBehaviour
     public void GetBegehungen()
     {
 
-        ServerCommunication.Instance.GetUserBegehungen(GetBegehungenSucceed, GetBegehungenFailed, AppState.authtoken, AppState.SelectedWeg);
+        ServerCommunication.Instance.GetUserBegehungen(GetBegehungenSucceed, GetBegehungenFailed, AppState.currentUser.Apitoken, AppState.SelectedWeg);
     }
 
     /// <summary>
@@ -93,35 +93,35 @@ public class BegehungDataHandler : MonoBehaviour
     /// </summary>
     public void AddBegehungen()
     {
-        var b = new Begehung();
-
-        b.beg_datum = DateTime.Now;
-        b.beg_guid = Guid.NewGuid().ToString();
-        b.beg_name = BegehungName.text;
-        b.beg_pin = 1234;
+        var b = new ExploratoryRouteWalk
+        {
+            Date = DateTime.Now,
+            Name = BegehungName.text,
+            Pin = 1234
+        };
 
         if (begehungen == null)
-            begehungen = new List<Begehung>();
+            begehungen = new List<ExploratoryRouteWalk>();
 
         this.begehungen.Add(b);
         SaveUserData();
         Restorebegehungen();
 
-        AppState.currentBegehung = b.beg_name;
+        AppState.currentBegehung = b.Name;
     }
 
     /// <summary>
     /// Request was successful
     /// </summary>
     /// <param name="userProfile">UserProfile Object</param>
-    private void GetBegehungenSucceed(BegehungAPIList begehungen)
+    private void GetBegehungenSucceed(ExploratoryRouteWalkAPIList begehungen)
     {
         DeleteLocalData();
-        this.begehungen = new List<Begehung>();
-        foreach (BegehungAPI b in begehungen.begehungen)
+        this.begehungen = new List<ExploratoryRouteWalk>();
+        foreach (ExploratoryRouteWalkAPI b in begehungen.erw)
         {
-            this.begehungen.Add(new Begehung(b));
-            Debug.Log(new Begehung(b));
+            this.begehungen.Add(new ExploratoryRouteWalk(b));
+            Debug.Log(new ExploratoryRouteWalk(b));
         }
         SaveUserData();
         Restorebegehungen();
@@ -151,7 +151,7 @@ public class BegehungDataHandler : MonoBehaviour
 
             if (BegehungPrefab != null)
             {
-                foreach (Begehung b in begehungen)
+                foreach (ExploratoryRouteWalk b in begehungen)
                 {
                     var neu = Instantiate(BegehungPrefab);
                     if (BegehungList != null)
@@ -162,17 +162,17 @@ public class BegehungDataHandler : MonoBehaviour
                             switch (df.name)
                             {
                                 case "Name":
-                                    df.text = b.beg_name;
+                                    df.text = b.Name;
                                     break;
                                 case "Datum":
-                                    var d = b.beg_datum;
+                                    var d = b.Date;
                                     df.text = d.Day + "." + d.Month + "." + d.Year;
                                     break;
                                 case "ID":
-                                    df.text = b.beg_id.ToString();
+                                    df.text = b.Id.ToString();
                                     break;
                                 case "PIN":
-                                    df.text = b.beg_pin.ToString();
+                                    df.text = b.Pin.ToString();
                                     break;
 
                             }
