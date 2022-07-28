@@ -25,10 +25,10 @@ public class StartScene : MonoBehaviour
 
     }
 
-    private void DisplayWayList(List<Weg> wayObjectList)
+    private void DisplayWayList(List<Way> wayObjectList)
     {
         float count = 0;
-        foreach (Weg wayObject in wayObjectList)
+        foreach (Way wayObject in wayObjectList)
         {
             float spacing = -2;
             Vector3 pos = new Vector3(spacing * count, 0, 0);
@@ -37,15 +37,15 @@ public class StartScene : MonoBehaviour
         }
     }
 
-    private List<Weg> GetListOfWays()
+    private List<Way> GetListOfWays()
     {
         // TEMP Placeholder for sqlite querey
-        List<Weg> wayObjectList = new List<Weg>();
+        List<Way> wayObjectList = new List<Way>();
 
-        wayObjectList.Add(new Weg() { weg_id = 1, start = 1, ziel = 2, weg_name = "Test Name", weg_beschreibung = "Dies ist eine super Beschreibung" });
-        wayObjectList.Add(new Weg() { weg_id = 2, start = 3, ziel = 4, weg_name = "Test Name", weg_beschreibung = "Dies ist eine super Beschreibung" });
-        wayObjectList.Add(new Weg() { weg_id = 3, start = 5, ziel = 6, weg_name = "Test Name", weg_beschreibung = "Dies ist eine super Beschreibung" });
-        wayObjectList.Add(new Weg() { weg_id = 4, start = 7, ziel = 8, weg_name = "Test Name", weg_beschreibung = "Dies ist eine super Beschreibung" });
+        wayObjectList.Add(new Way() { Id = 1, Start = 1, Destination = 2, Name = "Test Name", Description = "Dies ist eine super Beschreibung" });
+        wayObjectList.Add(new Way() { Id = 2, Start = 3, Destination = 4, Name = "Test Name", Description = "Dies ist eine super Beschreibung" });
+        wayObjectList.Add(new Way() { Id = 3, Start = 5, Destination = 6, Name = "Test Name", Description = "Dies ist eine super Beschreibung" });
+        wayObjectList.Add(new Way() { Id = 4, Start = 7, Destination = 8, Name = "Test Name", Description = "Dies ist eine super Beschreibung" });
 
 
         return wayObjectList;

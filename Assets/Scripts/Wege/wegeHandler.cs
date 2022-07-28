@@ -14,16 +14,15 @@ public class WegeHandler : MonoBehaviour
 
     public GameObject WegePrefab;
 
-    private List<Weg> wege;
+    private List<Way> wege;
 
     // Start is called before the first frame update
     void Start()
     {
         AppState.SelectedWeg = -1;
         ///debug
-        if (AppState.authtoken == "")
+        if (AppState.currentUser == null) 
         {
-            AppState.authtoken = "1234";
         }
         DBConnector.Instance.Startup();
         Restorewege();
@@ -35,7 +34,7 @@ public class WegeHandler : MonoBehaviour
     /// </summary>
     void Restorewege()
     {
-        List<Weg> wege = DBConnector.Instance.GetConnection().Query<Weg>("Select * FROM Weg");
+        List<Way> wege = DBConnector.Instance.GetConnection().Query<Way>("Select * FROM Weg");
         if (wege.Capacity > 0)
             this.wege = wege;
         else
@@ -49,7 +48,7 @@ public class WegeHandler : MonoBehaviour
     /// </summary>
     public void DeleteLocalData()
     {
-        DBConnector.Instance.GetConnection().DeleteAll<Weg>();
+        DBConnector.Instance.GetConnection().DeleteAll<Way>();
         wege = null;
         Restorewege();
     }
@@ -60,7 +59,7 @@ public class WegeHandler : MonoBehaviour
     void SaveUserData()
     {
         if (wege != null)
-            foreach(Weg w in wege)
+            foreach(Way w in wege)
             {
                 DBConnector.Instance.GetConnection().InsertOrReplace(w);
             }
@@ -72,7 +71,7 @@ public class WegeHandler : MonoBehaviour
     public void GetWege()
     {
 
-        ServerCommunication.Instance.GetUserWege(GetWegeSucceed, GetWegeFailed, AppState.authtoken);
+        ServerCommunication.Instance.GetUserWege(GetWegeSucceed, GetWegeFailed, AppState.currentUser.Apitoken);
     }
 
     /// <summary>
@@ -82,11 +81,11 @@ public class WegeHandler : MonoBehaviour
     private void GetWegeSucceed(WegAPIList wege)
     {
         DeleteLocalData();
-        this.wege = new List<Weg>();
-        foreach (WegAPI w in wege.wege)
+        this.wege = new List<Way>();
+        foreach (WayAPI w in wege.wege)
         {
-            this.wege.Add(new Weg(w));
-            Debug.Log(new Weg(w));
+            this.wege.Add(new Way(w));
+            Debug.Log(new Way(w));
         }
         SaveUserData();
         Restorewege();
@@ -116,7 +115,7 @@ public class WegeHandler : MonoBehaviour
 
             if (WegePrefab != null)
             {
-                foreach (Weg w in wege)
+                foreach (Way w in wege)
                 {
                     var neu = Instantiate(WegePrefab);
                     if (WegeList != null)
@@ -127,19 +126,19 @@ public class WegeHandler : MonoBehaviour
                             switch (df.name)
                             {
                                 case "Name":
-                                    df.text = w.weg_name;
+                                    df.text = w.Name;
                                     break;
                                 case "Start":
-                                    df.text = w.start.ToString();
+                                    df.text = w.Start.ToString();
                                     break;
                                 case "Ziel":
-                                    df.text = w.ziel.ToString();
+                                    df.text = w.Destination.ToString();
                                     break;
                                 case "Beschreibung":
-                                    df.text = w.weg_beschreibung;
+                                    df.text = w.Description;
                                     break;
                                 case "ID":
-                                    df.text = w.weg_id.ToString();
+                                    df.text = w.Id.ToString();
                                     break;
 
                             }

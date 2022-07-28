@@ -14,7 +14,7 @@ public class ProfileHandler : MonoBehaviour
     /// <summary>
     /// Object with the Current userProfile
     /// </summary>
-    public UserProfile userProfile;
+    public User userProfile;
     /// <summary>
     /// Object with the Authtoken userProfile
     /// </summary>
@@ -35,14 +35,16 @@ public class ProfileHandler : MonoBehaviour
         if (token.Capacity > 0)
         {
             authToken = token[0];
-            AppState.authtoken = token[0].ben_authtoken;
+            AppState.currentUser.Apitoken = token[0].ben_authtoken;
         }
         else
         {
             ///Debug part
-            AppState.authtoken = "1234";
-            authToken = new AuthToken();
-            authToken.ben_authtoken = "1234";
+            AppState.currentUser.Apitoken = "1234";
+            authToken = new AuthToken
+            {
+                ben_authtoken = "1234"
+            };
             DBConnector.Instance.GetConnection().InsertOrReplace(authToken);
             /////
         }
@@ -53,7 +55,7 @@ public class ProfileHandler : MonoBehaviour
     /// </summary>
     void RestoreUserData()
     {
-        List<UserProfile> profile = DBConnector.Instance.GetConnection().Query<UserProfile>("Select * FROM UserProfile");
+        List<User> profile = DBConnector.Instance.GetConnection().Query<User>("Select * FROM UserProfile");
         if (profile.Capacity > 0)
             userProfile = profile[0];
         else
@@ -66,8 +68,8 @@ public class ProfileHandler : MonoBehaviour
     /// </summary>
     public void DeleteUserData()
     {
-        DBConnector.Instance.GetConnection().DeleteAll<UserProfile>();
-        userProfile = new UserProfile();
+        DBConnector.Instance.GetConnection().DeleteAll<User>();
+        userProfile = new User();
         RestoreUserData();
     }
 
@@ -91,9 +93,9 @@ public class ProfileHandler : MonoBehaviour
     /// Request was successful
     /// </summary>
     /// <param name="userProfile">UserProfile Object</param>
-    private void APICallSucceed(UserProfileAPI userProfile)
+    private void APICallSucceed(UserAPI userProfile)
     {
-        this.userProfile = new UserProfile(userProfile);
+        this.userProfile = new User(userProfile);
         SaveUserData();
         RestoreUserData();
     }
@@ -121,19 +123,19 @@ public class ProfileHandler : MonoBehaviour
                 {
                     case "DFUserID":
                         if (userProfile != null)
-                            df.text = userProfile.ben_id.ToString();
+                            df.text = userProfile.Id.ToString();
                         else
                             df.text = null;
                         break;
                     case "DFUsername":
                         if (userProfile != null)
-                            df.text = userProfile.ben_benutzername;
+                            df.text = userProfile.Username;
                         else
                             df.text = null;
                         break;
                     case "DFMnemonic":
                         if (userProfile != null)
-                            df.text = userProfile.ben_mnemonic_token;
+                            df.text = userProfile.Mnemonic_token;
                         else
                             df.text = null;
                         break;

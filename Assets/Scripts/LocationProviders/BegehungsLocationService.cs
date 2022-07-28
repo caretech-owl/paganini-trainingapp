@@ -24,10 +24,10 @@ public class BegehungsLocationService : MonoBehaviour
 
         if (AppState.SelectedBegehung != -1)
         {
-            var list=DBConnector.Instance.GetConnection().Query<Begehung>("Select * from Begehung where beg_id=" + AppState.SelectedBegehung);
-            foreach(Begehung b in list)
+            var list=DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * from Begehung where beg_id=" + AppState.SelectedBegehung);
+            foreach(ExploratoryRouteWalk b in list)
             {
-                GameObject.Find("BegehungName").GetComponent<Text>().text = b.beg_name;
+                GameObject.Find("BegehungName").GetComponent<Text>().text = b.Name;
             }
         }
 #if UNITY_ANDROID
@@ -170,7 +170,7 @@ public class BegehungsLocationService : MonoBehaviour
         if (AppState.recording&&!AppState.pausedRec)
         {
             DBConnector.Instance.GetConnection().Insert(GetCurrentWegpunkt());
-            count = DBConnector.Instance.GetConnection().Query<Wegpunkt>("SELECT * FROM Wegpunkt where beg_id=?", AppState.SelectedBegehung.ToString()).Count;
+            count = DBConnector.Instance.GetConnection().Query<Pathpoint>("SELECT * FROM Wegpunkt where beg_id=?", AppState.SelectedBegehung.ToString()).Count;
         }
     }
 
@@ -178,17 +178,19 @@ public class BegehungsLocationService : MonoBehaviour
     /// <summary>
     /// neuen wegpunkt anlegen
     /// </summary>
-    private Wegpunkt GetCurrentWegpunkt()
+    private Pathpoint GetCurrentWegpunkt()
     {
-        Wegpunkt punkt = new Wegpunkt();
-        punkt.beg_id = AppState.SelectedBegehung;
-        punkt.wegp_longitude = UnityEngine.Input.location.lastData.longitude;
-        punkt.wegp_latitude = UnityEngine.Input.location.lastData.latitude;
-        punkt.wegp_altitude = UnityEngine.Input.location.lastData.altitude;
-        punkt.wegp_accuracy = UnityEngine.Input.location.lastData.horizontalAccuracy;
-        punkt.wegp_POIType = -1;
-        punkt.wegp_timestamp = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        punkt.wegp_lernstand = -1;
+        Pathpoint punkt = new Pathpoint
+        {
+            Erw_id = AppState.SelectedBegehung,
+            Longitude = UnityEngine.Input.location.lastData.longitude,
+            Latitude = UnityEngine.Input.location.lastData.latitude,
+            Altitude = UnityEngine.Input.location.lastData.altitude,
+            Accuracy = UnityEngine.Input.location.lastData.horizontalAccuracy,
+            POIType = -1,
+            Timestamp = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            Description = ""
+        };
         return punkt;
     }
     /// <summary>
@@ -196,8 +198,8 @@ public class BegehungsLocationService : MonoBehaviour
     /// </summary>
     public void MarkPOI(int poiType)
     {
-        Wegpunkt currentLocation = GetCurrentWegpunkt();
-        currentLocation.wegp_POIType = poiType;
+        Pathpoint currentLocation = GetCurrentWegpunkt();
+        currentLocation.POIType = poiType;
         DBConnector.Instance.GetConnection().Insert(currentLocation);
     }
 
