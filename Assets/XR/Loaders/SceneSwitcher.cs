@@ -5,36 +5,12 @@ using UnityEngine.UI;
 
 public class SceneSwitcher : MonoBehaviour
 {
-    void Update()
-    {
-        // Check if Back was pressed this frame
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            GotoMenuScene();
-        }
-        
-    }
-    public void GotoARGPSScene()
-    {
-        SceneManager.LoadScene("ARGPS Example");
-    }
 
-    public void GotoMenuScene()
-    {
-        SceneManager.LoadScene("DevUI");
-    }
-    public void GotoProfileScene()
-    {
-        SceneManager.LoadScene("ProfileScene");
-    }
-    public void GotoErstbegehungScene()
-    {
-        SceneManager.LoadScene("DokumentierteErstbegehung");
-    }
     public void GotoErstbegehungDev()
     {
-        SceneManager.LoadScene("14ExploringTraining");
+        SceneManager.LoadScene("ExploratoryRouteWalkRecording");
     }
+    /*
     public void GotoMeineBegehungen()
     {
         //get button id
@@ -49,11 +25,7 @@ public class SceneSwitcher : MonoBehaviour
             }
         }
         SceneManager.LoadScene("MeineBegehungen");
-    }
-    public void GotoMeineWege()
-    {
-        SceneManager.LoadScene("MeineWege");
-    }
+    }*/
     public void GoBack()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
@@ -61,15 +33,11 @@ public class SceneSwitcher : MonoBehaviour
 
     public void GotoOverview()
     {
-        SceneManager.LoadScene("09Overview");
+        SceneManager.LoadScene("MyExploratoryRouteWalks");
     }
 
     public void GotoUserLogin()
     {
-        SceneManager.LoadScene("000UserLogin");
-    }
-    public void GotoSWLogin()
-    {
-        SceneManager.LoadScene("00Login");
+        SceneManager.LoadScene("UserLogin");
     }
 }

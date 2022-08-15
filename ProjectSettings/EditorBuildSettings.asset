@@ -9,59 +9,59 @@ EditorBuildSettings:
     path: 
     guid: 00000000000000000000000000000000
   - enabled: 1
-    path: Assets/Scenes/000UserLogin.unity
+    path: Assets/Scenes/UserLogin.unity
     guid: 999695e6c31345344a7d988bf3a62a85
   - enabled: 1
-    path: Assets/Scenes/00Login.unity
-    guid: 36db97542fd4bda4a848c922977c32ec
-  - enabled: 1
-    path: Assets/Scenes/09Overview.unity
+    path: Assets/Scenes/MyExploratoryRouteWalks.unity
     guid: fb5fe123e6a99fe45a0e977a108d10b8
+  - enabled: 1
+    path: Assets/Scenes/ExploratoryRouteWalkRecording.unity
+    guid: 47740b3442471614a8b1b85ba147310d
   - enabled: 0
-    path: Assets/Scenes/DevUI.unity
+    path: Assets/Scenes/Backup/00Login.unity
+    guid: 36db97542fd4bda4a848c922977c32ec
+  - enabled: 0
+    path: Assets/Scenes/Backup/DevUI.unity
     guid: 69b668c862f33f843ad439bb78a4fbf1
   - enabled: 0
-    path: Assets/Scenes/ARGPS Example.unity
+    path: Assets/Scenes/Backup/ARGPS Example.unity
     guid: f605f50066a4c2c4c8b901dab209ac89
   - enabled: 0
-    path: Assets/Scenes/ProfileScene.unity
+    path: Assets/Scenes/Backup/ProfileScene.unity
     guid: 31edf13606bcd5744a78256916b0a1ca
   - enabled: 0
-    path: Assets/Scenes/MeineBegehungen.unity
+    path: Assets/Scenes/Backup/MeineBegehungen.unity
     guid: cff0d4b22af399b4cb62d872573db802
   - enabled: 0
-    path: Assets/Scenes/DokumentierteErstbegehung.unity
+    path: Assets/Scenes/Backup/DokumentierteErstbegehung.unity
     guid: e4f07f625e6c9d84f9d60bbc7a217e74
   - enabled: 0
-    path: Assets/Scenes/MeineWege.unity
+    path: Assets/Scenes/Backup/MeineWege.unity
     guid: 836ca4fc26fd9224da2f704385175702
   - enabled: 0
-    path: Assets/Scenes/01Start.unity
+    path: Assets/Scenes/Backup/01Start.unity
     guid: 959c4dd49ab6f464e9ab56a177613273
   - enabled: 0
-    path: Assets/Scenes/02AllOk.unity
+    path: Assets/Scenes/Backup/02AllOk.unity
     guid: 48aa2db212e7e7b478884726f81c2adf
   - enabled: 0
-    path: "Assets/Scenes/03Wegef\xFChrung.unity"
+    path: "Assets/Scenes/Backup/03Wegef\xFChrung.unity"
     guid: a570c2ed22ef0944cb95afe80cceb276
   - enabled: 0
-    path: Assets/Scenes/04Paused.unity
+    path: Assets/Scenes/Backup/04Paused.unity
     guid: 1511efa969ab64e46835f89120bc7e0a
   - enabled: 0
-    path: Assets/Scenes/05ZielErreicht.unity
+    path: Assets/Scenes/Backup/05ZielErreicht.unity
     guid: f56a89eaca814f548aa03b5b09222b0f
   - enabled: 0
-    path: Assets/Scenes/06VideoHelp.unity
+    path: Assets/Scenes/Backup/06VideoHelp.unity
     guid: db5b3bec7e23b1c4b8b9bcc66fc76d05
   - enabled: 0
-    path: Assets/Scenes/07Settings.unity
+    path: Assets/Scenes/Backup/07Settings.unity
     guid: 459a6dd4ab4fc344d9516b42b7a1f393
   - enabled: 0
-    path: Assets/Scenes/08ShowProfile.unity
+    path: Assets/Scenes/Backup/08ShowProfile.unity
     guid: 0898d9991dc8163429fd7966977271b8
-  - enabled: 1
-    path: Assets/Scenes/14ExploringTraining.unity
-    guid: 47740b3442471614a8b1b85ba147310d
   m_configObjects:
     AR Foundation RemoteARFoundationRemoteLoaderSettings: {fileID: 11400000, guid: 846186ea58b4a5444a5449294a5ad001,
       type: 2}
