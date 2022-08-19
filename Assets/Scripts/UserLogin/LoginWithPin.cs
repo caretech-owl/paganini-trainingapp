@@ -35,7 +35,7 @@ public class LoginWithPin : MonoBehaviour
         AppState.currentUser = new User(user);
         DBConnector.Instance.Startup();
         DBConnector.Instance.GetConnection().Insert(AppState.currentUser);
-        SceneManager.LoadScene(AppState.overviewScene);
+        SceneManager.LoadScene(AppState.MyExploratoryRouteWalkScene);
     }
 
     private void GetUserProfileFailed(string errorMessage)
