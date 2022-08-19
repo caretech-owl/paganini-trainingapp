@@ -21,7 +21,7 @@
 
     // Scenes
     public static string UserLoginScene = "UserLogin";
-    public static string MyExploratoryRouteWalkScene = "MyExploratoryRouteWalk";
+    public static string MyExploratoryRouteWalkScenes = "MyExploratoryRouteWalks";
     public static string ExploratoryRouteWalkRecodingScene = "ExploratoryRouteWalkRecording";
 
     public static string startScene = "01Start";

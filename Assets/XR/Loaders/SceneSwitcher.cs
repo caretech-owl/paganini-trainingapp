@@ -33,7 +33,7 @@ public class SceneSwitcher : MonoBehaviour
 
     public void GotoMyExploratoryRouteWalk()
     {
-        SceneManager.LoadScene(AppState.MyExploratoryRouteWalkScene);
+        SceneManager.LoadScene(AppState.MyExploratoryRouteWalkScenes);
     }
 
     public void GotoUserLogin()

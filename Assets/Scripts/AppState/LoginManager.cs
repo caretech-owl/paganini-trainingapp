@@ -30,7 +30,7 @@ public class LoginManager : MonoBehaviour
         }
         else if(SceneManager.GetActiveScene().name == AppState.UserLoginScene) 
         {
-            SceneManager.LoadScene(AppState.MyExploratoryRouteWalkScene);
+            SceneManager.LoadScene(AppState.MyExploratoryRouteWalkScenes);
         }        
     }
 
