@@ -20,17 +20,17 @@
     public static bool isIncognito = false;
 
     // Scenes
-    public static string UserLoginScene = "000UserLogin";
+    public static string UserLoginScene = "UserLogin";
+    public static string MyExploratoryRouteWalkScene = "MyExploratoryRouteWalk";
+    public static string ExploratoryRouteWalkRecodingScene = "ExploratoryRouteWalkRecording";
+
     public static string startScene = "01Start";
     public static string allOkScene = "02AllOk";
     public static string wegeFührungScene = "03Wegeführung";
     public static string pausedScene = "04Paused";
     public static string goalReachedScene = "05ZielErreicht";
-
     public static string videoHelpScene = "06VideoHelp";
-
     public static string settingsScene = "07Settings";
-
     public static string profileScene = "08ShowProfile";
     public static string overviewScene = "09Overview";
     // Current State

@@ -6,9 +6,9 @@ using UnityEngine.UI;
 public class SceneSwitcher : MonoBehaviour
 {
 
-    public void GotoErstbegehungDev()
+    public void GotoExploratoryRouteWalkRecording()
     {
-        SceneManager.LoadScene("ExploratoryRouteWalkRecording");
+        SceneManager.LoadScene(AppState.ExploratoryRouteWalkRecodingScene);
     }
     /*
     public void GotoMeineBegehungen()
@@ -31,13 +31,13 @@ public class SceneSwitcher : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
     }
 
-    public void GotoOverview()
+    public void GotoMyExploratoryRouteWalk()
     {
-        SceneManager.LoadScene("MyExploratoryRouteWalks");
+        SceneManager.LoadScene(AppState.MyExploratoryRouteWalkScene);
     }
 
     public void GotoUserLogin()
     {
-        SceneManager.LoadScene("UserLogin");
+        SceneManager.LoadScene(AppState.UserLoginScene);
     }
 }
