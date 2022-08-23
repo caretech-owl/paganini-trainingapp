@@ -6,12 +6,9 @@ using UnityEngine.UI;
 public class SceneSwitcher : MonoBehaviour
 {
 
+
+    
     public void GotoExploratoryRouteWalkRecording()
-    {
-        SceneManager.LoadScene(AppState.ExploratoryRouteWalkRecodingScene);
-    }
-    /*
-    public void GotoMeineBegehungen()
     {
         //get button id
         var list = EventSystem.current.currentSelectedGameObject.GetComponentsInChildren<Text>();
@@ -24,8 +21,8 @@ public class SceneSwitcher : MonoBehaviour
                     break;
             }
         }
-        SceneManager.LoadScene("MeineBegehungen");
-    }*/
+        SceneManager.LoadScene(AppState.ExploratoryRouteWalkRecodingScene);
+    }
     public void GoBack()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);

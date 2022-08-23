@@ -33,6 +33,7 @@ public class Address
         AddressAPI address = new AddressAPI
         {
             adr_id = this.Id,
+			user_id=AppState.currentUser.Id,
             adr_streetname = this.Streetname,
             adr_housenumber = this.Housenumber,
             adr_zipcode = this.Zipcode,

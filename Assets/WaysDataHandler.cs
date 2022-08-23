@@ -47,6 +47,13 @@ public class WaysDataHandler : MonoBehaviour
             
         }
         DBConnector.Instance.Startup();
+        getWaysfromAPI();
+    }
+
+
+    void getWaysfromAPI()
+    {
+        GetWege();
         Restorewege();
     }
 

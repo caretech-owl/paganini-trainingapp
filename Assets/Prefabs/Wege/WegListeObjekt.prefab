@@ -343,7 +343,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 930925469837159911}
-        m_MethodName: GotoMeineBegehungen
+        m_MethodName: GotoExploratoryRouteWalkRecording
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -399,7 +399,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -250, y: 107}
+  m_AnchoredPosition: {x: -200, y: 107}
   m_SizeDelta: {x: 454.14197, y: 135.2456}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &930925469936728971

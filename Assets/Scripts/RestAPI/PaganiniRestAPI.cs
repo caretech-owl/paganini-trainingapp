@@ -11,8 +11,8 @@ public class PaganiniRestAPI
     //getUserProfile  param: apitoken: ""
     public const string getUserProfile = serverURL + "userManagement/userProfile";
     //getUserBegehungen  param: apitoken: "", wegid: ""
-    public static string GetUserBegehungen(int wegid) { return serverURL + "weg/"+wegid.ToString()+"/begehung/"; }
+    public static string GetUserBegehungen(int wegid) { return serverURL + "way/"+wegid.ToString()+"/erw/"; }
     //getUserWege  param: apitoken: ""
-    public const string getUserWege = serverURL + "weg/";
+    public const string getUserWege = serverURL + "way/";
 
 }

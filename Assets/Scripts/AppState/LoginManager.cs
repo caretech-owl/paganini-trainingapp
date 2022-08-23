@@ -34,6 +34,11 @@ public class LoginManager : MonoBehaviour
         }        
     }
 
+    public void Logout()
+    {
+        DBConnector.Instance.TruncateTable<User>();
+        AppState.currentUser = null;
+    }
 
     void ReadUserFromDatabase()
     {

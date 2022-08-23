@@ -2,6 +2,7 @@
 public class AddressAPI
 {
 	public int adr_id;
+	public int user_id;
 	public string adr_streetname;
 	public string adr_housenumber;
 	public int adr_zipcode;

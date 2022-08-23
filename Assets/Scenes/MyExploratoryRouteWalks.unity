@@ -1023,7 +1023,7 @@ MonoBehaviour:
           m_BoolArgument: 1
         m_CallState: 2
       - m_Target: {fileID: 1126656359}
-        m_MethodName: GotoOverview
+        m_MethodName: GotoMyExploratoryRouteWalk
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -9305,7 +9305,12 @@ PrefabInstance:
     - target: {fileID: 2096885648542780905, guid: 0bb83e6b98e182e438c0f693e26f4ee4,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -270
+      value: -200
+      objectReference: {fileID: 0}
+    - target: {fileID: 2096885648542780905, guid: 0bb83e6b98e182e438c0f693e26f4ee4,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 82.377
       objectReference: {fileID: 0}
     - target: {fileID: 2712957443333111081, guid: 0bb83e6b98e182e438c0f693e26f4ee4,
         type: 3}
@@ -9469,13 +9474,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7563770863612874045, guid: 0bb83e6b98e182e438c0f693e26f4ee4,
         type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.4999991
+      objectReference: {fileID: 0}
+    - target: {fileID: 7563770863612874045, guid: 0bb83e6b98e182e438c0f693e26f4ee4,
+        type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -270
+      value: -229.54
       objectReference: {fileID: 0}
     - target: {fileID: 7563770863612874045, guid: 0bb83e6b98e182e438c0f693e26f4ee4,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 30
+      value: 30.000916
       objectReference: {fileID: 0}
     - target: {fileID: 8250727656276828467, guid: 0bb83e6b98e182e438c0f693e26f4ee4,
         type: 3}
