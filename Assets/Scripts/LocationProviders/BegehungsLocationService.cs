@@ -210,7 +210,7 @@ public class BegehungsLocationService : MonoBehaviour
     {
 
         
-        DBConnector.Instance.GetConnection().Execute("DELETE FROM Wegpunkt where beg_id=?", AppState.SelectedBegehung.ToString());
+        DBConnector.Instance.GetConnection().Execute("DELETE FROM Pathpoint where Id=?", AppState.SelectedBegehung.ToString());
       
             this.running = true;
       
