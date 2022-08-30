@@ -2,6 +2,10 @@
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using SQLite4Unity3d;
 
 public class SceneSwitcher : MonoBehaviour
 {
@@ -17,10 +21,26 @@ public class SceneSwitcher : MonoBehaviour
             switch (df.name)
             {
                 case "ID":
-                    AppState.SelectedWeg = int.Parse(df.text);
+                    AppState.SelectedBegehung = int.Parse(df.text);
+                    AppState.SelectedWeg  = int.Parse(df.text);
                     break;
             }
         }
+        // check if erw present 
+        List<Way> begehungen = DBConnector.Instance.GetConnection().Query<Way>("Select * FROM Way where Id="+AppState.SelectedWeg);
+        if(begehungen.Count!=0){
+            // TODO: add panel to ask for override
+
+            DBConnector.Instance.GetConnection().Execute("DELETE FROM ExploratoryRouteWalk where Id="+AppState.SelectedWeg);
+            DBConnector.Instance.GetConnection().Execute("DELETE FROM Pathpoint where Erw_id="+AppState.SelectedWeg);
+        }
+
+        ExploratoryRouteWalk walk=new ExploratoryRouteWalk();
+        walk.Id=AppState.SelectedWeg;
+        walk.Way_id=AppState.SelectedWeg;
+        walk.Date= DateTime.Now;
+        walk.Name= begehungen[0].Name;
+        DBConnector.Instance.GetConnection().InsertOrReplace(walk);
         SceneManager.LoadScene(AppState.ExploratoryRouteWalkRecodingScene);
     }
     public void GoBack()

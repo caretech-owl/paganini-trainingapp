@@ -40,6 +40,7 @@ public class WaysDataHandler : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        Debug.Log(Application.persistentDataPath);
         AppState.SelectedWeg = -1;
         ///debug
         if (AppState.currentUser == null)
@@ -80,7 +81,6 @@ public class WaysDataHandler : MonoBehaviour
     public void DeleteLocalData()
     {
         DBConnector.Instance.GetConnection().DeleteAll<Way>();
-        ways = null;
         Restorewege();
     }
 

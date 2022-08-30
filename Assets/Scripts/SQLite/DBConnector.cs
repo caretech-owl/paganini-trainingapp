@@ -33,6 +33,7 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
 
     private void ConnectToDatabase(string dbPath)
     {
+        Debug.Log("ConnectToDatabase");
         this.connection = new SQLiteConnection(dbPath, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create);
     }
 

@@ -24,7 +24,7 @@ public class BegehungsLocationService : MonoBehaviour
 
         if (AppState.SelectedBegehung != -1)
         {
-            var list=DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * from Begehung where beg_id=" + AppState.SelectedBegehung);
+            var list=DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * from ExploratoryRouteWalk where Id=" + AppState.SelectedBegehung);
             foreach(ExploratoryRouteWalk b in list)
             {
                 GameObject.Find("BegehungName").GetComponent<Text>().text = b.Name;
@@ -170,7 +170,7 @@ public class BegehungsLocationService : MonoBehaviour
         if (AppState.recording&&!AppState.pausedRec)
         {
             DBConnector.Instance.GetConnection().Insert(GetCurrentWegpunkt());
-            count = DBConnector.Instance.GetConnection().Query<Pathpoint>("SELECT * FROM Wegpunkt where beg_id=?", AppState.SelectedBegehung.ToString()).Count;
+            count = DBConnector.Instance.GetConnection().Query<Pathpoint>("SELECT * FROM Pathpoint where beg_id=?", AppState.SelectedBegehung.ToString()).Count;
         }
     }
 
@@ -200,6 +200,7 @@ public class BegehungsLocationService : MonoBehaviour
     {
         Pathpoint currentLocation = GetCurrentWegpunkt();
         currentLocation.POIType = poiType;
+        Debug.Log(currentLocation);
         DBConnector.Instance.GetConnection().Insert(currentLocation);
     }
 
@@ -210,7 +211,7 @@ public class BegehungsLocationService : MonoBehaviour
     {
 
         
-        DBConnector.Instance.GetConnection().Execute("DELETE FROM Pathpoint where Id=?", AppState.SelectedBegehung.ToString());
+        DBConnector.Instance.GetConnection().Execute("DELETE FROM Pathpoint where Erw_id=?", AppState.SelectedBegehung.ToString());
       
             this.running = true;
       

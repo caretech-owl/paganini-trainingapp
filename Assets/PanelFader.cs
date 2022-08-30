@@ -44,7 +44,7 @@ public class PanelFader : MonoBehaviour
 
         }
 
-        Debug.Log("PanelFader => initVerticalPosition: " + initVerticalPosition);
+        //Debug.Log("PanelFader => initVerticalPosition: " + initVerticalPosition);
 
 
     }

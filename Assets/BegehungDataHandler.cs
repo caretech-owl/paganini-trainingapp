@@ -47,7 +47,7 @@ public class BegehungDataHandler : MonoBehaviour
     /// </summary>
     void Restorebegehungen()
     {
-        List<ExploratoryRouteWalk> begehungen = DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * FROM Begehung");
+        List<ExploratoryRouteWalk> begehungen = DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * FROM ExploratoryRouteWalk");
         if (begehungen.Capacity > 0)
             this.begehungen = begehungen;
         else
