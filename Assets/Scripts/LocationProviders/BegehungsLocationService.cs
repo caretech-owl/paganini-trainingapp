@@ -27,7 +27,13 @@ public class BegehungsLocationService : MonoBehaviour
             var list=DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * from ExploratoryRouteWalk where Id=" + AppState.SelectedBegehung);
             foreach(ExploratoryRouteWalk b in list)
             {
-                GameObject.Find("BegehungName").GetComponent<Text>().text = b.Name;
+                GameObject obj = GameObject.Find("BegehungName");
+                if (obj != null)
+                {
+                    obj.GetComponent<Text>().text = b.Name;
+                } else {
+                    Debug.Log("Component BegehungName not present!");
+                }
             }
         }
 #if UNITY_ANDROID
