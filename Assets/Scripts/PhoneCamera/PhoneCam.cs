@@ -134,7 +134,7 @@ public class PhoneCam : MonoBehaviour
                 Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, erm.BegehungName));
             }
 
-            string VidDir= Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, erm.BegehungName ,"/Videos")).FullName;
+            string VidDir= Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, erm.BegehungName ,"Videos")).FullName;
             File.Move(path, VidDir+filename);
      
         }
@@ -146,12 +146,15 @@ public class PhoneCam : MonoBehaviour
     {
         if (AppState.recording)
         {
-            if(!Directory.Exists(Path.Combine(Application.persistentDataPath, erm.BegehungName))){
-                Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, erm.BegehungName));
+            string ImgDir = Path.Combine(Application.persistentDataPath, erm.BegehungName, "Fotos");
+            if (!Directory.Exists(ImgDir)){
+                Directory.CreateDirectory(ImgDir);
             }
-            Debug.Log(Path.Combine(Application.persistentDataPath, erm.BegehungName));
-            string ImgDir = Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, erm.BegehungName , "/Fotos")).FullName;
-            Debug.Log(ImgDir);
+            //Debug.Log(ImgDir);
+            //ImgDir = Path.Combine(ImgDir, "Fotos");
+            //Directory.CreateDirectory(ImgDir);
+            //Debug.Log(ImgDir);
+
             JPGRecorder rec = new JPGRecorder(videoWidth, videoHeight);
             rec.CommitFrame(pixelBuffer);
             var path = await rec.FinishWriting();

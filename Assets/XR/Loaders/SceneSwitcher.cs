@@ -27,8 +27,8 @@ public class SceneSwitcher : MonoBehaviour
             }
         }
         // check if erw present 
-        List<Way> begehungen = DBConnector.Instance.GetConnection().Query<Way>("Select * FROM Way where Id="+AppState.SelectedWeg);
-        if(begehungen.Count!=0){
+        List<Way> ways = DBConnector.Instance.GetConnection().Query<Way>("Select * FROM Way where Id="+AppState.SelectedWeg);
+        if(ways.Count!=0){
             // TODO: add panel to ask for override
 
             DBConnector.Instance.GetConnection().Execute("DELETE FROM ExploratoryRouteWalk where Id="+AppState.SelectedWeg);
@@ -39,7 +39,10 @@ public class SceneSwitcher : MonoBehaviour
         walk.Id=AppState.SelectedWeg;
         walk.Way_id=AppState.SelectedWeg;
         walk.Date= DateTime.Now;
-        walk.Name= begehungen[0].Name;
+        walk.Name= ways[0].Name;
+        // We set the current exploratory walk
+        AppState.currentBegehung = walk.Name;
+
         DBConnector.Instance.GetConnection().InsertOrReplace(walk);
         SceneManager.LoadScene(AppState.ExploratoryRouteWalkRecodingScene);
     }
