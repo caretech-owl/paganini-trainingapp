@@ -80,7 +80,9 @@ public class WaysDataHandler : MonoBehaviour
     /// </summary>
     public void DeleteLocalData()
     {
-        DBConnector.Instance.GetConnection().DeleteAll<Way>();
+        // We delete everything except what hasn't been synchronised yet
+        //DBConnector.Instance.GetConnection().DeleteAll<Way>();
+        DBConnector.Instance.GetConnection().Execute("Delete from Way where Id >=0");
         Restorewege();
     }
 
@@ -127,10 +129,15 @@ public class WaysDataHandler : MonoBehaviour
             w.Id = LastWegeId + 1;
         }
 
+        // We assign negative ID, so that we can spot it later as unsynched
+        // TODO: add a proper 'status' flag 
+        w.Id = - w.Id;
+
         ways.Add(w);
         SaveUserData();
         Restorewege();
 
+        AppState.SelectedWeg = w.Id;
         AppState.currentBegehung = w.Name;
     }
 
