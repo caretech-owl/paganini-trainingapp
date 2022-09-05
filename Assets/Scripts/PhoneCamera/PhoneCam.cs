@@ -142,6 +142,15 @@ public class PhoneCam : MonoBehaviour
         Debug.Log(Application.persistentDataPath);
     }
 
+
+    public void CancelRecording()
+    {
+        //TODO: Delete way, if created, and related files
+
+        string ImgDir = Path.Combine(Application.persistentDataPath, erm.BegehungName, "Fotos");
+    }
+
+
     public async void TakePicture()
     {
         if (AppState.recording)

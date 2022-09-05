@@ -1,4 +1,6 @@
-﻿public static class AppState
+﻿using UnityEngine;
+
+public static class AppState
 {
 
     public static User currentUser=null;
@@ -38,5 +40,7 @@
     public static string currentScene = "";
     public static string lastScene = "";
     public static string currentBegehung = "";
+
+    public static int screenSleepTimeout = Screen.sleepTimeout;
 
 }

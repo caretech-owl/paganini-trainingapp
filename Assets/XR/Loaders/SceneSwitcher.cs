@@ -45,6 +45,9 @@ public class SceneSwitcher : MonoBehaviour
 
         DBConnector.Instance.GetConnection().InsertOrReplace(walk);
         SceneManager.LoadScene(AppState.ExploratoryRouteWalkRecodingScene);
+
+        // Prevent screen from dimming
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
     }
     public void GoBack()
     {
@@ -54,10 +57,16 @@ public class SceneSwitcher : MonoBehaviour
     public void GotoMyExploratoryRouteWalk()
     {
         SceneManager.LoadScene(AppState.MyExploratoryRouteWalkScenes);
+
+        // Restore default screen dimming timeout
+        Screen.sleepTimeout = AppState.screenSleepTimeout;
     }
 
     public void GotoUserLogin()
     {
         SceneManager.LoadScene(AppState.UserLoginScene);
+
+        // Restore default screen dimming timeout
+        Screen.sleepTimeout = AppState.screenSleepTimeout;
     }
 }
