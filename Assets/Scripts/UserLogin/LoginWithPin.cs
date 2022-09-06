@@ -28,6 +28,7 @@ public class LoginWithPin : MonoBehaviour
     private void GetAuthFailed(string errorMessage)
     {
         Debug.LogError(errorMessage);
+        Assets.ErrorHandlerSingleton.GetErrorHandler().AddNewError("AuthFailed", errorMessage);
     }
 
     private void GetUserProfileSucceed(UserAPI user)
