@@ -239,6 +239,7 @@ public class WaysDataHandler : MonoBehaviour
 
             if (WegePrefab != null)
             {
+                int ytransform = -100;
                 foreach (Way w in ways)
                 {
                     var neu = Instantiate(WegePrefab);
@@ -269,7 +270,9 @@ public class WaysDataHandler : MonoBehaviour
                         }
                         neu.transform.SetParent(WegeList.transform);
                         neu.transform.localScale = new Vector3(1, 1, 1);
-                        neu.transform.localPosition = new Vector3(neu.transform.localPosition.x, neu.transform.localPosition.y, 1);
+                        neu.transform.localPosition = new Vector3(50, ytransform, 1);
+
+                        ytransform -= 200;
                     }
 
                     LastWegeId = w.Id;
