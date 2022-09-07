@@ -112,6 +112,7 @@ public class WaysDataHandler : MonoBehaviour
     /// </summary>
     public void AddWay()
     {
+        // TODO: Save type of source and destination 
         var w = new Way
         {
             Name = WegName.text,
@@ -222,6 +223,10 @@ public class WaysDataHandler : MonoBehaviour
     private void GetWegeFailed(string errorMessage)
     {
         Debug.LogError(errorMessage);
+
+        // TODO: Either we have no connection, or the token is no longer valid.
+        // If no longer valid, we should forward the user to the login screen
+        Assets.ErrorHandlerSingleton.GetErrorHandler().AddNewError("Error Loading Ways", errorMessage);
     }
 
     /// <summary>
