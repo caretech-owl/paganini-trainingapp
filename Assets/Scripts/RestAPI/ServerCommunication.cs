@@ -77,7 +77,22 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
 
         yield return www.SendWebRequest();
 
-        if (www.isNetworkError || www.isHttpError)
+        if (www.isNetworkError)
+        {
+            Debug.LogError(www.error);
+            callbackOnFail?.Invoke("NetworkError");
+        }
+        else if (www.isHttpError && www.responseCode >= 500)
+        {
+            Debug.LogError(www.error);
+            callbackOnFail?.Invoke("ServerError");
+        }
+        else if (www.isHttpError && www.responseCode == 401)
+        {
+            Debug.LogError(www.error);
+            callbackOnFail?.Invoke("Unauthorised");
+        }
+        else if (www.isHttpError)
         {
             Debug.LogError(www.error);
             callbackOnFail?.Invoke(www.error);
@@ -148,7 +163,7 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
         Header[] header = new Header[1];
         header[0].name = "apitoken";
         header[0].value = apitoken;
-        Debug.Log(PaganiniRestAPI.getUserWege);
+        Debug.Log(PaganiniRestAPI.getUserWege + " apitoken: " + apitoken);
         SendRequest(PaganiniRestAPI.getUserWege, callbackOnSuccess, callbackOnFail, header);
     }
 
