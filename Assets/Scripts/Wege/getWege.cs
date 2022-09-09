@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
 using TMPro;
 
+//TODO: Is this class used?
 public class getWege : MonoBehaviour
 {
 
@@ -91,10 +92,10 @@ public class getWege : MonoBehaviour
         //wegeList.Add(new Weg() { weg_id = "Test Id3", start = "Paris", ziel = "Bielefeld", weg_name = "Test Name", weg_beschreibung = "Dies ist eine super Beschreibung" });
         //wegeList.Add(new Weg() { weg_id = "Test Id4", start = "Berlin", ziel = "Bielefeld", weg_name = "Test Name", weg_beschreibung = "Dies ist eine super Beschreibung" });
 
-        wegeList.Add(new Way() { Id = 1, Start = 1, Destination = 2, Name = "Test Name", Description = "Dies ist eine super Beschreibung" });
-        wegeList.Add(new Way() { Id = 2, Start = 3, Destination = 4, Name = "Test Name", Description = "Dies ist eine super Beschreibung" });
-        wegeList.Add(new Way() { Id = 3, Start = 5, Destination = 6, Name = "Test Name", Description = "Dies ist eine super Beschreibung" });
-        wegeList.Add(new Way() { Id = 4, Start = 7, Destination = 8, Name = "Test Name", Description = "Dies ist eine super Beschreibung" });
+        //wegeList.Add(new Way() { Id = 1, Start = 1, Destination = 2, Name = "Test Name", Description = "Dies ist eine super Beschreibung" });
+        //wegeList.Add(new Way() { Id = 2, Start = 3, Destination = 4, Name = "Test Name", Description = "Dies ist eine super Beschreibung" });
+        //wegeList.Add(new Way() { Id = 3, Start = 5, Destination = 6, Name = "Test Name", Description = "Dies ist eine super Beschreibung" });
+        //wegeList.Add(new Way() { Id = 4, Start = 7, Destination = 8, Name = "Test Name", Description = "Dies ist eine super Beschreibung" });
 
 
         return wegeList;

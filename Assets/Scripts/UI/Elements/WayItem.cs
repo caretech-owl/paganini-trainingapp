@@ -1,21 +1,39 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.Events;
+
+[System.Serializable]
+public class WayEvent : UnityEvent<Way>
+{
+}
+
 
 public class WayItem : MonoBehaviour
 {
 
-    public Button infoContainer;
+    public LandmarkIcon startLandmark;
+    public LandmarkIcon destinationLandmark;
 
-    public Text info;
+    public TMPro.TMP_Text startName;
+    public TMPro.TMP_Text destinationName;
 
-    public Button startButton;
+    public Button selectionButton;
+
+
+
+    public WayEvent OnSelected;
+
+    private Way way;
 
     // Start is called before the first frame update
     void Start()
     {
+
+        selectionButton.onClick.AddListener(waySelected);
 
     }
 
@@ -25,21 +43,42 @@ public class WayItem : MonoBehaviour
 
     }
 
-    public void StartButtonOnClick(Button selectedGameObject)
+    public void fillWayItem(Way w)
     {
-        var selectedItem = selectedGameObject.transform.parent;
-        this.OnClick(int.Parse(selectedItem.name));
+        startName.text = w.Start;
+        destinationName.text = w.Destination;
 
-    }
-    public void ListElementOnClick(Button selectedGameObject)
-    {
-        var selectedItem = selectedGameObject.transform.parent;
-        this.OnClick(int.Parse(selectedItem.name));
+        startLandmark.selectedLandmarkType = (LandmarkIcon.LandmarkType) Int32.Parse(w.StartType);
+        destinationLandmark.selectedLandmarkType = (LandmarkIcon.LandmarkType)Int32.Parse(w.DestinationType);
+
+        this.way = w;
     }
 
-    public void OnClick(int wegeId)
+
+    private void waySelected()
     {
-        AppState.SelectedWeg = wegeId;
-        SceneManager.LoadScene(AppState.allOkScene);
+        Debug.Log("Way selected, id: " + way.Id);
+        if (OnSelected != null)
+        {
+            OnSelected.Invoke(way);
+        }
     }
+
+    //public void StartButtonOnClick(Button selectedGameObject)
+    //{
+    //    var selectedItem = selectedGameObject.transform.parent;
+    //    this.OnClick(int.Parse(selectedItem.name));
+
+    //}
+    //public void ListElementOnClick(Button selectedGameObject)
+    //{
+    //    var selectedItem = selectedGameObject.transform.parent;
+    //    this.OnClick(int.Parse(selectedItem.name));
+    //}
+
+    //public void OnClick(int wegeId)
+    //{
+    //    AppState.SelectedWeg = wegeId;
+    //    SceneManager.LoadScene(AppState.allOkScene);
+    //}
 }

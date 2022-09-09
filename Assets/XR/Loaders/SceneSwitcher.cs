@@ -49,6 +49,37 @@ public class SceneSwitcher : MonoBehaviour
         // Prevent screen from dimming
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
     }
+
+
+
+    public void GotoExploratoryRouteWalkRecording(Way way)
+    {
+        Debug.Log("===================I'm getting the way as a parameter!");
+
+        AppState.SelectedBegehung = way.Id;
+        AppState.SelectedWeg = way.Id;
+
+        DBConnector.Instance.GetConnection().Execute("DELETE FROM ExploratoryRouteWalk where Id=" + AppState.SelectedWeg);
+        DBConnector.Instance.GetConnection().Execute("DELETE FROM Pathpoint where Erw_id=" + AppState.SelectedWeg);
+
+
+        ExploratoryRouteWalk walk = new ExploratoryRouteWalk();
+        walk.Id = way.Id;
+        walk.Way_id = way.Id;
+        walk.Date = DateTime.Now;
+        walk.Name = way.Name;
+        // We set the current exploratory walk
+        AppState.currentBegehung = walk.Name;
+
+        DBConnector.Instance.GetConnection().InsertOrReplace(walk);
+        SceneManager.LoadScene(AppState.ExploratoryRouteWalkRecodingScene);
+
+        // Prevent screen from dimming
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
+    }
+
+
+
     public void GoBack()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);

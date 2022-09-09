@@ -8,9 +8,11 @@ public class WaysDataHandler : MonoBehaviour
     /// <summary>
     /// Game Object to Display Wege in
     /// </summary>
-    public GameObject WegeList;
 
-    public GameObject WegePrefab;
+
+    public GameObject WayListView;
+    private WayList WayListHandler;
+
 
     private List<Way> ways;
 
@@ -21,6 +23,7 @@ public class WaysDataHandler : MonoBehaviour
     public TMPro.TMP_InputField WegZiel;
     public int WegStartType;
     public int WegZielType;
+
 
 
     public TMPro.TMP_Text StartPanelWegStart;
@@ -40,12 +43,18 @@ public class WaysDataHandler : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        Debug.Log("This is the view associated: " + WayListView.ToString());
+
+        WayListHandler = WayListView.GetComponent<WayList>();
+
+
+
         Debug.Log(Application.persistentDataPath);
         AppState.SelectedWeg = -1;
         ///debug
         if (AppState.currentUser == null)
         {
-            
+
         }
         DBConnector.Instance.Startup();
         getWaysfromAPI();
@@ -116,12 +125,15 @@ public class WaysDataHandler : MonoBehaviour
         var w = new Way
         {
             Name = WegName.text,
-            Start = WegStartType,
-            Description = WegStart.text + "->" + WegZiel.text,
-            Destination = WegZielType
+            Start = WegStart.text,
+            StartType = WegStartType.ToString(),
+            Destination = WegZiel.text,
+            DestinationType = WegZielType.ToString(),
+            Description = WegStart.text + "->" + WegZiel.text
+            
         };
 
-        if (ways == null) { 
+        if (ways == null) {
             ways = new List<Way>();
             w.Id = 1;
         }
@@ -132,7 +144,7 @@ public class WaysDataHandler : MonoBehaviour
 
         // We assign negative ID, so that we can spot it later as unsynched
         // TODO: add a proper 'status' flag 
-        w.Id = - w.Id;
+        w.Id = -w.Id;
 
         ways.Add(w);
         SaveUserData();
@@ -232,57 +244,26 @@ public class WaysDataHandler : MonoBehaviour
     /// <summary>
     /// Prints the Begehungen to the GUI
     /// </summary>
+
     private void DisplayWege()
     {
-        if (this.ways != null)
+
+        if (this.ways == null || this.ways.Capacity == 0)
         {
-            //deletes list
-            foreach (Transform child in WegeList.transform)
+            WayListHandler.ShowBlankState();        
+        }
+        else
+        { 
+            WayListHandler.ClearList();
+
+            foreach (Way w in ways)
             {
-                Destroy(child.gameObject);
+                WayListHandler.AddWayItem(w);
+                LastWegeId = w.Id;
             }
 
-            if (WegePrefab != null)
-            {
-                int ytransform = -150;
-                foreach (Way w in ways)
-                {
-                    var neu = Instantiate(WegePrefab);
-                    if (WegeList != null)
-                    {
-                        var list = neu.GetComponentsInChildren<Text>();
-                        foreach (var df in list)
-                        {
-                            switch (df.name)
-                            {
-                                case "Name":
-                                    df.text = w.Name;
-                                    break;
-                                case "Start":
-                                    df.text = w.Start.ToString();
-                                    break;
-                                case "Ziel":
-                                    df.text = w.Destination.ToString();
-                                    break;
-                                case "Beschreibung":
-                                    df.text = w.Description;
-                                    break;
-                                case "ID":
-                                    df.text = w.Id.ToString();
-                                    break;
-
-                            }
-                        }
-                        neu.transform.SetParent(WegeList.transform);
-                        neu.transform.localScale = new Vector3(1, 1, 1);
-                        neu.transform.localPosition = new Vector3(400, ytransform, 1);
-
-                        ytransform -= 300;
-                    }
-
-                    LastWegeId = w.Id;
-                }
-            }
+            WayListHandler.ShowWayList();
         }
     }
+
 }

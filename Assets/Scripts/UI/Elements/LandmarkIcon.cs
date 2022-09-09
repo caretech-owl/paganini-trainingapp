@@ -35,15 +35,10 @@ public class LandmarkIcon : MonoBehaviour
     // activates the selected landmark type
     void displayLandmarkType(LandmarkType selected)
     {
-        Debug.Log(gameObject.transform.childCount);
         for (int i=0; i< gameObject.transform.childCount; i++)
         {
             Transform ch = gameObject.transform.GetChild(i);
-            Debug.Log(ch.name);
-
             ch.gameObject.SetActive(ch.name == selected.ToString());
-            Debug.Log(ch.name + "--" + selected.ToString() + "=== " + (ch.name == selected.ToString()));
-
         }
 
         activeLandmarkType = selected;

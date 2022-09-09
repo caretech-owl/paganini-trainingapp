@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
+
+
 
 public class WayList : MonoBehaviour
 {
@@ -11,6 +14,10 @@ public class WayList : MonoBehaviour
     public GameObject content;
 
     public GameObject wayItemPrefab;
+
+    public GameObject blankState;
+
+    public WayEvent onWaySelected;
 
     void Start()
     {
@@ -23,26 +30,59 @@ public class WayList : MonoBehaviour
 
     }
 
-    public void CreateWayEntry(Way way, Vector3 position)
+
+    public void ShowBlankState()
     {
-        WayItem item = this.CreateWayItem(this.wayItemPrefab, way);
-        item.transform.SetParent(this.content.transform, false);
+        blankState.SetActive(true);
+        scrollView.SetActive(false);
     }
 
-    private WayItem CreateWayItem(GameObject wayItemPrefab, Way way)
+    public void ShowWayList()
     {
-        WayItem item = Instantiate(wayItemPrefab).GetComponent<WayItem>();
-        item.name = way.Id.ToString();
-
-        //set Info Text
-        item.info.text = way.Start.ToString() + " bis " + way.Destination.ToString();
-
-        // store wege id in gameobject
-        item.infoContainer.name = way.Id.ToString();
-
-        // onClick
-        item.infoContainer.onClick.AddListener(() => item.ListElementOnClick(item.infoContainer));
-        item.startButton.onClick.AddListener(() => item.StartButtonOnClick(item.startButton));
-        return item;
+        blankState.SetActive(false);
+        scrollView.SetActive(true);
     }
+
+    public void AddWayItem(Way w)
+    {
+
+        var neu = Instantiate(wayItemPrefab, content.transform);
+
+        WayItem item = neu.GetComponent<WayItem>();
+        item.fillWayItem(w);
+        item.OnSelected = onWaySelected;
+
+    }
+
+    public void ClearList()
+    {
+        foreach (Transform child in content.transform)
+        {
+            Destroy(child.gameObject);
+        }
+    }
+
+
+    //public void CreateWayEntry(Way way, Vector3 position)
+    //{
+    //    WayItem item = this.CreateWayItem(this.wayItemPrefab, way);
+    //    item.transform.SetParent(this.content.transform, false);
+    //}
+
+    //private WayItem CreateWayItem(GameObject wayItemPrefab, Way way)
+    //{
+    //    WayItem item = Instantiate(wayItemPrefab).GetComponent<WayItem>();
+    //    item.name = way.Id.ToString();
+
+    //    //set Info Text
+    //    item.info.text = way.Start.ToString() + " bis " + way.Destination.ToString();
+
+    //    // store wege id in gameobject
+    //    item.infoContainer.name = way.Id.ToString();
+
+    //    // onClick
+    //    item.infoContainer.onClick.AddListener(() => item.ListElementOnClick(item.infoContainer));
+    //    item.startButton.onClick.AddListener(() => item.StartButtonOnClick(item.startButton));
+    //    return item;
+    //}
 }
