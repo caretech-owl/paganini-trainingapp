@@ -11,12 +11,21 @@ public class Way
     public string DestinationType { set; get; }
     public string Name { set; get; }
 	public string Description { set; get; }
+    public int Status { set; get; }
 
-	public override string ToString()
+
+    public enum WayStatus
+    {
+        Local = 0,
+		FromAPI = 1
+    }
+
+
+    public override string ToString()
 	{
 		return string.Format("[Weg: way_id={0}, way_start={1}, way_destination={2}, "
-			+"way_start_type {3}, way_destination_type={4}, way_name={5},  way_description={6}]",
-			Id, Start, Destination, StartType, DestinationType, Name, Description);
+			+"way_start_type {3}, way_destination_type={4}, way_name={5},  way_description={6}, status={7}]",
+			Id, Start, Destination, StartType, DestinationType, Name, Description, Status);
 	}
 
 	public Way() { }
@@ -29,6 +38,7 @@ public class Way
         this.DestinationType = way.way_destination.adr_icon;
         this.Name = way.way_name;
 		this.Description = way.way_description;
+		this.Status = (int) WayStatus.FromAPI;
 	}
 
 	public WayAPI ToAPI()

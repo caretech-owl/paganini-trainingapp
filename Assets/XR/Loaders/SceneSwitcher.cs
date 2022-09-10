@@ -11,7 +11,7 @@ public class SceneSwitcher : MonoBehaviour
 {
 
 
-    
+    // TODO: Check for references adn replace for the parameterised version
     public void GotoExploratoryRouteWalkRecording()
     {
         //get button id
@@ -54,7 +54,6 @@ public class SceneSwitcher : MonoBehaviour
 
     public void GotoExploratoryRouteWalkRecording(Way way)
     {
-        Debug.Log("===================I'm getting the way as a parameter!");
 
         AppState.SelectedBegehung = way.Id;
         AppState.SelectedWeg = way.Id;
@@ -78,6 +77,20 @@ public class SceneSwitcher : MonoBehaviour
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
     }
 
+    public void CancelRecordingAndGoMyExploratoryRouteWalk()
+    {
+
+        DBConnector.Instance.GetConnection().Execute("DELETE FROM ExploratoryRouteWalk where Id=" + AppState.SelectedWeg);
+        DBConnector.Instance.GetConnection().Execute("DELETE FROM Pathpoint where Erw_id=" + AppState.SelectedWeg);
+
+        // We delete the way if it's local
+        DBConnector.Instance.GetConnection().Execute("DELETE FROM Way where Id=" + AppState.SelectedWeg + " and status = " + (int) Way.WayStatus.Local);
+
+
+
+
+        GotoMyExploratoryRouteWalk();
+    }
 
 
     public void GoBack()

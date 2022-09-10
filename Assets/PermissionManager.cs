@@ -10,27 +10,37 @@ public class PermissionManager : MonoBehaviour
     public GameObject PermissionButtonMikrophone;
     public GameObject PermissionButtonGPS;
 
+    public GameObject LandingPagePanel;
+
 
     // Start is called before the first frame update
     void Start()
     {
 #if PLATFORM_ANDROID
+        bool askPermission = false;
         if (!Permission.HasUserAuthorizedPermission(Permission.Microphone))
         {
             PermissionButtonMikrophone.SetActive(true);
-            PermissionPanel.SetActive(true);
+            askPermission = true;
         }
 
         if (!Permission.HasUserAuthorizedPermission(Permission.Camera))
         {
             PermissionButtonCamera.SetActive(true);
-            PermissionPanel.SetActive(true);
+            askPermission = true;
         }
         if (!Permission.HasUserAuthorizedPermission(Permission.FineLocation))
         {
-            PermissionButtonGPS.SetActive(true);
-            PermissionPanel.SetActive(true);
+            PermissionButtonGPS.SetActive(true);            
+            askPermission = true;
         }
+
+        if (askPermission)
+        {
+            PermissionPanel.SetActive(true);
+            LandingPagePanel.SetActive(false);
+        }
+
 #endif
     }
 
@@ -42,7 +52,6 @@ public class PermissionManager : MonoBehaviour
         {
             PermissionButtonMikrophone.SetActive(false);
         }
-
         if (Permission.HasUserAuthorizedPermission(Permission.Camera))
         {
             PermissionButtonCamera.SetActive(false);
@@ -68,4 +77,5 @@ public class PermissionManager : MonoBehaviour
     {
         Permission.RequestUserPermission(Permission.FineLocation);
     }
+
 }

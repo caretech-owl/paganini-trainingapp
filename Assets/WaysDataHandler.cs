@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -43,10 +44,8 @@ public class WaysDataHandler : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Debug.Log("This is the view associated: " + WayListView.ToString());
 
         WayListHandler = WayListView.GetComponent<WayList>();
-
 
 
         Debug.Log(Application.persistentDataPath);
@@ -91,7 +90,7 @@ public class WaysDataHandler : MonoBehaviour
     {
         // We delete everything except what hasn't been synchronised yet
         //DBConnector.Instance.GetConnection().DeleteAll<Way>();
-        DBConnector.Instance.GetConnection().Execute("Delete from Way where Id >=0");
+        DBConnector.Instance.GetConnection().Execute("Delete from Way where Status =" + ((int)Way.WayStatus.FromAPI));
         Restorewege();
     }
 
@@ -121,7 +120,6 @@ public class WaysDataHandler : MonoBehaviour
     /// </summary>
     public void AddWay()
     {
-        // TODO: Save type of source and destination 
         var w = new Way
         {
             Name = WegName.text,
@@ -129,22 +127,17 @@ public class WaysDataHandler : MonoBehaviour
             StartType = WegStartType.ToString(),
             Destination = WegZiel.text,
             DestinationType = WegZielType.ToString(),
-            Description = WegStart.text + "->" + WegZiel.text
-            
+            Description = WegStart.text + "->" + WegZiel.text,
+            Status = (int) Way.WayStatus.Local            
         };
 
         if (ways == null) {
             ways = new List<Way>();
-            w.Id = 1;
-        }
-        else
-        {
-            w.Id = LastWegeId + 1;
         }
 
-        // We assign negative ID, so that we can spot it later as unsynched
-        // TODO: add a proper 'status' flag 
-        w.Id = -w.Id;
+        // safely create an ID, as the seconds since 2010        
+        TimeSpan t = (DateTime.UtcNow - new DateTime(2010, 1, 1));
+        w.Id = - (int)t.TotalSeconds;
 
         ways.Add(w);
         SaveUserData();
