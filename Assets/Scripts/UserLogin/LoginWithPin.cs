@@ -3,12 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.UI;
 
 public class LoginWithPin : MonoBehaviour
 {
     public GameObject textinput;
+    public Button LoginButton;
+
     public void SendPinToAPI()
     {
+        LoginButton.interactable = false;
         ServerCommunication.Instance.GetUserAuthentification(GetAuthSucceed, GetAuthFailed, System.Int32.Parse(textinput.GetComponent<TMP_InputField>().text));
     }
 
@@ -28,7 +32,11 @@ public class LoginWithPin : MonoBehaviour
     private void GetAuthFailed(string errorMessage)
     {
         Debug.LogError(errorMessage);
+        LoginButton.interactable = true;
+
         Assets.ErrorHandlerSingleton.GetErrorHandler().AddNewError("AuthFailed", errorMessage);
+
+        
     }
 
     private void GetUserProfileSucceed(UserAPI user)
@@ -41,6 +49,7 @@ public class LoginWithPin : MonoBehaviour
 
     private void GetUserProfileFailed(string errorMessage)
     {
+        LoginButton.interactable = true;
         Debug.LogError(errorMessage);
     }
 }

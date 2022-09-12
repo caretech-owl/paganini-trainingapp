@@ -22,28 +22,24 @@ public class WaysDataHandler : MonoBehaviour
     public TMPro.TMP_InputField WegName;
     public TMPro.TMP_InputField WegStart;
     public TMPro.TMP_InputField WegZiel;
-    public int WegStartType;
-    public int WegZielType;
 
-
+    public GameObject StartIconsToggleGroup;
+    public GameObject DestinationIconsToggleGroup;
 
     public TMPro.TMP_Text StartPanelWegStart;
     public TMPro.TMP_Text StartPanelWegZiel;
 
-    public GameObject StartPanelIconStartTrain;
-    public GameObject StartPanelIconStartCoffee;
-    public GameObject StartPanelIconStartWork;
-    public GameObject StartPanelIconStartHome;
+    public GameObject StartPanelIconStart;
+    public GameObject StartPanelIconZiel;
 
-    public GameObject StartPanelIconZielTrain;
-    public GameObject StartPanelIconZielCoffee;
-    public GameObject StartPanelIconZielWork;
-    public GameObject StartPanelIconZielHome;
+    //TODO: get from parent
+    public LoginManager LoginHandler;
 
 
     // Start is called before the first frame update
     void Start()
     {
+        //LoginHandler = gameObject.transform.GetComponentInParent<LoginManager>();
 
         WayListHandler = WayListView.GetComponent<WayList>();
 
@@ -120,13 +116,17 @@ public class WaysDataHandler : MonoBehaviour
     /// </summary>
     public void AddWay()
     {
+
+        LandmarkToggleList startIcon = StartIconsToggleGroup.GetComponent<LandmarkToggleList>();
+        LandmarkToggleList destinationIcon = DestinationIconsToggleGroup.GetComponent<LandmarkToggleList>();
+
         var w = new Way
         {
             Name = WegName.text,
             Start = WegStart.text,
-            StartType = WegStartType.ToString(),
+            StartType = ((int) startIcon.SelectedLandMarkType).ToString(),
             Destination = WegZiel.text,
-            DestinationType = WegZielType.ToString(),
+            DestinationType = ((int)destinationIcon.SelectedLandMarkType).ToString(),
             Description = WegStart.text + "->" + WegZiel.text,
             Status = (int) Way.WayStatus.Local            
         };
@@ -147,59 +147,22 @@ public class WaysDataHandler : MonoBehaviour
         AppState.currentBegehung = w.Name;
     }
 
-    /// <summary>
-    /// Set type of start
-    /// </summary>
-    public void SetWayStartType(int type)
-    {
-        WegStartType = type;
-    }
-
-    /// <summary>
-    /// Set type of destination
-    /// </summary>
-    public void SetWayDestinationType(int type)
-    {
-        WegZielType = type;
-    }
 
     /// <summary>
     /// Set up start panel with given information
     /// </summary>
     public void SetUpStartPanel()
     {
+
+        LandmarkToggleList startIcon = StartIconsToggleGroup.GetComponent<LandmarkToggleList>();
+        LandmarkToggleList destinationIcon = DestinationIconsToggleGroup.GetComponent<LandmarkToggleList>();
+
         // set text 
         StartPanelWegStart.text = WegStart.text;
         StartPanelWegZiel.text = WegZiel.text;
 
-        // set icons
-        StartPanelIconStartTrain.SetActive(false);
-        StartPanelIconStartCoffee.SetActive(false);
-        StartPanelIconStartWork.SetActive(false);
-        StartPanelIconStartHome.SetActive(false);
-
-        if (WegStartType == 1)
-            StartPanelIconStartTrain.SetActive(true);
-        else if (WegStartType == 2)
-            StartPanelIconStartCoffee.SetActive(true);
-        else if (WegStartType == 3)
-            StartPanelIconStartWork.SetActive(true);
-        else if (WegStartType == 4)
-            StartPanelIconStartHome.SetActive(true);
-
-        StartPanelIconZielTrain.SetActive(false);
-        StartPanelIconZielCoffee.SetActive(false);
-        StartPanelIconZielWork.SetActive(false);
-        StartPanelIconZielHome.SetActive(false);
-
-        if (WegZielType == 1)
-            StartPanelIconZielTrain.SetActive(true);
-        else if (WegZielType == 2)
-            StartPanelIconZielCoffee.SetActive(true);
-        else if (WegZielType == 3)
-            StartPanelIconZielWork.SetActive(true);
-        else if (WegZielType == 4)
-            StartPanelIconZielHome.SetActive(true);
+        StartPanelIconStart.GetComponent<LandmarkIcon>().selectedLandmarkType = startIcon.SelectedLandMarkType;
+        StartPanelIconZiel.GetComponent<LandmarkIcon>().selectedLandmarkType = destinationIcon.SelectedLandMarkType;
 
 
     }
@@ -228,10 +191,20 @@ public class WaysDataHandler : MonoBehaviour
     private void GetWegeFailed(string errorMessage)
     {
         Debug.LogError(errorMessage);
+        
 
-        // TODO: Either we have no connection, or the token is no longer valid.
-        // If no longer valid, we should forward the user to the login screen
+
         Assets.ErrorHandlerSingleton.GetErrorHandler().AddNewError("Error Loading Ways", errorMessage);
+
+
+        // TODO: Implement scene switching with "messages" displayed on the login (e.g., pin no valid)
+
+        if (errorMessage == "Unauthorised")
+        {
+            LoginHandler.Logout();
+            LoginHandler.RecheckLogin();
+        }
+
     }
 
     /// <summary>
