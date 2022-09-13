@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using NatSuite.Recorders;
 using NatSuite.Recorders.Clocks;
 using NatSuite.Recorders.Inputs;
+using System;
 #if PLATFORM_ANDROID
 using UnityEngine.Android;
 using System.IO;
@@ -19,6 +20,11 @@ public class PhoneCam : MonoBehaviour
     public int fps = 12;
     public bool recordMicrophone;
     public ExploringRouteManager erm;
+
+
+    [Header(@"UI Configuration")]
+    public GameObject IconFrom;
+    public GameObject IconTo;
 
     private MP4Recorder recorder;
     private AudioInput audioInput;
@@ -76,6 +82,10 @@ public class PhoneCam : MonoBehaviour
         microphoneSource.clip = Microphone.Start(null, true, 1, AudioSettings.outputSampleRate);
         yield return new WaitUntil(() => Microphone.GetPosition(null) > 0);
         microphoneSource.Play();
+
+        Way w = SessionData.Instance.GetData<Way>("SelectedWay");
+        IconFrom.GetComponent<LandmarkIcon>().selectedLandmarkType = (LandmarkIcon.LandmarkType)Int32.Parse(w.StartType);
+        IconTo.GetComponent<LandmarkIcon>().selectedLandmarkType = (LandmarkIcon.LandmarkType)Int32.Parse(w.DestinationType);
     }
 
     private void OnDestroy()

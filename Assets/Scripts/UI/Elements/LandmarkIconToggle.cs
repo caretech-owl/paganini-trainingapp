@@ -11,7 +11,7 @@ public class LandmarkIconToggle : MonoBehaviour
     private ToggleGroup group;
 
     public GameObject OnIcon;
-    public GameObject OffIcon;
+    public float AlphaWhenInactive;
 
     private LandmarkIcon.LandmarkType landmarkType;
 
@@ -20,7 +20,6 @@ public class LandmarkIconToggle : MonoBehaviour
         get { return landmarkType; }
         set {
             OnIcon.GetComponent<LandmarkIcon>().selectedLandmarkType = value;
-            OffIcon.GetComponent<LandmarkIcon>().selectedLandmarkType = value;
             landmarkType = value;
         }
     }
@@ -63,9 +62,9 @@ public class LandmarkIconToggle : MonoBehaviour
 
     void onValueChanged(bool on)
     {
-        OnIcon.SetActive(on);
-        OffIcon.SetActive(!on);
+        Debug.Log(AlphaWhenInactive);
 
+        GetComponent<CanvasGroup>().alpha = on ? 1 : AlphaWhenInactive;
     }
 
 }

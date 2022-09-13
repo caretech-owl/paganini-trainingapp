@@ -145,6 +145,15 @@ public class WaysDataHandler : MonoBehaviour
 
         AppState.SelectedWeg = w.Id;
         AppState.currentBegehung = w.Name;
+
+        SetSelectedWay(w);
+        
+
+    }
+    
+    public void SetSelectedWay(Way w)
+    {
+        SessionData.Instance.SaveData("SelectedWay", w);
     }
 
 
@@ -162,8 +171,7 @@ public class WaysDataHandler : MonoBehaviour
         StartPanelWegZiel.text = WegZiel.text;
 
         StartPanelIconStart.GetComponent<LandmarkIcon>().selectedLandmarkType = startIcon.SelectedLandMarkType;
-        StartPanelIconZiel.GetComponent<LandmarkIcon>().selectedLandmarkType = destinationIcon.SelectedLandMarkType;
-
+        StartPanelIconZiel.GetComponent<LandmarkIcon>().selectedLandmarkType = destinationIcon.SelectedLandMarkType; 
 
     }
 
