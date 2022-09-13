@@ -145,7 +145,8 @@ public class PhoneCam : MonoBehaviour
 
     public async void CancelRecording()
     {
-   
+        AppState.recording = false;
+
         string ImgDir = Path.Combine(Application.persistentDataPath, erm.BegehungName, "Fotos");
         Directory.Delete(ImgDir, true);
 
