@@ -10,15 +10,18 @@ public class WaysDataHandler : MonoBehaviour
     /// Game Object to Display Wege in
     /// </summary>
 
+    //TODO: get from parent
+    public LoginManager LoginHandler;
 
+    [Header(@"List Configuration")]
     public GameObject WayListView;
     private WayList WayListHandler;
 
 
     private List<Way> ways;
+    private Way selectedWay;
 
-    private int LastWegeId;
-
+    [Header(@"Creation form Configuration")]
     public TMPro.TMP_InputField WegName;
     public TMPro.TMP_InputField WegStart;
     public TMPro.TMP_InputField WegZiel;
@@ -26,14 +29,15 @@ public class WaysDataHandler : MonoBehaviour
     public GameObject StartIconsToggleGroup;
     public GameObject DestinationIconsToggleGroup;
 
+    [Header(@"Start UI Configuration")]
     public TMPro.TMP_Text StartPanelWegStart;
     public TMPro.TMP_Text StartPanelWegZiel;
 
     public GameObject StartPanelIconStart;
     public GameObject StartPanelIconZiel;
 
-    //TODO: get from parent
-    public LoginManager LoginHandler;
+    public GameObject StartPanelOverwrite;
+    public GameObject StartPanelNew;
 
 
     // Start is called before the first frame update
@@ -46,20 +50,22 @@ public class WaysDataHandler : MonoBehaviour
 
         Debug.Log(Application.persistentDataPath);
         AppState.SelectedWeg = -1;
-        ///debug
-        if (AppState.currentUser == null)
-        {
 
+
+        // We have a user session
+        if (AppState.currentUser != null)
+        {
+            DBConnector.Instance.Startup();
+            getWaysfromAPI();
         }
-        DBConnector.Instance.Startup();
-        getWaysfromAPI();
+
     }
 
 
     void getWaysfromAPI()
     {
         GetWege();
-        Restorewege();
+        //Restorewege();
     }
 
 
@@ -146,14 +152,14 @@ public class WaysDataHandler : MonoBehaviour
         AppState.SelectedWeg = w.Id;
         AppState.currentBegehung = w.Name;
 
-        SetSelectedWay(w);
-        
+        SetSelectedWay(w);        
 
     }
     
     public void SetSelectedWay(Way w)
     {
         SessionData.Instance.SaveData("SelectedWay", w);
+        selectedWay = w;
     }
 
 
@@ -162,16 +168,15 @@ public class WaysDataHandler : MonoBehaviour
     /// </summary>
     public void SetUpStartPanel()
     {
-
-        LandmarkToggleList startIcon = StartIconsToggleGroup.GetComponent<LandmarkToggleList>();
-        LandmarkToggleList destinationIcon = DestinationIconsToggleGroup.GetComponent<LandmarkToggleList>();
-
+        
         // set text 
-        StartPanelWegStart.text = WegStart.text;
-        StartPanelWegZiel.text = WegZiel.text;
+        StartPanelWegStart.text = selectedWay.Start;
+        StartPanelWegZiel.text = selectedWay.Destination;
 
-        StartPanelIconStart.GetComponent<LandmarkIcon>().selectedLandmarkType = startIcon.SelectedLandMarkType;
-        StartPanelIconZiel.GetComponent<LandmarkIcon>().selectedLandmarkType = destinationIcon.SelectedLandMarkType; 
+        StartPanelIconStart.GetComponent<LandmarkIcon>().selectedLandmarkType = (LandmarkIcon.LandmarkType)Int32.Parse(selectedWay.StartType);
+        StartPanelIconZiel.GetComponent<LandmarkIcon>().selectedLandmarkType = (LandmarkIcon.LandmarkType)Int32.Parse(selectedWay.DestinationType);
+
+        CheckIfLocalERW();
 
     }
 
@@ -199,7 +204,6 @@ public class WaysDataHandler : MonoBehaviour
     private void GetWegeFailed(string errorMessage)
     {
         Debug.LogError(errorMessage);
-        
 
 
         Assets.ErrorHandlerSingleton.GetErrorHandler().AddNewError("Error Loading Ways", errorMessage);
@@ -212,6 +216,9 @@ public class WaysDataHandler : MonoBehaviour
             LoginHandler.Logout();
             LoginHandler.RecheckLogin();
         }
+
+        // Load it from the database if there are problems (e.g., connection problems)
+        Restorewege();
 
     }
 
@@ -233,11 +240,64 @@ public class WaysDataHandler : MonoBehaviour
             foreach (Way w in ways)
             {
                 WayListHandler.AddWayItem(w);
-                LastWegeId = w.Id;
             }
 
             WayListHandler.ShowWayList();
         }
     }
+
+
+    public void CreateNewERW()
+    {
+
+        DBConnector.Instance.GetConnection().Execute("DELETE FROM ExploratoryRouteWalk where Id=" + selectedWay.Id);
+        DBConnector.Instance.GetConnection().Execute("DELETE FROM Pathpoint where Erw_id=" + selectedWay.Id);
+
+
+        ExploratoryRouteWalk walk = new ExploratoryRouteWalk();
+        walk.Id = selectedWay.Id;
+        walk.Way_id = selectedWay.Id;
+        walk.Date = DateTime.Now;
+        walk.Name = selectedWay.Name;
+
+        // We set the current exploratory walk
+        AppState.currentBegehung = walk.Name;
+        AppState.SelectedBegehung = selectedWay.Id;
+        AppState.SelectedWeg = selectedWay.Id;
+
+        DBConnector.Instance.GetConnection().InsertOrReplace(walk);
+
+    }
+
+    public void CancelNewERW()
+    {
+        DBConnector.Instance.GetConnection().Execute("Delete from Way where Status =" + ((int)Way.WayStatus.Local) + " and Id =" + selectedWay.Id);
+        AppState.currentBegehung = null;
+        AppState.SelectedBegehung = -1;
+        AppState.SelectedWeg = -1;
+        selectedWay = null;
+
+        Restorewege();
+
+    }
+
+        void CheckIfLocalERW()
+    {
+        List<ExploratoryRouteWalk> erws = DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * FROM ExploratoryRouteWalk where Id=" + selectedWay.Id);
+        Debug.Log("CheckIfLocalERW -> Capacity: " + erws.Count);
+
+
+        StartPanelOverwrite.SetActive(erws.Count > 0);
+        StartPanelNew.SetActive(erws.Count == 0);
+
+    }
+
+
+
+    //public void SetSelectedERW(ExploratoryRouteWalk erw)
+    //{
+    //    SessionData.Instance.SaveData("SelectedERW", erw);
+    //}
+
 
 }

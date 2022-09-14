@@ -139,7 +139,7 @@ public class PhoneCam : MonoBehaviour
             // Playback recording
             Debug.LogWarning($"Saved recording to: {path}");
             string[] split = path.Split('/');
-            string filename = "/"+split[split.Length - 1] + ".mp4";
+            string filename = "/" + split[split.Length - 1]; //".mp4";
             if(!Directory.Exists(Path.Combine(Application.persistentDataPath, erm.BegehungName))){
                 Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, erm.BegehungName));
             }
