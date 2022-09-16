@@ -8,8 +8,49 @@ using UnityEngine.UI;
 public class FormRequirement
 {
     public enum FormRequirementType { Optional, Required};
-    public TMPro.TMP_InputField Field;
-    public FormRequirementType Type;
+    public enum FieldType { Text, ToggleGroup };
+    
+    public Object Field;
+    public FieldType Type;
+    public FormRequirementType RequirementType;
+
+    public bool IsRequirementValid()
+    {
+
+        Debug.Log("This is the type of the field: " + Field.GetType());
+
+        if (RequirementType == FormRequirement.FormRequirementType.Optional) return true;
+
+        bool isValid = false;
+        if (Type == FieldType.Text)
+        {
+            TMPro.TMP_InputField item = (TMPro.TMP_InputField) Field;
+            isValid = item.text.Trim() != "";
+        }
+        else if (Type == FieldType.ToggleGroup)
+        {
+            ToggleGroup item = ((GameObject)Field).GetComponent<ToggleGroup>();
+            isValid = item.AnyTogglesOn();
+        }
+
+        return isValid;        
+    }
+
+    public void ClearField()
+    {
+
+        if (Type == FieldType.Text)
+        {
+            TMPro.TMP_InputField item = (TMPro.TMP_InputField)Field;
+            item.text = "";
+        }
+        else if (Type == FieldType.ToggleGroup)
+        {
+            ToggleGroup item = ((GameObject)Field).GetComponent<ToggleGroup>();
+            item.SetAllTogglesOff();
+        }
+
+    }
 
 }
 
@@ -47,7 +88,7 @@ public class FormValidator : MonoBehaviour
         List<FormRequirement> failed = new List <FormRequirement> ();
         foreach (FormRequirement item in Fields)
         {
-            if (item.Type == FormRequirement.FormRequirementType.Required && item.Field.text.Trim() == "")
+            if (!item.IsRequirementValid())
             {
                 failed.Add(item);
             }
@@ -62,14 +103,18 @@ public class FormValidator : MonoBehaviour
             OnValidationFail.Invoke();
         }
     }
+
     private void HandleSkip()
     {
+        ClearOutFields();
+        OnValidationSkipped.Invoke();
+    }
 
+    private void ClearOutFields()
+    {
         foreach (FormRequirement item in Fields)
         {
-            item.Field.text = "";
+            item.ClearField();
         }
-
-        OnValidationSkipped.Invoke();
     }
 }

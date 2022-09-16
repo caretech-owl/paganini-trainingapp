@@ -35,7 +35,13 @@ public class LandmarkToggleList : MonoBehaviour
                 Toggle t = toggle.GetComponent<Toggle>();
                 t.onValueChanged.AddListener(delegate
                 {
-                    if (t.isOn) { SelectedLandMarkType = GetSelectedLandmarkType(); }
+                    if (t.isOn) {
+                        SelectedLandMarkType = GetSelectedLandmarkType();
+                    }
+                    else if (!toggleGroup.AnyTogglesOn())
+                    {
+                        SelectedLandMarkType = LandmarkIcon.LandmarkType.Placeholder;
+                    }
                 });
             }
 
