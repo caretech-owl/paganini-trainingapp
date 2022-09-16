@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Serialization;
 using UnityEngine;
 
 namespace Assets
@@ -38,7 +41,7 @@ namespace Assets
             Debug.Log("SetupNewErrorUI");
         }
 
-        public void AddNewError(string title, string description, bool showError = true)
+        public void AddNewError(string title, string description, bool showError = true, bool writeErrorToFile = true)
         {
             errors.Add(new DetailedError
             {
@@ -47,9 +50,39 @@ namespace Assets
                 Description = description
             });
 
-            if (showError)
+            if (showError && errorUI != null)
             {
                 errorUI.SetActive(true);
+            }
+
+            if (writeErrorToFile)
+            {
+                SerializeAsXML();
+
+                // Write to plain text file
+                StreamWriter file = new StreamWriter(Application.persistentDataPath + "/DetailedErrors.txt", append: true);
+                file.WriteLine(Time.time.ToString() + "\t" + title + "\t" + description);
+            }
+        }
+
+        private void SerializeAsXML()
+        {
+            var objType = errors.GetType();
+
+            try
+            {
+                using (var xmlwriter = new XmlTextWriter(Application.persistentDataPath + "/DetailedErrors.xml", Encoding.UTF8))
+                {
+                    xmlwriter.Indentation = 2;
+                    xmlwriter.IndentChar = ' ';
+                    xmlwriter.Formatting = Formatting.Indented;
+                    var xmlSerializer = new XmlSerializer(objType);
+                    xmlSerializer.Serialize(xmlwriter, errors);
+                }
+            }
+            catch (System.IO.IOException ex)
+            {
+                AddNewError("Could nót write to file!", ex.Message, true, false);
             }
         }
     }
