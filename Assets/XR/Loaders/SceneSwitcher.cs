@@ -108,6 +108,14 @@ public class SceneSwitcher : MonoBehaviour
         Screen.sleepTimeout = AppState.screenSleepTimeout;
     }
 
+    public void GotoSyncExploratoryRouteWalk()
+    {
+        SceneManager.LoadScene(AppState.SyncExploratoryRouteWalkScenes);
+
+        // Restore default screen dimming timeout
+        Screen.sleepTimeout = AppState.screenSleepTimeout;
+    }
+
     public void GotoUserLogin()
     {
         SceneManager.LoadScene(AppState.UserLoginScene);

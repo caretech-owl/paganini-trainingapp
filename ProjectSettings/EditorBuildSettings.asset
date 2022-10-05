@@ -5,9 +5,6 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: 
-    guid: 00000000000000000000000000000000
   - enabled: 1
     path: Assets/Scenes/UserLogin.unity
     guid: 999695e6c31345344a7d988bf3a62a85
@@ -17,6 +14,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/ExploratoryRouteWalkRecording.unity
     guid: 47740b3442471614a8b1b85ba147310d
+  - enabled: 1
+    path: Assets/Scenes/SyncExploratoryRouteWalks.unity
+    guid: c435a2b6e617d7b44912b1ee008de062
+  - enabled: 0
+    path: Assets/Scenes/Backup/SyncExploratoryRouteWalks.unity
+    guid: 86bd83cae7e8a934eae85496aac9fa1b
   - enabled: 0
     path: Assets/Scenes/Backup/00Login.unity
     guid: 36db97542fd4bda4a848c922977c32ec
@@ -63,7 +66,8 @@ EditorBuildSettings:
     path: Assets/Scenes/Backup/08ShowProfile.unity
     guid: 0898d9991dc8163429fd7966977271b8
   m_configObjects:
-    AR Foundation RemoteARFoundationRemoteLoaderSettings: {fileID: 0}
+    AR Foundation RemoteARFoundationRemoteLoaderSettings: {fileID: 11400000, guid: 846186ea58b4a5444a5449294a5ad001,
+      type: 2}
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 94009097ddd01a74cb199a2bee03b1c0,
       type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 95df8a23d8b0bc74d822457ff5d97cc1,
