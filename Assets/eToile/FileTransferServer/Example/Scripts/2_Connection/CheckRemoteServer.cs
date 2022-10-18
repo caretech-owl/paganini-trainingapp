@@ -49,7 +49,7 @@ public class CheckRemoteServer : MonoBehaviour
     // FTS event: On Device List Update ()
     public void UpdateDevicesList(List<FTSCore.RemoteDevice> devices)
     {
-        List<string> list = _fts.GetDeviceIPList();
+        List<string> list = _fts.GetDeviceNamesList();
         if (list.Count > 0)
         {
             // One or more devices are responding:
