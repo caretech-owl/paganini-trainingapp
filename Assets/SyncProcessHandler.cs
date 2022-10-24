@@ -28,7 +28,7 @@ public class SyncProcessHandler : MonoBehaviour
         {
             DBConnector.Instance.Startup();
             GetWaysFromLocalDatabase();
-            begehungen = DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * FROM ExploratoryRouteWalk");
+            begehungen = DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * FROM ExploratoryRouteWalk where Status =" + ((int)Way.WayStatus.Local) );
         }
 
         ExportWaysToSharedFolder();
@@ -42,20 +42,11 @@ public class SyncProcessHandler : MonoBehaviour
 
             foreach (var way in ways)
             {
-                DetailedWayExport detailedWayExport = new DetailedWayExport { 
-                    Id = way.Id,
-                    Name = way.Name,
-                    Description = way.Description,
-                    Destination = way.Destination,
-                    DestinationType = way.DestinationType,
-                    Start = way.Start,
-                    StartType = way.StartType,
-                    Status = way.Status
-                };
+                DetailedWayExport detailedWayExport = FilledOutRecordingReport(way);
 
                 //// Get GPS coordinates
                 //List<Pathpoint> points = DBConnector.Instance.GetConnection().Query<Pathpoint>("SELECT * FROM Pathpoint where beg_id=?", way.Id);
-  
+
                 //if (points != null)
                 //{
                 //    detailedWayExport.Points = points;
@@ -108,7 +99,7 @@ public class SyncProcessHandler : MonoBehaviour
     // that are found, and process the files they contain.
     private void ProcessDirectoryMP4(string targetDirectory)
     {
-        Debug.LogError(targetDirectory);
+        Debug.Log(targetDirectory);
         // Process the list of files found in the directory.
         string[] fileEntries = Directory.GetFiles(targetDirectory, "*.mp4");
         foreach (string fileName in fileEntries)
@@ -194,8 +185,15 @@ public class SyncProcessHandler : MonoBehaviour
     /// </summary>
     void GetWaysFromLocalDatabase()
     {
-        List<Way> wege = DBConnector.Instance.GetConnection().Query<Way>("Select * FROM Way");
+        string q = "Select w.* FROM way w join exploratoryroutewalk erw ON" +
+            " w.Id = erw.Way_id " +
+            " WHERE (w.Status = ?) or (erw.Status = ?)";
+
+        List<Way> wege = DBConnector.Instance.GetConnection().Query<Way>(q, new object[] { (int)Way.WayStatus.Local, (int)Way.WayStatus.Local } );
         Debug.Log("Restorewege -> Capacity: " + wege.Count);
+
+       
+
 
         if (wege.Count > 0)
             this.ways = wege;
@@ -204,6 +202,36 @@ public class SyncProcessHandler : MonoBehaviour
 
         //DisplayWege();
     }
+
+    DetailedWayExport FilledOutRecordingReport(Way way)
+    {
+        DetailedWayExport detailedWayExport = new DetailedWayExport
+        {
+            Id = way.Id,
+            Name = way.Name,
+            Description = way.Description,
+            Destination = way.Destination,
+            DestinationType = way.DestinationType,
+            Start = way.Start,
+            StartType = way.StartType,
+            Status = way.Status
+        };
+
+        List<ExploratoryRouteWalk> erw = (DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * FROM ExploratoryRouteWalk where Way_id = ?", new object[] { way.Id }));
+        if (erw.Count > 0 )
+        {
+            detailedWayExport.RecordingName = erw[0].Name;
+            detailedWayExport.RecordingDate = erw[0].Date;
+        } else
+        {
+            Debug.LogError("There is no ERW for Way with Id = " + way.Id);
+        }
+
+
+        return detailedWayExport;
+    }
+
+
 
     public class DetailedWayExport
     {
@@ -217,6 +245,10 @@ public class SyncProcessHandler : MonoBehaviour
         public string DestinationType { set; get; }
         public string Name { set; get; }
         public string Description { set; get; }
+
+        public System.DateTime RecordingDate { set; get; }
+        public string RecordingName { set; get; }
+
         public int Status { set; get; }
     }
 

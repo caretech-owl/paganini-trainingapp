@@ -1,4 +1,5 @@
 ﻿using SQLite4Unity3d;
+using static Way;
 
 public class ExploratoryRouteWalk
 {
@@ -9,11 +10,12 @@ public class ExploratoryRouteWalk
 	public string Name{ set; get; }
 	public System.DateTime Date { set; get; }
 	public int Pin { set; get; }
+    public int Status { set; get; }
 
 
-	public override string ToString()
+    public override string ToString()
 	{
-		return string.Format("[exploratory_route_walk: erw_id={0}, way_id={1}, erw_name={2},  erw_datum={3}, erw_pin={4}]", Id,Way_id,Name,Date,Pin);
+		return string.Format("[exploratory_route_walk: erw_id={0}, way_id={1}, erw_name={2},  erw_datum={3}, erw_pin={4}, erw_status=(5)]", Id,Way_id,Name,Date,Pin, Status);
 	}
 
 	public ExploratoryRouteWalk() { }
@@ -24,7 +26,8 @@ public class ExploratoryRouteWalk
 		this.Name = erw.erw_name;
 		this.Date = System.DateTime.Parse(erw.erw_datum);
 		this.Pin = erw.erw_pin;
-	}
+        this.Status = (int)WayStatus.FromAPI;
+    }
 
 	public ExploratoryRouteWalkAPI ToAPI()
 	{

@@ -259,6 +259,7 @@ public class WaysDataHandler : MonoBehaviour
         walk.Way_id = selectedWay.Id;
         walk.Date = DateTime.Now;
         walk.Name = selectedWay.Name;
+        walk.Status = (int)Way.WayStatus.Local;
 
         // We set the current exploratory walk
         AppState.currentBegehung = walk.Name;
