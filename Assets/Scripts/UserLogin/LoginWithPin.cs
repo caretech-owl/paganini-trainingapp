@@ -4,11 +4,14 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 public class LoginWithPin : MonoBehaviour
 {
     public GameObject textinput;
     public Button LoginButton;
+    public UnityEvent OnLoginSucceed;
+    public UnityEvent OnLoginFail;
 
     public void SendPinToAPI()
     {
@@ -34,9 +37,9 @@ public class LoginWithPin : MonoBehaviour
         Debug.LogError(errorMessage);
         LoginButton.interactable = true;
 
-        Assets.ErrorHandlerSingleton.GetErrorHandler().AddNewError("AuthFailed", errorMessage);
+        //Assets.ErrorHandlerSingleton.GetErrorHandler().AddNewError("AuthFailed", errorMessage);
 
-        
+        OnLoginFail.Invoke();
     }
 
     private void GetUserProfileSucceed(UserAPI user)
@@ -44,12 +47,18 @@ public class LoginWithPin : MonoBehaviour
         AppState.currentUser = new User(user);
         DBConnector.Instance.Startup();
         DBConnector.Instance.GetConnection().Insert(AppState.currentUser);
-        SceneManager.LoadScene(AppState.MyExploratoryRouteWalkScenes);
+        //SceneManager.LoadScene(AppState.MyExploratoryRouteWalkScenes);
+
+        OnLoginSucceed.Invoke();
     }
 
     private void GetUserProfileFailed(string errorMessage)
     {
-        LoginButton.interactable = true;
         Debug.LogError(errorMessage);
+        LoginButton.interactable = true;        
+
+        //Assets.ErrorHandlerSingleton.GetErrorHandler().AddNewError("AuthFailed", errorMessage);
+
+        OnLoginFail.Invoke();
     }
 }

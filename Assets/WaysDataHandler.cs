@@ -39,6 +39,8 @@ public class WaysDataHandler : MonoBehaviour
     public GameObject StartPanelOverwrite;
     public GameObject StartPanelNew;
 
+    private bool StatusOverwriteERW;
+
 
     // Start is called before the first frame update
     void Start()
@@ -176,6 +178,7 @@ public class WaysDataHandler : MonoBehaviour
         StartPanelIconStart.GetComponent<LandmarkIcon>().selectedLandmarkType = (LandmarkIcon.LandmarkType)Int32.Parse(selectedWay.StartType);
         StartPanelIconZiel.GetComponent<LandmarkIcon>().selectedLandmarkType = (LandmarkIcon.LandmarkType)Int32.Parse(selectedWay.DestinationType);
 
+        
         CheckIfLocalERW();
 
     }
@@ -272,6 +275,9 @@ public class WaysDataHandler : MonoBehaviour
 
     public void CancelNewERW()
     {
+        // If we are cancelling the overwriting, let's not delete the existing ERW.
+        if (StatusOverwriteERW) return;
+
         DBConnector.Instance.GetConnection().Execute("Delete from Way where Status =" + ((int)Way.WayStatus.Local) + " and Id =" + selectedWay.Id);
         AppState.currentBegehung = null;
         AppState.SelectedBegehung = -1;
@@ -290,6 +296,8 @@ public class WaysDataHandler : MonoBehaviour
 
         StartPanelOverwrite.SetActive(erws.Count > 0);
         StartPanelNew.SetActive(erws.Count == 0);
+
+        StatusOverwriteERW = erws.Count > 0;
 
     }
 

@@ -26,6 +26,8 @@ public static class AppState
     public static string MyExploratoryRouteWalkScenes = "MyExploratoryRouteWalks";
     public static string SyncExploratoryRouteWalkScenes = "SyncExploratoryRouteWalks";
     public static string ExploratoryRouteWalkRecodingScene = "ExploratoryRouteWalkRecording";
+    public static string UserSettingsScene = "UserSettings";
+    public static string MyRouteTrainingScene = "MyRouteTraining";
 
     public static string startScene = "01Start";
     public static string allOkScene = "02AllOk";

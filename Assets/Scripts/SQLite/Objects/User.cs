@@ -6,7 +6,8 @@ public class User
     public string Mnemonic_token { set; get; }
     public string Username { set; get; }
 	public string Apitoken { set; get; }
-	public bool Righthanded { set; get; }
+    public string AppName { set; get; }
+    public bool Righthanded { set; get; }
 	public bool Canread { set; get; }
 	public bool Activatetts { set; get; }
 	public bool Vibration { set; get; }
@@ -14,7 +15,7 @@ public class User
 
 	public override string ToString()
 	{
-		return string.Format("[User: user_id={0}, user_mnemonic_token={1}, user_username={2}, user_apitoken={3}, user_righthanded={4}, user_canread={5}, user_activatetts={6}, user_vibration={7}]", Id,Mnemonic_token,Username,Apitoken, Righthanded, Canread, Activatetts, Vibration);
+		return string.Format("[User: user_id={0}, user_mnemonic_token={1}, user_username={2}, app_name={8}, user_apitoken={3}, user_righthanded={4}, user_canread={5}, user_activatetts={6}, user_vibration={7}]", Id,Mnemonic_token,Username,Apitoken, Righthanded, Canread, Activatetts, Vibration, AppName);
 	}
 
 	public User() { }

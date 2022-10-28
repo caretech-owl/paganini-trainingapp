@@ -2,10 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class LoginManager : MonoBehaviour
 {
- 
+
+    public UnityEvent OnAlreadyLoggedIn;
+    public UnityEvent OnNotLoggedIn;
+
     void Start()
     {
         RecheckLogin();
@@ -27,10 +31,12 @@ public class LoginManager : MonoBehaviour
             {
                 SceneManager.LoadScene(AppState.UserLoginScene);
             }
+
+            OnNotLoggedIn.Invoke();
         }
-        else if(SceneManager.GetActiveScene().name == AppState.UserLoginScene) 
+        else 
         {
-            SceneManager.LoadScene(AppState.MyExploratoryRouteWalkScenes);
+            OnAlreadyLoggedIn.Invoke();
         }        
     }
 

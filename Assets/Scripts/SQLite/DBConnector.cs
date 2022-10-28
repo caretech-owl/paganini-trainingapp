@@ -18,6 +18,7 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
             string dbPath = Application.persistentDataPath + "/" + databaseName;
             ConnectToDatabase(dbPath);
             CreateTables();
+            Debug.Log("DB Startup Completed. ");
         }
     }
 
@@ -33,8 +34,9 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
 
     private void ConnectToDatabase(string dbPath)
     {
-        Debug.Log("ConnectToDatabase");
+        Debug.Log("ConnectToDatabase :" + dbPath);
         this.connection = new SQLiteConnection(dbPath, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create);
+       
     }
 
     private void CreateTables()

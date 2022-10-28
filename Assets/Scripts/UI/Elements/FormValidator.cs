@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -24,7 +25,16 @@ public class FormRequirement
         bool isValid = false;
         if (Type == FieldType.Text)
         {
-            TMPro.TMP_InputField item = (TMPro.TMP_InputField) Field;
+            TMPro.TMP_InputField item;
+            if (Field is TMPro.TMP_InputField)
+            {
+                item = (TMPro.TMP_InputField)Field;
+            }
+            else
+            {
+                item = ((GameObject)Field).GetComponent<TMP_InputField>();
+            }            
+            
             isValid = item.text.Trim() != "";
         }
         else if (Type == FieldType.ToggleGroup)
