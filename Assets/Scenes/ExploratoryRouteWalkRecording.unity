@@ -1741,7 +1741,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5fe91a236977140558ca88017c286ceb, type: 2}
+  - {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1762,7 +1762,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 3286163911610860551, guid: 1ec63271821c642cfb02947a54876be0,
+  m_Sprite: {fileID: 3286163911610860551, guid: 211dca61ae1544c71a34c411cf656f89,
     type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -1790,7 +1790,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 3286163911610860551, guid: 1c30ca1c49d3b419ea2468e7b3318547,
+      objectReference: {fileID: 3286163911610860551, guid: 5953350cf5ce9477892b9a086b06b276,
         type: 3}
     - target: {fileID: 8395980410073783532, guid: 23c649791e0c34956be74bc367ea7a57,
         type: 3}
@@ -2116,7 +2116,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 3286163911610860551, guid: 1c30ca1c49d3b419ea2468e7b3318547,
+      objectReference: {fileID: 3286163911610860551, guid: 76fd2f83c51f2482fa7ebd64967be313,
         type: 3}
     - target: {fileID: 8395980410073783532, guid: 23c649791e0c34956be74bc367ea7a57,
         type: 3}
@@ -2651,7 +2651,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0, y: 360}
+  m_AnchoredPosition: {x: 0, y: 360}
   m_SizeDelta: {x: 600, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &607273806
@@ -3476,6 +3476,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fcb374c0097bdfa4dae3de14c7713c2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  OnAlreadyLoggedIn:
+    m_PersistentCalls:
+      m_Calls: []
+  OnNotLoggedIn:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!4 &707330388
 Transform:
   m_ObjectHideFlags: 0
@@ -4166,7 +4172,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 800, y: 0}
+  m_AnchoredPosition: {x: 799.99994, y: 0}
   m_SizeDelta: {x: 160, y: 160}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &847625120
