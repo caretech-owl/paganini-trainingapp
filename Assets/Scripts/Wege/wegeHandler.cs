@@ -82,7 +82,7 @@ public class WegeHandler : MonoBehaviour
     {
         DeleteLocalData();
         this.wege = new List<Way>();
-        foreach (WayAPI w in wege.wege)
+        foreach (WayAPI w in wege.ways)
         {
             this.wege.Add(new Way(w));
             Debug.Log(new Way(w));

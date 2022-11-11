@@ -11,5 +11,5 @@ public class WayAPI
 
 public class WegAPIList
 {
-	public WayAPI[] wege;
+	public WayAPI[] ways;
 }

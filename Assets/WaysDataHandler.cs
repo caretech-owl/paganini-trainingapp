@@ -191,7 +191,7 @@ public class WaysDataHandler : MonoBehaviour
     {
         DeleteLocalData();
         this.ways = new List<Way>();
-        foreach (WayAPI w in wege.wege)
+        foreach (WayAPI w in wege.ways)
         {
             this.ways.Add(new Way(w));
             Debug.Log(new Way(w));
