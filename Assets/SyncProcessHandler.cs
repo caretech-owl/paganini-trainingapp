@@ -44,17 +44,9 @@ public class SyncProcessHandler : MonoBehaviour
             {
                 DetailedWayExport detailedWayExport = FilledOutRecordingReport(way);
 
-                //// Get GPS coordinates
-                //List<Pathpoint> points = DBConnector.Instance.GetConnection().Query<Pathpoint>("SELECT * FROM Pathpoint where beg_id=?", way.Id);
-
-                //if (points != null)
-                //{
-                //    detailedWayExport.Points = points;
-                //}
-                //else
-                //{
-                //    ErrorHandlerSingleton.GetErrorHandler().AddNewError("ExportWaysToSharedFolder", "No exploratory route walk available for way!");
-                //}
+                // Get GPS coordinates
+                List<Pathpoint> points = DBConnector.Instance.GetConnection().Query<Pathpoint>("SELECT * FROM Pathpoint where beg_id=?", way.Id);
+                detailedWayExport.Points = SerializeGPSCoordinatesAsXML(points, detailedWayExport);
 
                 // Get files
                 detailedWayExport.Folder = way.Name;
@@ -174,6 +166,40 @@ public class SyncProcessHandler : MonoBehaviour
         }
     }
 
+    // write down coordinates for specific way to xml file in shared folder
+    private string SerializeGPSCoordinatesAsXML(List<Pathpoint> points, DetailedWayExport detailedWayExport)
+    {
+        if (points != null)
+        {
+            var objType = points.GetType();
+            string filename = FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder + "/" + detailedWayExport.Folder + "-coordinates.xml";
+
+            try
+            {
+                using (var xmlwriter = new XmlTextWriter(filename, Encoding.UTF8))
+                {
+                    xmlwriter.Indentation = 2;
+                    xmlwriter.IndentChar = ' ';
+                    xmlwriter.Formatting = Formatting.Indented;
+                    var xmlSerializer = new XmlSerializer(objType);
+                    xmlSerializer.Serialize(xmlwriter, points);
+                }
+            }
+            catch (System.IO.IOException ex)
+            {
+                filename = String.Empty;
+                ErrorHandlerSingleton.GetErrorHandler().AddNewError("Could nót write to file!", ex.Message, true, false);
+            }
+
+            return filename;
+        }
+        else
+        {
+            return String.Empty;
+        }
+
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -237,7 +263,7 @@ public class SyncProcessHandler : MonoBehaviour
     {
         public string Folder { get; set; }
         public List<DetailedWayExportFiles> Files { get; set; }
-        public List<Pathpoint> Points { get; set; }
+        public string Points { get; set; }
         public int Id { set; get; }
         public string Start { set; get; }
         public string Destination { set; get; }
@@ -257,5 +283,4 @@ public class SyncProcessHandler : MonoBehaviour
         public string File { get; set; }
         public byte[] Checksum { get; set; }
     }
-
 }
