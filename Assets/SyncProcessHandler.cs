@@ -45,7 +45,7 @@ public class SyncProcessHandler : MonoBehaviour
                 DetailedWayExport detailedWayExport = FilledOutRecordingReport(way);
 
                 // Get GPS coordinates
-                List<Pathpoint> points = DBConnector.Instance.GetConnection().Query<Pathpoint>("SELECT * FROM Pathpoint where beg_id=?", way.Id);
+                List<Pathpoint> points = DBConnector.Instance.GetConnection().Query<Pathpoint>("SELECT * FROM Pathpoint where erw_id=?", way.Id);
                 detailedWayExport.Points = SerializeGPSCoordinatesAsXML(points, detailedWayExport);
 
                 // Get files
