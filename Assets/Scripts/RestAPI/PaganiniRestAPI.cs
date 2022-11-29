@@ -5,7 +5,7 @@ using UnityEngine;
 public class PaganiniRestAPI
 {
     //Base URL for the Rest APi
-    public const string serverURL = "https://infinteg-main.fh-bielefeld.de/paganini/api/";
+    public const string serverURL = "https://infinteg-main.fh-bielefeld.de/paganini/api/usr/";
     //public const string serverURL = "http://localhost:3000/usr/";
     //getAuthToken  param: apitoken: ""
     public const string getAuthToken = serverURL + "me/authentification";

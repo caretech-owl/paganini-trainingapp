@@ -7,17 +7,34 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using TMPro;
 using UnityEngine;
+using static FTSCore;
 
 public class SyncProcessHandler : MonoBehaviour
 {
     public FileTransferServer fileTransferServer;
+    public GameObject SmartphoneAskForConnectionText;
+    public GameObject UI_AskForConnection;
+    public GameObject UI_WaitForTablet;
+    public GameObject UI_WaitForConnectionWithTablet;
+    public GameObject UI_WaitForSyncEnd;
+    public GameObject UI_SyncFinshed;
+    public Progressbar Progressbar;
 
     private List<Way> ways;
     private List<ExploratoryRouteWalk> begehungen;
     private List<DetailedWayExport> wayExports;
     private List<DetailedWayExportFiles> exportFilesForWay;
     private string currentFolderForCopies;
+    private int CountOfFiles = 0;
+    private int TransferedCountOfFiles = 0;
+
+    // Next update in second
+    private int nextUpdate = 1;
+    bool isSearchForTablet = true;
+
+
 
     // Start is called before the first frame update
     void Start()
@@ -28,30 +45,33 @@ public class SyncProcessHandler : MonoBehaviour
         {
             DBConnector.Instance.Startup();
             GetWaysFromLocalDatabase();
-            begehungen = DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * FROM ExploratoryRouteWalk where Status =" + ((int)Way.WayStatus.Local) );
+            begehungen = DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * FROM ExploratoryRouteWalk where Status =" + ((int)Way.WayStatus.Local));
         }
 
-        ExportWaysToSharedFolder();
+        File.Create(FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder + "/HANDSHAKE").Close();
     }
 
     private void ExportWaysToSharedFolder()
     {
         if (ways != null)
         {
+            CountOfFiles = 0;
             wayExports = new List<DetailedWayExport>();
 
             foreach (var way in ways)
             {
                 DetailedWayExport detailedWayExport = FilledOutRecordingReport(way);
 
+                // set destination folder for tablet
+                detailedWayExport.Folder = way.Name;
+
                 // Get GPS coordinates
                 List<Pathpoint> points = DBConnector.Instance.GetConnection().Query<Pathpoint>("SELECT * FROM Pathpoint where erw_id=?", way.Id);
                 detailedWayExport.Points = SerializeGPSCoordinatesAsXML(points, detailedWayExport);
+                CountOfFiles++;
 
                 // Get files
-                detailedWayExport.Folder = way.Name;
                 currentFolderForCopies = FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder;
-
                 exportFilesForWay = new List<DetailedWayExportFiles>();
 
                 try
@@ -80,6 +100,8 @@ public class SyncProcessHandler : MonoBehaviour
 
             // write down to xml
             SerializeAsXML();
+
+            Debug.Log("CountOfFiles: " + CountOfFiles);
         }
         else
         {
@@ -131,6 +153,8 @@ public class SyncProcessHandler : MonoBehaviour
         exportFilesForWay.Add(dwef);
 
         File.Copy(file, currentFolderForCopies + "/" + new FileInfo(file).Name);
+
+        CountOfFiles++;
     }
 
     private byte[] ComputeChecksum(string file)
@@ -172,7 +196,7 @@ public class SyncProcessHandler : MonoBehaviour
         if (points != null)
         {
             var objType = points.GetType();
-            string filename = FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder + "/" + detailedWayExport.Folder + "-coordinates.xml";
+            string filename = FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder + "/" + detailedWayExport.Name + "-coordinates.xml";
 
             try
             {
@@ -203,8 +227,110 @@ public class SyncProcessHandler : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
+        // If the next update is reached
+        if (isSearchForTablet && Time.time >= nextUpdate)
+        {
+            Debug.Log(Time.time + ">=" + nextUpdate);
+            // Change the next update (current second+1)
+            nextUpdate = Mathf.FloorToInt(Time.time) + 2;
+            fileTransferServer.SendPollRequest();
+        }
     }
+
+    public void DevicesListUpdate()
+    {
+
+        List<string> list = fileTransferServer.GetDeviceNamesList();
+        if (list.Count > 0)
+        {
+            Debug.Log("DevicesListUpdate:" + SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text);
+            SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text = SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text.Replace("[TABLETNAME]", list[0]);
+            isSearchForTablet = false;
+        }
+    }
+
+    public void AcceptConnection()
+    {
+        UI_AskForConnection.SetActive(false);
+        UI_WaitForConnectionWithTablet.SetActive(true);
+
+        // create and copy files to synchronize
+        ExportWaysToSharedFolder();
+
+        // inform tablet
+        fileTransferServer.RequestFile(0, "CONNECTIONALLOWED");
+    }
+
+    public void UpdateProgressbar(FileUpload fileUpload)
+    {
+        Debug.Log("UpdateProgressbar:fileUpload: " + fileUpload.GetName());
+
+        if (fileUpload.GetName().Equals("HANDSHAKE"))
+        {
+            UI_WaitForTablet.SetActive(false);
+            UI_AskForConnection.SetActive(true); 
+        }
+        else if (fileUpload.GetName().Equals("waysForExport.xml"))
+        {
+            // do nothing here
+        }
+        else
+        {
+            TransferedCountOfFiles++;
+            Debug.Log("UpdateProgressbar: CountOfFiles: " + CountOfFiles + "TransferedCountOfFiles: " + TransferedCountOfFiles);
+
+            if (TransferedCountOfFiles >= CountOfFiles)
+            {
+                UI_WaitForSyncEnd.SetActive(false);
+                UI_SyncFinshed.SetActive(true);
+            }
+            else
+            {
+                Progressbar.SetProgressbar(TransferedCountOfFiles / CountOfFiles);
+            }
+        }
+    }
+
+    public void OnFileDownload(FileRequest fileRequest)
+    {
+        Debug.Log("OnFileDownload:fileRequest: " + fileRequest._sourceName);
+
+        if (fileRequest._sourceName.Equals("CONNECTIONALLOWED"))
+        {
+            UI_WaitForConnectionWithTablet.SetActive(false);
+            UI_WaitForSyncEnd.SetActive(true);
+        }
+
+        //if (fileUpload.GetName().Equals("HANDSHAKE"))
+        //{
+        //    UI_WaitForTablet.SetActive(false);
+        //    UI_AskForConnection.SetActive(true);
+        //}
+    }
+
+    public void OnFileNotFoundUpload(FileRequest fileRequest)
+    {
+        Debug.Log("OnFileUpload:fileRequest: " + fileRequest._sourceName);
+
+        //if (fileUpload.GetName().Equals("HANDSHAKE"))
+        //{
+        //    UI_WaitForTablet.SetActive(false);
+        //    UI_AskForConnection.SetActive(true);
+        //}
+    }
+
+    public void OnBeginFileUpload(FileUpload fileUpload)
+    {
+        Debug.Log("OnBeginFileUpload:fileUpload: " + fileUpload.GetName());
+
+        //if (fileUpload.GetName().Equals("HANDSHAKE"))
+        //{
+        //    UI_WaitForTablet.SetActive(false);
+        //    UI_AskForConnection.SetActive(true);
+        //}
+    }
+
 
     /// <summary>
     /// Reads back in the Wege List from SQLite and Saves it in the Object
@@ -215,10 +341,10 @@ public class SyncProcessHandler : MonoBehaviour
             " w.Id = erw.Way_id " +
             " WHERE (w.Status = ?) or (erw.Status = ?)";
 
-        List<Way> wege = DBConnector.Instance.GetConnection().Query<Way>(q, new object[] { (int)Way.WayStatus.Local, (int)Way.WayStatus.Local } );
+        List<Way> wege = DBConnector.Instance.GetConnection().Query<Way>(q, new object[] { (int)Way.WayStatus.Local, (int)Way.WayStatus.Local });
         Debug.Log("Restorewege -> Capacity: " + wege.Count);
 
-       
+
 
 
         if (wege.Count > 0)
@@ -244,11 +370,12 @@ public class SyncProcessHandler : MonoBehaviour
         };
 
         List<ExploratoryRouteWalk> erw = (DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * FROM ExploratoryRouteWalk where Way_id = ?", new object[] { way.Id }));
-        if (erw.Count > 0 )
+        if (erw.Count > 0)
         {
             detailedWayExport.RecordingName = erw[0].Name;
             detailedWayExport.RecordingDate = erw[0].Date;
-        } else
+        }
+        else
         {
             Debug.LogError("There is no ERW for Way with Id = " + way.Id);
         }
