@@ -16625,9 +16625,9 @@ MonoBehaviour:
   _ip: 
   _port: 60000
   deviceName: Mobile Phone
-  sharedFolder: RawShared
+  sharedFolder: RawDownloads
   sharedIsFullPath: 0
-  downloadFolder: RawDownload
+  downloadFolder: RawDownloads
   downloadIsFullPath: 0
   serverEnabled: 1
   autoDownload: 1

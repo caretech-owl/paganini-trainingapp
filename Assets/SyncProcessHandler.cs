@@ -48,7 +48,28 @@ public class SyncProcessHandler : MonoBehaviour
             begehungen = DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * FROM ExploratoryRouteWalk where Status =" + ((int)Way.WayStatus.Local));
         }
 
+        // Check existence of shared folder
+        if (!Directory.Exists(FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder))
+        {
+            Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder);
+        }
+
+        // Delete all files in sharing folder
+        try
+        {
+            foreach (var file in Directory.GetFiles(FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder))
+            {
+                File.Delete(file);
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorHandlerSingleton.GetErrorHandler().AddNewError("SynchronizationHandler:Start(): Error in 'Delete all files in sharing folder'", ex.Message, false);
+        }
+
         File.Create(FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder + "/HANDSHAKE").Close();
+
+        File.Create(FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder + "/ENDOFSYNC").Close();
     }
 
     private void ExportWaysToSharedFolder()
@@ -271,6 +292,12 @@ public class SyncProcessHandler : MonoBehaviour
             UI_WaitForTablet.SetActive(false);
             UI_AskForConnection.SetActive(true); 
         }
+        else if (fileUpload.GetName().Equals("ENDOFSYNC"))
+        {
+            UI_WaitForSyncEnd.SetActive(false);
+            UI_SyncFinshed.SetActive(true);
+        }
+
         else if (fileUpload.GetName().Equals("waysForExport.xml"))
         {
             // do nothing here
