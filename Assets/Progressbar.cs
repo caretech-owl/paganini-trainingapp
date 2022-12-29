@@ -32,6 +32,8 @@ public class Progressbar : MonoBehaviour
     public void SetProgressbar(float value)
     {
         slider.value = value;
-        percentage_txt.text = ((int)slider.value * 100) + "%";
+        percentage_txt.text = ((int)Mathf.Floor(slider.value * 100)) + "%";
+
+        Debug.Log("Slider value is" + value);
     }
 }

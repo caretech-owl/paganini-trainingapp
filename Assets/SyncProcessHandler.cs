@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
@@ -16,6 +17,7 @@ public class SyncProcessHandler : MonoBehaviour
     public FileTransferServer fileTransferServer;
     public GameObject SmartphoneAskForConnectionText;
     public GameObject UI_AskForConnection;
+    public GameObject UI_NoData;
     public GameObject UI_WaitForTablet;
     public GameObject UI_WaitForConnectionWithTablet;
     public GameObject UI_WaitForSyncEnd;
@@ -23,7 +25,6 @@ public class SyncProcessHandler : MonoBehaviour
     public Progressbar Progressbar;
 
     private List<Way> ways;
-    private List<ExploratoryRouteWalk> begehungen;
     private List<DetailedWayExport> wayExports;
     private List<DetailedWayExportFiles> exportFilesForWay;
     private string currentFolderForCopies;
@@ -44,8 +45,7 @@ public class SyncProcessHandler : MonoBehaviour
         if (AppState.currentUser != null)
         {
             DBConnector.Instance.Startup();
-            GetWaysFromLocalDatabase();
-            begehungen = DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * FROM ExploratoryRouteWalk where Status =" + ((int)Way.WayStatus.Local));
+            GetWaysFromLocalDatabase();                        
         }
 
         // Check existence of shared folder
@@ -164,6 +164,17 @@ public class SyncProcessHandler : MonoBehaviour
     // Insert logic for processing found files here.
     private void ProcessFile(string file)
     {
+
+        double ChunkSize = 50 * 1024 * 1024;
+        // Get the file size
+        long fileSize = new FileInfo(file).Length;
+
+        if (fileSize > ChunkSize)
+        {
+            ProcessFileChunks(file, ChunkSize);
+            return;
+        }
+
         DetailedWayExportFiles dwef = new DetailedWayExportFiles();
 
         dwef.File = file;
@@ -171,12 +182,59 @@ public class SyncProcessHandler : MonoBehaviour
 
         //Debug.Log("Processed file:" + file);
         //Debug.Log("validServerList.captionText.text: " + validServerList.captionText.text);
+
         exportFilesForWay.Add(dwef);
 
         File.Copy(file, currentFolderForCopies + "/" + new FileInfo(file).Name);
-
         CountOfFiles++;
+
     }
+
+    private void ProcessFileChunks(string file, double ChunkSize)
+    {
+        long fileSize = new FileInfo(file).Length;
+
+        // Calculate the number of chunks to split the file into
+        int chunkCount = (int)Math.Ceiling(fileSize / (double)ChunkSize);
+
+        // Create a buffer for reading chunks
+        byte[] buffer = new byte[(int)ChunkSize];       
+
+        // Read the file in chunks and write them to the destination folder
+        using (FileStream fs = new FileStream(file, FileMode.Open))
+        {
+            for (int i = 0; i < chunkCount; i++)
+            {
+                // Calculate the chunk size
+                int chunkSize = (int)Math.Min(ChunkSize, fileSize - (i * ChunkSize));
+
+                if  (chunkSize < ChunkSize)
+                {
+                    buffer = new byte[(int)chunkSize];
+                }
+
+                // Read the chunk into the buffer
+                fs.Read(buffer, 0, chunkSize);
+
+                // Write the chunk to the destination folder
+                string chunkFileName = $"{new FileInfo(file).Name}.part{i + 1}-{chunkCount}.chunk";
+                File.WriteAllBytes(currentFolderForCopies + "/" + chunkFileName, buffer);
+
+                // Update the DetailedWayExportFiles object
+                DetailedWayExportFiles dwef = new DetailedWayExportFiles();
+                dwef.File = currentFolderForCopies + "/" + chunkFileName;
+                dwef.Checksum = ComputeChecksum(dwef.File);
+                exportFilesForWay.Add(dwef);
+
+                // Update the file size
+                //fileSize -= chunkSize;
+
+                CountOfFiles++;
+            }
+        }
+    }
+
+
 
     private byte[] ComputeChecksum(string file)
     {
@@ -305,7 +363,7 @@ public class SyncProcessHandler : MonoBehaviour
         else
         {
             TransferedCountOfFiles++;
-            Debug.Log("UpdateProgressbar: CountOfFiles: " + CountOfFiles + "TransferedCountOfFiles: " + TransferedCountOfFiles);
+            Debug.Log("UpdateProgressbar: CountOfFiles: " + CountOfFiles + " TransferedCountOfFiles: " + TransferedCountOfFiles);
 
             if (TransferedCountOfFiles >= CountOfFiles)
             {
@@ -314,7 +372,9 @@ public class SyncProcessHandler : MonoBehaviour
             }
             else
             {
-                Progressbar.SetProgressbar(TransferedCountOfFiles / CountOfFiles);
+                float progress = (float)TransferedCountOfFiles / (float)CountOfFiles;
+                Progressbar.SetProgressbar(progress);
+                Debug.Log("UpdateProgressbar: %: " + progress);
             }
         }
     }
@@ -338,7 +398,7 @@ public class SyncProcessHandler : MonoBehaviour
 
     public void OnFileNotFoundUpload(FileRequest fileRequest)
     {
-        Debug.Log("OnFileUpload:fileRequest: " + fileRequest._sourceName);
+        Debug.Log("OnFileNotFoundUpload:fileRequest: " + fileRequest._sourceName);
 
         //if (fileUpload.GetName().Equals("HANDSHAKE"))
         //{
@@ -375,9 +435,15 @@ public class SyncProcessHandler : MonoBehaviour
 
 
         if (wege.Count > 0)
-            this.ways = wege;
-        else
+            this.ways = wege;            
+        else {
             this.ways = null;
+            UI_NoData.SetActive(true);
+            UI_WaitForTablet.SetActive(false);
+        }
+       
+    
+            
 
         //DisplayWege();
     }
