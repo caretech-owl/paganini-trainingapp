@@ -6,11 +6,13 @@ using System.IO;
 using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography;
 using System.Text;
+using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using TMPro;
 using UnityEngine;
 using static FTSCore;
+using static SyncProcessHandler;
 
 public class SyncProcessHandler : MonoBehaviour
 {
@@ -75,54 +77,56 @@ public class SyncProcessHandler : MonoBehaviour
     private void ExportWaysToSharedFolder()
     {
         if (ways != null)
-        {
-            CountOfFiles = 0;
+        {            
             wayExports = new List<DetailedWayExport>();
 
             foreach (var way in ways)
             {
                 DetailedWayExport detailedWayExport = FilledOutRecordingReport(way);
 
-                // set destination folder for tablet
-                detailedWayExport.Folder = way.Name;
+                // Create the dummy files, representing the request messages for the way
+                File.Create(FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder + "/REQUEST-ERW-" + way.Id).Close();
 
-                // Get GPS coordinates
-                List<Pathpoint> points = DBConnector.Instance.GetConnection().Query<Pathpoint>("SELECT * FROM Pathpoint where erw_id=?", way.Id);
-                detailedWayExport.Points = SerializeGPSCoordinatesAsXML(points, detailedWayExport);
-                CountOfFiles++;
+                //// set destination folder for tablet
+                //detailedWayExport.Folder = way.Name;
 
-                // Get files
-                currentFolderForCopies = FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder;
-                exportFilesForWay = new List<DetailedWayExportFiles>();
+                //// Get GPS coordinates
+                //List<Pathpoint> points = DBConnector.Instance.GetConnection().Query<Pathpoint>("SELECT * FROM Pathpoint where erw_id=?", way.Id);
+                //detailedWayExport.Points = SerializeGPSCoordinatesAsXML(points, detailedWayExport);
+                //CountOfFiles++;
 
-                try
-                {
-                    ProcessDirectoryMP4(FileManagement.persistentDataPath + "/" + detailedWayExport.Folder);
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError(ex.Message);
-                }
+                //// Get files
+                //currentFolderForCopies = FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder;
+                //exportFilesForWay = new List<DetailedWayExportFiles>();
+
+                //try
+                //{
+                //    ProcessDirectoryMP4(FileManagement.persistentDataPath + "/" + detailedWayExport.Folder);
+                //}
+                //catch (Exception ex)
+                //{
+                //    Debug.LogError(ex.Message);
+                //}
 
 
-                try
-                {
-                    ProcessDirectoryJPG(FileManagement.persistentDataPath + "/" + detailedWayExport.Folder);
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError(ex.Message);
-                }
+                //try
+                //{
+                //    ProcessDirectoryJPG(FileManagement.persistentDataPath + "/" + detailedWayExport.Folder);
+                //}
+                //catch (Exception ex)
+                //{
+                //    Debug.LogError(ex.Message);
+                //}
 
-                detailedWayExport.Files = exportFilesForWay;
+                //detailedWayExport.Files = exportFilesForWay;
 
                 wayExports.Add(detailedWayExport);
             }
 
             // write down to xml
-            SerializeAsXML();
+            SerializeAsXML(wayExports, "waysForExport.xml");
 
-            Debug.Log("CountOfFiles: " + CountOfFiles);
+            //Debug.Log("CountOfFiles: " + CountOfFiles);
         }
         else
         {
@@ -248,24 +252,24 @@ public class SyncProcessHandler : MonoBehaviour
     }
 
     // write down to xml file in shared folder
-    private void SerializeAsXML()
+    private void SerializeAsXML(List<DetailedWayExport> list, string fileName)
     {
-        var objType = wayExports.GetType();
+        var objType = list.GetType();
 
         try
         {
-            using (var xmlwriter = new XmlTextWriter(FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder + "/waysForExport.xml", Encoding.UTF8))
+            using (var xmlwriter = new XmlTextWriter(FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder + "/" + fileName, Encoding.UTF8))
             {
                 xmlwriter.Indentation = 2;
                 xmlwriter.IndentChar = ' ';
                 xmlwriter.Formatting = Formatting.Indented;
                 var xmlSerializer = new XmlSerializer(objType);
-                xmlSerializer.Serialize(xmlwriter, wayExports);
+                xmlSerializer.Serialize(xmlwriter, list);
             }
         }
         catch (System.IO.IOException ex)
         {
-            ErrorHandlerSingleton.GetErrorHandler().AddNewError("Could nót write to file!", ex.Message, true, false);
+            ErrorHandlerSingleton.GetErrorHandler().AddNewError("Could not write to file!", ex.Message, true, false);
         }
     }
 
@@ -355,8 +359,12 @@ public class SyncProcessHandler : MonoBehaviour
             UI_WaitForSyncEnd.SetActive(false);
             UI_SyncFinshed.SetActive(true);
         }
-
-        else if (fileUpload.GetName().Equals("waysForExport.xml"))
+        else if (fileUpload.GetName().StartsWith("REQUEST-ERW-"))
+        {
+            string msg = fileUpload.GetName().Replace("REQUEST-ERW-", "");
+            PrepareERW(Int32.Parse(msg), msg);
+        }
+        else if (fileUpload.GetName().Equals("waysForExport.xml") || fileUpload.GetName().EndsWith("-manifest.xml"))
         {
             // do nothing here
         }
@@ -387,6 +395,9 @@ public class SyncProcessHandler : MonoBehaviour
         {
             UI_WaitForConnectionWithTablet.SetActive(false);
             UI_WaitForSyncEnd.SetActive(true);
+        } else if (fileRequest._sourceName.StartsWith("REQUEST-ERW-READY"))
+        {
+            // do nothing
         }
 
         //if (fileUpload.GetName().Equals("HANDSHAKE"))
@@ -405,6 +416,7 @@ public class SyncProcessHandler : MonoBehaviour
         //    UI_WaitForTablet.SetActive(false);
         //    UI_AskForConnection.SetActive(true);
         //}
+
     }
 
     public void OnBeginFileUpload(FileUpload fileUpload)
@@ -416,6 +428,57 @@ public class SyncProcessHandler : MonoBehaviour
         //    UI_WaitForTablet.SetActive(false);
         //    UI_AskForConnection.SetActive(true);
         //}
+    }
+
+
+
+    private void PrepareERW(int id, string fileName)
+    {
+        CountOfFiles = 0;
+        var way = ways.FirstOrDefault(w => w.Id == id);
+
+        DetailedWayExport detailedWayExport = FilledOutRecordingReport(way);
+
+        // set destination folder for tablet
+        detailedWayExport.Folder = way.Name;
+
+        // Get GPS coordinates
+        List<Pathpoint> points = DBConnector.Instance.GetConnection().Query<Pathpoint>("SELECT * FROM Pathpoint where erw_id=?", way.Id);
+        detailedWayExport.Points = SerializeGPSCoordinatesAsXML(points, detailedWayExport);
+        CountOfFiles++;
+
+        // Get files
+        currentFolderForCopies = FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder;
+        exportFilesForWay = new List<DetailedWayExportFiles>();
+
+        try
+        {
+            ProcessDirectoryMP4(FileManagement.persistentDataPath + "/" + detailedWayExport.Folder);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError(ex.Message);
+        }
+
+
+        try
+        {
+            ProcessDirectoryJPG(FileManagement.persistentDataPath + "/" + detailedWayExport.Folder);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError(ex.Message);
+        }
+
+        detailedWayExport.Files = exportFilesForWay;
+
+        // export to xml
+        List<DetailedWayExport> erwExport = new List<DetailedWayExport>();
+        erwExport.Add(detailedWayExport);
+        SerializeAsXML(erwExport, $"{detailedWayExport.Name}-manifest.xml");
+
+        fileTransferServer.RequestFile(0, "REQUEST-ERW-READY");
+
     }
 
 
@@ -432,8 +495,6 @@ public class SyncProcessHandler : MonoBehaviour
         Debug.Log("Restorewege -> Capacity: " + wege.Count);
 
 
-
-
         if (wege.Count > 0)
             this.ways = wege;            
         else {
@@ -442,10 +503,6 @@ public class SyncProcessHandler : MonoBehaviour
             UI_WaitForTablet.SetActive(false);
         }
        
-    
-            
-
-        //DisplayWege();
     }
 
     DetailedWayExport FilledOutRecordingReport(Way way)

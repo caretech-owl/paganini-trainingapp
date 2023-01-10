@@ -111,6 +111,9 @@ public class SceneSwitcher : MonoBehaviour
     public void GotoSyncExploratoryRouteWalk()
     {
         SceneManager.LoadScene(AppState.SyncExploratoryRouteWalkScenes);
+
+        // Prevent screen from dimming
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
     }
 
     public void GotoUserLogin()
@@ -120,6 +123,7 @@ public class SceneSwitcher : MonoBehaviour
 
     public void GotoUserSettings()
     {
+        Screen.sleepTimeout = AppState.screenSleepTimeout;
         SceneManager.LoadScene(AppState.UserSettingsScene);
     }
 
