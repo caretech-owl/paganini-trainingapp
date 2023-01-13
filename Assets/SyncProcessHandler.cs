@@ -23,6 +23,8 @@ public class SyncProcessHandler : MonoBehaviour
     public GameObject UI_WaitForConnectionWithTablet;
     public GameObject UI_WaitForSyncEnd;
     public GameObject UI_SyncFinshed;
+    public GameObject UI_SyncError;
+
     public Progressbar Progressbar;
 
     private List<Way> ways;
@@ -39,6 +41,11 @@ public class SyncProcessHandler : MonoBehaviour
 
     private RemoteDevice serverDevice;
     private SyncStatus CurrentStatus;
+
+    // Status of the connection with the remote device
+    private bool isCurrentDeviceConnected;
+    private int connectionAttemps = 0;
+    private DateTime lastHeartbeat = System.DateTime.Now;
 
     // This are the internal protocol states. This is used to verify
     // that incoming (protocol) request arrive at the proper order
@@ -111,6 +118,11 @@ public class SyncProcessHandler : MonoBehaviour
 
         // inform tablet
         RequestConnectionAllowed();
+
+        // We start a co-routine to check on the connection with
+        // the current device
+        lastHeartbeat = System.DateTime.Now;
+        StartCoroutine(CheckDeviceConnection());
     }
 
 
@@ -138,6 +150,8 @@ public class SyncProcessHandler : MonoBehaviour
             this.ways = null;
             UI_NoData.SetActive(true);
             UI_WaitForTablet.SetActive(false);
+
+            ResetOrDisposeProcessProtocol();
         }
 
     }
@@ -354,6 +368,17 @@ public class SyncProcessHandler : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// Resets the underlying FTS connections, related variables, and stops
+    /// connection polling co-routines.
+    /// </summary>
+    private void ResetOrDisposeProcessProtocol()
+    {
+        Log("Performing: ResetOrDisposeProcessProtocol");
+        StopAllCoroutines();
+        fileTransferServer.Disconnect();
+    }
+
     /**************************
      *  FTS event listeners   *
      **************************/
@@ -367,6 +392,9 @@ public class SyncProcessHandler : MonoBehaviour
     {
 
         Log($"OnDevicesListUpdate: Status: {CurrentStatus} Device list: " + devices.Count);
+        isCurrentDeviceConnected = true;
+        connectionAttemps = 0;
+
         if (devices.Count > 0 && CurrentStatus == SyncStatus.LISTEN)
         {
             serverDevice = devices[0];
@@ -560,6 +588,42 @@ public class SyncProcessHandler : MonoBehaviour
         fileTransferServer.RequestFile(serverDevice.ip, fileName);
     }
 
+
+    /// <summary>
+    ///  Checks whether the remote device is reponsive (connected). This is based
+    ///  on delayed polling requests, as FTS does not have a primitive for
+    ///  checking the status of a remote device.
+    /// </summary>
+    private IEnumerator CheckDeviceConnection()
+    {
+        while (isCurrentDeviceConnected || connectionAttemps < 3)
+        {
+            string deviceIp = serverDevice.ip;
+
+
+            // We switch off the connected flag
+            isCurrentDeviceConnected = false;
+            connectionAttemps++;
+
+            // We poll the connected device
+            // If alive, it should set the deviceConnected to = true
+
+            fileTransferServer.SendPollRequest(deviceIp);
+            lastHeartbeat = System.DateTime.Now;
+
+            
+            LogProcess($"Pooling request sent to device {serverDevice.name} (attempt {connectionAttemps}). ");
+
+            yield return new WaitForSeconds(10f);
+        }
+
+
+        LogProcess($"Device {serverDevice.name} is disconnected.");
+
+        UI_WaitForSyncEnd.SetActive(false);
+        UI_SyncError.SetActive(true);
+        ResetOrDisposeProcessProtocol();
+    }
 
 
 
