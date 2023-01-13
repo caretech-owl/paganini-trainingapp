@@ -17049,8 +17049,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 406325932}
-        m_MethodName: DevicesListUpdate
-        m_Mode: 1
+        m_MethodName: OnDevicesListUpdate
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -17077,7 +17077,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 406325932}
-        m_MethodName: OnFileNotFoundUpload
+        m_MethodName: OnFileNotFoundDownload
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -17111,7 +17111,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 406325932}
-        m_MethodName: UpdateProgressbar
+        m_MethodName: OnUpload
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
