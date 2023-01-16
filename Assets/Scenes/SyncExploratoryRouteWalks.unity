@@ -828,7 +828,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 242550758}
+      objectReference: {fileID: 406325932}
     - target: {fileID: 8922460139546043853, guid: d25a88e5321824de7b276b6317e6e78f,
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
@@ -837,7 +837,7 @@ PrefabInstance:
     - target: {fileID: 8922460139546043853, guid: d25a88e5321824de7b276b6317e6e78f,
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: GotoUserSettings
+      value: DenyConnection
       objectReference: {fileID: 0}
     - target: {fileID: 8922460139546043853, guid: d25a88e5321824de7b276b6317e6e78f,
         type: 3}

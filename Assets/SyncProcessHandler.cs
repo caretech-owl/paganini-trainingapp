@@ -38,7 +38,7 @@ public class SyncProcessHandler : MonoBehaviour
     private int nextUpdate = 1;
     bool isSearchForTablet = true;
 
-
+    private List<RemoteDevice> rejectedServers;
     private RemoteDevice serverDevice;
     private SyncStatus CurrentStatus;
 
@@ -79,8 +79,11 @@ public class SyncProcessHandler : MonoBehaviour
             GetWaysFromLocalDatabase();
         }
 
-        // Set the name of the device to the user's mnemonic token
-        fileTransferServer._deviceName = AppState.currentUser.Mnemonic_token;
+        // Set the name of the device to the user's mnemonic token + the type of app
+        fileTransferServer._deviceName = AppState.currentUser.Mnemonic_token + ",USR";
+
+        // Initialise list of rejected servers
+        rejectedServers =  new List<RemoteDevice>();
 
         // Initialise synchronisation folder
         ResetSynchronisationFolders();
@@ -91,13 +94,13 @@ public class SyncProcessHandler : MonoBehaviour
     void Update()
     {
         // If the next update is reached
-        if (isSearchForTablet && Time.time >= nextUpdate)
-        {
-            //Debug.Log(Time.time + ">=" + nextUpdate);
-            // Change the next update (current second+1)
-            nextUpdate = Mathf.FloorToInt(Time.time) + 2;
-            fileTransferServer.SendPollRequest();
-        }
+        //if (isSearchForTablet && Time.time >= nextUpdate)
+        //{
+        //    //Debug.Log(Time.time + ">=" + nextUpdate);
+        //    // Change the next update (current second+1)
+        //    nextUpdate = Mathf.FloorToInt(Time.time) + 2;
+        //    fileTransferServer.SendPollRequest();
+        //}
     }
 
     /**************************************
@@ -123,6 +126,60 @@ public class SyncProcessHandler : MonoBehaviour
         // the current device
         lastHeartbeat = System.DateTime.Now;
         StartCoroutine(CheckDeviceConnection());
+    }
+
+    /// <summary>
+    /// Triggers a connection reject command, to start the actual sync process
+    /// the user.
+    /// </summary>
+    public void DenyConnection()
+    {
+        UI_AskForConnection.SetActive(false);
+        UI_WaitForTablet.SetActive(true);
+
+        // inform tablet
+        RequestConnectionDenied();
+
+        // Add the server to the rejected list
+        rejectedServers.Add(serverDevice);              
+
+        Log($"Connection denied to {serverDevice.name} {serverDevice.ip}");
+
+        CurrentStatus = SyncStatus.LISTEN;
+        serverDevice = null;
+    }
+
+
+    private void HandleConnectionRequest(FileUpload request)
+    {
+        // get the list of current devices
+        RemoteDevice reqDevice = GetRequestingDevice(request);
+
+        string[] comp = reqDevice.name.Split(',');
+
+        if (comp[1] != "SWR")
+        {
+            Log("ERROR: Client is not a Tablet app. Expected 'SWR' (social  worker)");
+            return;
+        }
+        // not in the list of rejected servers
+        else if (rejectedServers.FirstOrDefault(x => x.ip == reqDevice.ip && x.name == reqDevice.name) == null)
+        {
+            serverDevice = reqDevice;
+
+            // name on ui
+            SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text = SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text.Replace("[TABLETNAME]", comp[0]);
+
+            // interface to user decision
+            UI_WaitForTablet.SetActive(false);
+            UI_AskForConnection.SetActive(true);
+
+            CurrentStatus = SyncStatus.WAIT_ACCEPT;
+
+        } else
+        {
+            RequestConnectionDenied(reqDevice);
+        }
     }
 
 
@@ -365,6 +422,7 @@ public class SyncProcessHandler : MonoBehaviour
 
         File.Create(FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder + "/HANDSHAKE").Close();
         File.Create(FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder + "/ENDOFSYNC").Close();
+        File.Create(FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder + "/CANCELSYNC").Close();
     }
 
 
@@ -393,15 +451,16 @@ public class SyncProcessHandler : MonoBehaviour
 
         Log($"OnDevicesListUpdate: Status: {CurrentStatus} Device list: " + devices.Count);
         isCurrentDeviceConnected = true;
-        connectionAttemps = 0;
+        connectionAttemps = 0;        
 
-        if (devices.Count > 0 && CurrentStatus == SyncStatus.LISTEN)
-        {
-            serverDevice = devices[0];
-            //Debug.Log("DevicesListUpdate:" + SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text);
-            SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text = SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text.Replace("[TABLETNAME]", devices[0].name);
-            isSearchForTablet = false;
-        }
+
+        //if (devices.Count > 0 && CurrentStatus == SyncStatus.LISTEN)
+        //{
+        //    serverDevice = devices[0];
+        //    //Debug.Log("DevicesListUpdate:" + SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text);
+        //    SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text = SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text.Replace("[TABLETNAME]", devices[0].name);
+        //    isSearchForTablet = false;
+        //}
     }
 
     /// <summary>
@@ -417,19 +476,21 @@ public class SyncProcessHandler : MonoBehaviour
         {
             if (CurrentStatus != SyncStatus.LISTEN)
             {
-                LogError($"ENDOFSYNC: Process status is {CurrentStatus.ToString()} when LISTEN was expected.");
+                LogError($"HANDSHAKE: Process status is {CurrentStatus.ToString()} when LISTEN was expected.");
+
+                RemoteDevice reqDevice = GetRequestingDevice(fileUpload);
+                RequestConnectionDenied(reqDevice);
                 return;
             }
-            UI_WaitForTablet.SetActive(false);
-            UI_AskForConnection.SetActive(true);
 
-            CurrentStatus = SyncStatus.WAIT_ACCEPT;
+            HandleConnectionRequest(fileUpload);
+            
         }
         else if (fileUpload.GetName().Equals("waysForExport.xml"))
         {
             if (CurrentStatus != SyncStatus.ACCEPT)
             {
-                LogError($"ENDOFSYNC: Process status is {CurrentStatus.ToString()} when ACCEPT was expected.");
+                LogError($"waysForExport: Process status is {CurrentStatus.ToString()} when ACCEPT was expected.");
                 return;
             }
             // do nothing here
@@ -439,7 +500,7 @@ public class SyncProcessHandler : MonoBehaviour
         {
             if (CurrentStatus != SyncStatus.WAIT_ERW_SELECT)
             {
-                LogError($"ENDOFSYNC: Process status is {CurrentStatus.ToString()} when WAIT_ERW_SELECT was expected.");
+                LogError($"REQUEST-ERW: Process status is {CurrentStatus.ToString()} when WAIT_ERW_SELECT was expected.");
                 return;
             }
 
@@ -452,7 +513,7 @@ public class SyncProcessHandler : MonoBehaviour
         {
             if (CurrentStatus != SyncStatus.ERW_READY)
             {
-                LogError($"ENDOFSYNC: Process status is {CurrentStatus.ToString()} when ERW_READY was expected.");
+                LogError($"manifest: Process status is {CurrentStatus.ToString()} when ERW_READY was expected.");
                 return;
             }
             // do nothing here
@@ -534,8 +595,14 @@ public class SyncProcessHandler : MonoBehaviour
     {
         Debug.Log("OnBeginFileUpload:fileUpload: " + fileUpload.GetName());
 
+        // Any connected device can request a handshake, a any time. We can allow this.
+        if (fileUpload.GetName().Equals("HANDSHAKE"))
+        {
+            return;
+        }
+
         // Someone else is trying to get the file?
-        if (!fileUpload.IsThis(serverDevice.ip, fileUpload.GetName()))
+        if (serverDevice != null && !fileUpload.IsThis(serverDevice.ip, fileUpload.GetName()))
         {
             Debug.LogError($"Fatal security risk: Another device in [{string.Join("--", fileTransferServer.GetDeviceNamesList())}] is attempting to retrieve files.");
             // Terminate the process
@@ -567,6 +634,26 @@ public class SyncProcessHandler : MonoBehaviour
     {
         LogProcess("Requesting CONNECTIONALLOWED");
         RequestFile("CONNECTIONALLOWED");
+    }
+
+    /// <summary>
+    /// Informs the server that the connection request has been denied
+    /// </summary>
+    private void RequestConnectionDenied()
+    {
+        LogProcess("Requesting CONNECTIONDENIED");
+        RequestFile("CONNECTIONDENIED");
+    }
+
+
+    /// <summary>
+    /// Informs the server that the connection request has been denied
+    /// </summary>
+    /// <param name="device">Device we want to send the connection denied msg to.</param>
+    private void RequestConnectionDenied(RemoteDevice device)
+    {
+        LogProcess("Requesting CONNECTIONDENIED");
+        fileTransferServer.RequestFile(device.ip, "CONNECTIONDENIED");
     }
 
     /// <summary>
@@ -625,7 +712,31 @@ public class SyncProcessHandler : MonoBehaviour
         ResetOrDisposeProcessProtocol();
     }
 
+    /// <summary>
+    /// Identifies the requesting device, from the incoming request
+    /// </summary>
+    /// <param name="request">Incomping request.</param>
+    private RemoteDevice GetRequestingDevice(FileUpload request)
+    {
+        // get the list of current devices
+        List<RemoteDevice> devices = fileTransferServer.GetDevicesList();
+        RemoteDevice reqDevice = null;
 
+        // identify which device sent the request by ip
+        foreach (var device in devices)
+        {
+            Log($"Device: {device.name} {device.ip}");
+
+            // check the ip
+            if (request.IsThis(device.ip, request.GetName()))
+            {
+                reqDevice = device;
+                break;
+            }
+        }
+
+        return reqDevice;
+    }
 
     /* Log functions */
 
@@ -639,9 +750,18 @@ public class SyncProcessHandler : MonoBehaviour
         Debug.Log(text);
     }
 
-    private void LogProcess(string text)
+    private void LogProcess(string text, RemoteDevice device = null)
     {
-        string entry = $"[{System.DateTime.Now.ToString("HH:mm:ss")}] Status: {CurrentStatus.ToString()} Remote Device: {serverDevice.name} == {text}";
+        string name = "*none*";
+        if (device != null)
+        {
+            name = device.name;
+        } else if (serverDevice != null)
+        {
+            name = serverDevice.name;
+        }
+
+        string entry = $"[{System.DateTime.Now.ToString("HH:mm:ss")}] Status: {CurrentStatus.ToString()} Remote Device: {name} == {text}";
         Debug.Log(entry);
     }
 
