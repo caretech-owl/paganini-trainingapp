@@ -93,14 +93,16 @@ public class SyncProcessHandler : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // If the next update is reached
+        //If the next update is reached
         //if (isSearchForTablet && Time.time >= nextUpdate)
         //{
-        //    //Debug.Log(Time.time + ">=" + nextUpdate);
-        //    // Change the next update (current second+1)
-        //    nextUpdate = Mathf.FloorToInt(Time.time) + 2;
-        //    fileTransferServer.SendPollRequest();
-        //}
+        if (isSearchForTablet && Time.time >= nextUpdate)
+        {
+            //Debug.Log(Time.time + ">=" + nextUpdate);
+            // Change the next update (current second+1)
+            nextUpdate = Mathf.FloorToInt(Time.time) + 2;
+            fileTransferServer.SendPollRequest();
+        }
     }
 
     /**************************************
@@ -157,7 +159,7 @@ public class SyncProcessHandler : MonoBehaviour
 
         string[] comp = reqDevice.name.Split(',');
 
-        if (comp[1] != "SWR")
+        if (comp.Length != 2 && comp[1] != "SWR")
         {
             Log("ERROR: Client is not a Tablet app. Expected 'SWR' (social  worker)");
             return;
@@ -451,7 +453,8 @@ public class SyncProcessHandler : MonoBehaviour
 
         Log($"OnDevicesListUpdate: Status: {CurrentStatus} Device list: " + devices.Count);
         isCurrentDeviceConnected = true;
-        connectionAttemps = 0;        
+        connectionAttemps = 0;
+        isSearchForTablet = false;
 
 
         //if (devices.Count > 0 && CurrentStatus == SyncStatus.LISTEN)
