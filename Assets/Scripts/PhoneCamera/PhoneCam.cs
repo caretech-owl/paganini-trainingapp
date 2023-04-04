@@ -26,7 +26,8 @@ public class PhoneCam : MonoBehaviour
     public GameObject IconFrom;
     public GameObject IconTo;
 
-    private MP4Recorder recorder;
+    //private MP4Recorder recorder;
+    private HEVCRecorder recorder;    
     private AudioInput audioInput;
     private AudioSource microphoneSource;
     private WebCamTexture webCamTexture;
@@ -60,7 +61,7 @@ public class PhoneCam : MonoBehaviour
         {
             if (!devices[i].isFrontFacing)
             {
-                webCamTexture = new WebCamTexture(devices[i].name, videoWidth, videoWidth, fps);
+                webCamTexture = new WebCamTexture(devices[i].name, videoWidth, videoHeight, fps);
             }
         }
 
@@ -116,7 +117,9 @@ public class PhoneCam : MonoBehaviour
             var sampleRate = recordMicrophone ? AudioSettings.outputSampleRate : 0;
             var channelCount = recordMicrophone ? (int)AudioSettings.speakerMode : 0;
             clock = new RealtimeClock();
-            recorder = new MP4Recorder(videoWidth, videoHeight, fps, sampleRate, channelCount, audioBitRate: 96_000);
+            //recorder = new MP4Recorder(videoWidth, videoHeight, fps, sampleRate, channelCount, audioBitRate: 96_000);
+            recorder = new HEVCRecorder(videoWidth, videoHeight, fps, sampleRate, channelCount, audioBitRate: 96_000, videoBitRate: 500_000);
+
             // Create recording inputs
             pixelBuffer = webCamTexture.GetPixels32();
             audioInput = recordMicrophone ? new AudioInput(recorder, clock, microphoneSource, true) : null;
@@ -165,7 +168,7 @@ public class PhoneCam : MonoBehaviour
     }
 
 
-    public async void TakePicture()
+    public async void TakePicture(string filename)
     {
         if (AppState.recording)
         {
@@ -183,7 +186,7 @@ public class PhoneCam : MonoBehaviour
             var path = await rec.FinishWriting();
             Debug.LogWarning($"Saved recording to: {path}");
             string[] split = path.Split('/');
-            string filename = split[split.Length - 1]+".jpg";
+            //string filename = split[split.Length - 1]+".jpg";
             string[] fotos=Directory.GetFiles(path);
             foreach (string foto in fotos)
             {

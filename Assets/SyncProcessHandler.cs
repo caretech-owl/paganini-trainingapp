@@ -232,7 +232,8 @@ public class SyncProcessHandler : MonoBehaviour
             DestinationType = way.DestinationType,
             Start = way.Start,
             StartType = way.StartType,
-            Status = way.Status
+            UserId = AppState.currentUser.Id,
+            FromAPI = way.Status == (Int32)Way.WayStatus.FromAPI
         };
 
         List<ExploratoryRouteWalk> erw = (DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * FROM ExploratoryRouteWalk where Way_id = ?", new object[] { way.Id }));
@@ -298,7 +299,7 @@ public class SyncProcessHandler : MonoBehaviour
         detailedWayExport.Folder = way.Name;
 
         // Get GPS coordinates
-        List<Pathpoint> points = DBConnector.Instance.GetConnection().Query<Pathpoint>("SELECT * FROM Pathpoint where erw_id=?", way.Id);
+        List<Pathpoint> points = DBConnector.Instance.GetConnection().Query<Pathpoint>("SELECT * FROM Pathpoint where RouteId=?", way.Id);
         detailedWayExport.Points = SerializeGPSCoordinatesAsXML(points, detailedWayExport);
         CountOfFiles++;
 
@@ -780,11 +781,12 @@ public class SyncProcessHandler : MonoBehaviour
         public string DestinationType { set; get; }
         public string Name { set; get; }
         public string Description { set; get; }
+        public int UserId { set; get; }
 
         public System.DateTime RecordingDate { set; get; }
         public string RecordingName { set; get; }
 
-        public int Status { set; get; }
+        public bool FromAPI { set; get; }
     }
 
     public class DetailedWayExportFiles

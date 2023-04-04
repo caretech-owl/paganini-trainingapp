@@ -12,6 +12,8 @@ public class BegehungsLocationService : MonoBehaviour
     /// </summary>
     public GameObject LocationSection;
 
+    public PhoneCam PhoneCam;
+
     private Boolean running = false;
     private Boolean rights = false;
 
@@ -188,13 +190,13 @@ public class BegehungsLocationService : MonoBehaviour
     {
         Pathpoint punkt = new Pathpoint
         {
-            Erw_id = AppState.SelectedBegehung,
+            RouteId = AppState.SelectedBegehung,
             Longitude = UnityEngine.Input.location.lastData.longitude,
             Latitude = UnityEngine.Input.location.lastData.latitude,
             Altitude = UnityEngine.Input.location.lastData.altitude,
             Accuracy = UnityEngine.Input.location.lastData.horizontalAccuracy,
             POIType = -1,
-            Timestamp = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            Timestamp = System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             Description = ""
         };
         return punkt;
@@ -211,13 +213,31 @@ public class BegehungsLocationService : MonoBehaviour
     }
 
     /// <summary>
+    /// Saves a POI with a picture
+    /// </summary>
+    public void MarkPOIPhoto()
+    {        
+        Pathpoint currentLocation = GetCurrentWegpunkt();
+        currentLocation.POIType = 1;
+
+        DateTime currentTime = DateTimeOffset.FromUnixTimeMilliseconds(currentLocation.Timestamp).LocalDateTime;
+        currentLocation.PhotoFilename = "recording_" + currentTime.ToString("yyyy_MM_dd_H_mm_ss_FF") + ".jpg";
+        
+
+        DBConnector.Instance.GetConnection().Insert(currentLocation);
+
+        PhoneCam.TakePicture(currentLocation.PhotoFilename);
+
+    }
+
+    /// <summary>
     /// Starts the Tracking Service Again
     /// </summary>
     public void RestartTracking()
     {
 
         
-        DBConnector.Instance.GetConnection().Execute("DELETE FROM Pathpoint where Erw_id=?", AppState.SelectedBegehung.ToString());
+        DBConnector.Instance.GetConnection().Execute("DELETE FROM Pathpoint where RouteId=?", AppState.SelectedBegehung.ToString());
       
             this.running = true;
       

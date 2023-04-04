@@ -254,7 +254,7 @@ public class WaysDataHandler : MonoBehaviour
     {
 
         DBConnector.Instance.GetConnection().Execute("DELETE FROM ExploratoryRouteWalk where Id=" + selectedWay.Id);
-        DBConnector.Instance.GetConnection().Execute("DELETE FROM Pathpoint where Erw_id=" + selectedWay.Id);
+        DBConnector.Instance.GetConnection().Execute("DELETE FROM Pathpoint where RouteId=" + selectedWay.Id);
 
 
         ExploratoryRouteWalk walk = new ExploratoryRouteWalk();
