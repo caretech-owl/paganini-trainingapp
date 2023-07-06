@@ -1,15 +1,44 @@
-﻿[System.Serializable]
-public class WayAPI
+﻿using System;
+using Newtonsoft.Json;
+using UnityEngine;
+
+[System.Serializable]
+public class WayAPI : BaseAPI
 {
-	public int way_id;
+    [JsonIgnore]
+    public int way_id;
+
 	public AddressAPI way_start;
 	public AddressAPI way_destination;
 	public string way_name;
 	public string way_description;
-	//TODO: start_address
+
+    [JsonIgnore]
+    public RouteAPIResult [] routes;
 }
 
-public class WegAPIList
+[System.Serializable]
+public class WayAPIResult : WayAPI
 {
-	public WayAPI[] ways;
+    [JsonRequired]
+    public int way_id;
+
+    [JsonProperty]
+    public RouteAPIResult[] routes;
+}
+
+//TODO: We should move address to its own Table, and then
+// serialise start and destination with the IDs
+[System.Serializable]
+public class WayAPIUpdate : WayAPI
+{
+    [JsonIgnore]
+    public AddressAPI way_start;
+    [JsonIgnore]
+    public AddressAPI way_destination;
+}
+
+public class WayAPIList
+{
+	public WayAPIResult[] ways;
 }

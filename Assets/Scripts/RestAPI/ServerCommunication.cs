@@ -127,58 +127,58 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
 
     #region [API]
 
-    /// <summary>
-    /// This method call server API to get the userProfile
-    /// </summary>
-    /// <param name="callbackOnSuccess">Callback on success.</param>
-    /// <param name="callbackOnFail">Callback on fail.</param>
-    public void GetUserProfile(UnityAction<UserAPI> callbackOnSuccess, UnityAction<string> callbackOnFail, string apitoken)
-    {
-        Header[] header = new Header[1];
-        header[0].name = "apitoken";
-        header[0].value = apitoken;
-        SendRequest(PaganiniRestAPI.getUserProfile, callbackOnSuccess, callbackOnFail, header);
-    }
+    ///// <summary>
+    ///// This method call server API to get the userProfile
+    ///// </summary>
+    ///// <param name="callbackOnSuccess">Callback on success.</param>
+    ///// <param name="callbackOnFail">Callback on fail.</param>
+    //public void GetUserProfile(UnityAction<UserAPI> callbackOnSuccess, UnityAction<string> callbackOnFail, string apitoken)
+    //{
+    //    Header[] header = new Header[1];
+    //    header[0].name = "apitoken";
+    //    header[0].value = apitoken;
+    //    SendRequest(PaganiniRestAPI.getUserProfile, callbackOnSuccess, callbackOnFail, header);
+    //}
 
-    /// <summary>
-    /// This method call server API to login via PIN 
-    /// </summary>
-    /// <param name="callbackOnSuccess">Callback on success.</param>
-    /// <param name="callbackOnFail">Callback on fail.</param>
-    public void GetUserAuthentification(UnityAction<APIToken> callbackOnSuccess, UnityAction<string> callbackOnFail, int pin)
-    {
-        Header[] header = new Header[1];
-        header[0].name = "pin";
-        header[0].value = pin.ToString();
-        SendRequest(PaganiniRestAPI.getAuthToken, callbackOnSuccess, callbackOnFail, header);
-    }
+    ///// <summary>
+    ///// This method call server API to login via PIN 
+    ///// </summary>
+    ///// <param name="callbackOnSuccess">Callback on success.</param>
+    ///// <param name="callbackOnFail">Callback on fail.</param>
+    //public void GetUserAuthentification(UnityAction<APIToken> callbackOnSuccess, UnityAction<string> callbackOnFail, int pin)
+    //{
+    //    Header[] header = new Header[1];
+    //    header[0].name = "pin";
+    //    header[0].value = pin.ToString();
+    //    SendRequest(PaganiniRestAPI.getAuthToken, callbackOnSuccess, callbackOnFail, header);
+    //}
 
-    /// <summary>
-    /// This method call server API to get the wege for the local user
-    /// </summary>
-    /// <param name="callbackOnSuccess">Callback on success.</param>
-    /// <param name="callbackOnFail">Callback on fail.</param>
-    public void GetUserWege(UnityAction<WegAPIList> callbackOnSuccess, UnityAction<string> callbackOnFail, string apitoken)
-    {
-        Header[] header = new Header[1];
-        header[0].name = "apitoken";
-        header[0].value = apitoken;
-        Debug.Log(PaganiniRestAPI.getUserWege + " apitoken: " + apitoken);
-        SendRequest(PaganiniRestAPI.getUserWege, callbackOnSuccess, callbackOnFail, header);
-    }
+    ///// <summary>
+    ///// This method call server API to get the wege for the local user
+    ///// </summary>
+    ///// <param name="callbackOnSuccess">Callback on success.</param>
+    ///// <param name="callbackOnFail">Callback on fail.</param>
+    //public void GetUserWege(UnityAction<WegAPIList> callbackOnSuccess, UnityAction<string> callbackOnFail, string apitoken)
+    //{
+    //    Header[] header = new Header[1];
+    //    header[0].name = "apitoken";
+    //    header[0].value = apitoken;
+    //    Debug.Log(PaganiniRestAPI.getUserWege + " apitoken: " + apitoken);
+    //    SendRequest(PaganiniRestAPI.getUserWege, callbackOnSuccess, callbackOnFail, header);
+    //}
 
-    /// <summary>
-    /// This method call server API to get the begehungen for a specific weg 
-    /// </summary>
-    /// <param name="callbackOnSuccess">Callback on success.</param>
-    /// <param name="callbackOnFail">Callback on fail.</param>
-    public void GetUserBegehungen(UnityAction<ExploratoryRouteWalkAPIList> callbackOnSuccess, UnityAction<string> callbackOnFail, string apitoken, int wegId)
-    {
-        Header[] header = new Header[1];
-        header[0].name = "apitoken";
-        header[0].value = apitoken;
-        SendRequest(PaganiniRestAPI.GetUserBegehungen(wegId), callbackOnSuccess, callbackOnFail, header);
-    }
+    ///// <summary>
+    ///// This method call server API to get the begehungen for a specific weg 
+    ///// </summary>
+    ///// <param name="callbackOnSuccess">Callback on success.</param>
+    ///// <param name="callbackOnFail">Callback on fail.</param>
+    //public void GetUserBegehungen(UnityAction<ExploratoryRouteWalkAPIList> callbackOnSuccess, UnityAction<string> callbackOnFail, string apitoken, int wegId)
+    //{
+    //    Header[] header = new Header[1];
+    //    header[0].name = "apitoken";
+    //    header[0].value = apitoken;
+    //    SendRequest(PaganiniRestAPI.GetUserBegehungen(wegId), callbackOnSuccess, callbackOnFail, header);
+    //}
 
 
 

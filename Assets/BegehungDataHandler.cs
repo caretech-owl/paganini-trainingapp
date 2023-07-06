@@ -26,14 +26,14 @@ public class BegehungDataHandler : MonoBehaviour
 
     private int expectedPin = 0;
 
-    private List<ExploratoryRouteWalk> begehungen;
+    private List<Route> begehungen;
 
     // Start is called before the first frame update
     void Start()
     {
         AppState.SelectedBegehung = -1;
         ///debug
-        if (AppState.currentUser == null)
+        if (AppState.CurrentUser == null)
         {
 
         }
@@ -47,7 +47,7 @@ public class BegehungDataHandler : MonoBehaviour
     /// </summary>
     void Restorebegehungen()
     {
-        List<ExploratoryRouteWalk> begehungen = DBConnector.Instance.GetConnection().Query<ExploratoryRouteWalk>("Select * FROM ExploratoryRouteWalk");
+        List<Route> begehungen = DBConnector.Instance.GetConnection().Query<Route>("Select * FROM ExploratoryRouteWalk");
         if (begehungen.Capacity > 0)
             this.begehungen = begehungen;
         else
@@ -61,7 +61,7 @@ public class BegehungDataHandler : MonoBehaviour
     /// </summary>
     public void DeleteLocalData()
     {
-        DBConnector.Instance.GetConnection().DeleteAll<ExploratoryRouteWalk>();
+        DBConnector.Instance.GetConnection().DeleteAll<Route>();
         begehungen = null;
 
         Restorebegehungen();
@@ -73,7 +73,7 @@ public class BegehungDataHandler : MonoBehaviour
     void SaveUserData()
     {
         if (begehungen != null)
-            foreach (ExploratoryRouteWalk b in begehungen)
+            foreach (Route b in begehungen)
             {
                 DBConnector.Instance.GetConnection().InsertOrReplace(b);
             }
@@ -85,7 +85,7 @@ public class BegehungDataHandler : MonoBehaviour
     public void GetBegehungen()
     {
 
-        ServerCommunication.Instance.GetUserBegehungen(GetBegehungenSucceed, GetBegehungenFailed, AppState.currentUser.Apitoken, AppState.SelectedWeg);
+        //ServerCommunication.Instance.GetUserBegehungen(GetBegehungenSucceed, GetBegehungenFailed, AppState.CurrentUser.Apitoken, AppState.SelectedWeg);
     }
 
     /// <summary>
@@ -93,7 +93,7 @@ public class BegehungDataHandler : MonoBehaviour
     /// </summary>
     public void AddBegehungen()
     {
-        var b = new ExploratoryRouteWalk
+        var b = new Route
         {
             Date = DateTime.Now,
             Name = BegehungName.text,
@@ -101,7 +101,7 @@ public class BegehungDataHandler : MonoBehaviour
         };
 
         if (begehungen == null)
-            begehungen = new List<ExploratoryRouteWalk>();
+            begehungen = new List<Route>();
 
         this.begehungen.Add(b);
         SaveUserData();
@@ -114,14 +114,14 @@ public class BegehungDataHandler : MonoBehaviour
     /// Request was successful
     /// </summary>
     /// <param name="userProfile">UserProfile Object</param>
-    private void GetBegehungenSucceed(ExploratoryRouteWalkAPIList begehungen)
+    private void GetBegehungenSucceed(RouteAPIList begehungen)
     {
         DeleteLocalData();
-        this.begehungen = new List<ExploratoryRouteWalk>();
-        foreach (ExploratoryRouteWalkAPI b in begehungen.erw)
+        this.begehungen = new List<Route>();
+        foreach (var b in begehungen.erw)
         {
-            this.begehungen.Add(new ExploratoryRouteWalk(b));
-            Debug.Log(new ExploratoryRouteWalk(b));
+            this.begehungen.Add(new Route(b));
+            Debug.Log(new Route(b));
         }
         SaveUserData();
         Restorebegehungen();
@@ -151,7 +151,7 @@ public class BegehungDataHandler : MonoBehaviour
 
             if (BegehungPrefab != null)
             {
-                foreach (ExploratoryRouteWalk b in begehungen)
+                foreach (Route b in begehungen)
                 {
                     var neu = Instantiate(BegehungPrefab);
                     if (BegehungList != null)

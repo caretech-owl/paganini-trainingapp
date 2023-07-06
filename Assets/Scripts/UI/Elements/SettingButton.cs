@@ -24,7 +24,7 @@ public class SettingButton : MonoBehaviour
 
     private void SettingsButtonOnClick()
     {
-        SceneManager.LoadScene(AppState.settingsScene);
+        SceneManager.LoadScene(SceneSwitcher.settingsScene);
     }
 
 

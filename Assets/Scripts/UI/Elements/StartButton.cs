@@ -37,6 +37,6 @@ public class StartButton : MonoBehaviour
 
     private void OnClick()
     {
-        SceneManager.LoadScene(AppState.wegeFührungScene);
+        SceneManager.LoadScene(SceneSwitcher.wegeFührungScene);
     }
 }

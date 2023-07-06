@@ -15,7 +15,7 @@ public class WegeführungScene : MonoBehaviour
     {
         // Set current scene to last scene for navigation
         AppState.lastScene = AppState.currentScene;
-        AppState.currentScene = AppState.wegeFührungScene;
+        AppState.currentScene = SceneSwitcher.wegeFührungScene;
     }
 
     // Update is called once per frame

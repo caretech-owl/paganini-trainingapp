@@ -27,7 +27,7 @@ public class PausedView : MonoBehaviour
 
         // Set current scene to last scene for navigation
         AppState.lastScene = AppState.currentScene;
-        AppState.currentScene = AppState.pausedScene;
+        AppState.currentScene = SceneSwitcher.pausedScene;
     }
 
     // Update is called once per frame
@@ -38,6 +38,6 @@ public class PausedView : MonoBehaviour
 
     private void ContinueButtonOnClick()
     {
-        SceneManager.LoadScene(AppState.wegeFührungScene);
+        SceneManager.LoadScene(SceneSwitcher.wegeFührungScene);
     }
 }

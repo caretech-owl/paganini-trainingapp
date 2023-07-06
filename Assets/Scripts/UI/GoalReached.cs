@@ -22,7 +22,7 @@ public class GoalReached : MonoBehaviour
 
         // Set current scene to last scene for navigation
         AppState.lastScene = AppState.currentScene;
-        AppState.currentScene = AppState.goalReachedScene;
+        AppState.currentScene = SceneSwitcher.goalReachedScene;
     }
 
     // Update is called once per frame
@@ -36,6 +36,6 @@ public class GoalReached : MonoBehaviour
         this.mainMenu.EnablePauseButton();
         this.mainMenu.EnableMuteButton();
         this.mainMenu.EnableInkognitoButton();
-        SceneManager.LoadScene(AppState.startScene);
+        SceneManager.LoadScene(SceneSwitcher.startScene);
     }
 }

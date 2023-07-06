@@ -26,7 +26,7 @@ public class VideoHelp : MonoBehaviour
 
         // Set current scene to last scene for navigation
         AppState.lastScene = AppState.currentScene;
-        AppState.currentScene = AppState.videoHelpScene;
+        AppState.currentScene = SceneSwitcher.videoHelpScene;
     }
 
     // Update is called once per frame
@@ -39,7 +39,7 @@ public class VideoHelp : MonoBehaviour
     {
         this.mainMenu.EnableCallButton();
         this.mainMenu.EnablePauseButton();
-        SceneManager.LoadScene(AppState.wegeFührungScene);
+        SceneManager.LoadScene(SceneSwitcher.wegeFührungScene);
 
         // TODO CALL IMPLEMENTATION
 

@@ -32,7 +32,7 @@ public class ShowProfile : MonoBehaviour
     private void BackButtonOnClick()
     {
         Debug.Log("LOAD " + AppState.lastScene);
-        SceneManager.LoadScene(AppState.settingsScene);
+        SceneManager.LoadScene(SceneSwitcher.settingsScene);
     }
 
     private string GetNickname()

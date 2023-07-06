@@ -23,8 +23,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/UserSettings.unity
     guid: 1eaeb5f23d9d746019572516c0d1e236
+  - enabled: 1
+    path: Assets/Scenes/RouteTraining.unity
+    guid: 631fc2d882788440685cffe34beb224e
+  - enabled: 1
+    path: Assets/Scenes/ARDirection.unity
+    guid: 56041febc4c94414485ede7e951df8b0
   m_configObjects:
-    AR Foundation RemoteARFoundationRemoteLoaderSettings: {fileID: 0}
+    AR Foundation RemoteARFoundationRemoteLoaderSettings: {fileID: 11400000, guid: 846186ea58b4a5444a5449294a5ad001,
+      type: 2}
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 94009097ddd01a74cb199a2bee03b1c0,
       type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 95df8a23d8b0bc74d822457ff5d97cc1,

@@ -1,8 +1,15 @@
-﻿[System.Serializable]
-public class AddressAPI
+﻿using System;
+using Newtonsoft.Json;
+using UnityEngine;
+
+[System.Serializable]
+public class AddressAPI : BaseAPI
 {
-	public int adr_id;
-	public int user_id;
+    [JsonIgnore]
+    public int adr_id;
+    [JsonIgnore]
+    public int user_id;
+
 	public string adr_streetname;
 	public string adr_housenumber;
 	public int adr_zipcode;
@@ -11,7 +18,22 @@ public class AddressAPI
 	public string adr_name;
 }
 
+[System.Serializable]
+public class AddressAPIResult : AddressAPI
+{
+    [JsonIgnore]
+    public int adr_id;
+    [JsonIgnore]
+    public int user_id;
+}
+
+[System.Serializable]
+public class AddressAPIUpdate : BaseAPI
+{
+    public int adr_id;
+}
+
 public class AddressAPIList
 {
-	public AddressAPI[] adressen;
+	public AddressAPIResult[] addresses;
 }

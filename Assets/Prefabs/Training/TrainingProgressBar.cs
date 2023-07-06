@@ -1,0 +1,62 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class TrainingProgressBar : MonoBehaviour
+{
+    [SerializeField] private Slider RouteSlider;
+
+
+    private RouteSharedData SharedData;
+    private POIWatcher POIWatch;
+    private LocationUtils RouteValidation;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        SharedData = RouteSharedData.Instance;
+        POIWatch = POIWatcher.Instance;
+
+        POIWatch.OnEnteredPOI += POIWatch_OnEnteredPOI;
+        POIWatch.OnUserLocationChanged += POIWatch_OnUserLocationChanged;
+
+    }
+
+
+
+    // Update is called once per frame
+    void Update()
+    {
+        
+    }
+
+    private void OnDestroy()
+    {
+        POIWatch.OnEnteredPOI -= POIWatch_OnEnteredPOI;
+    }
+
+    public void Initialise() {
+        RouteSlider.minValue = 1;
+        RouteSlider.maxValue = 100;
+
+        //RouteSlider.value = POIWatch.CurrentPOIIndex;
+    }
+
+
+    /* Events */
+
+    private void POIWatch_OnEnteredPOI(object sender, POIArgs e)
+    {
+        
+    }
+
+    private void POIWatch_OnUserLocationChanged(object sender, LocationChangedArgs e)
+    {
+        if (POIWatch.GetCurrentState() != POIWatcher.POIState.OffTrack) {
+            RouteSlider.value = (float)(e.ClosestSegmentIndex / SharedData.PathpointList.Count) * 100;
+        }
+        
+    }
+
+}

@@ -32,7 +32,7 @@ public class AllOkScene : MonoBehaviour
 
         // Set current scene to last scene for navigation
         AppState.lastScene = AppState.currentScene;
-        AppState.currentScene = AppState.allOkScene;
+        AppState.currentScene = SceneSwitcher.allOkScene;
     }
 
     // Update is called once per frame

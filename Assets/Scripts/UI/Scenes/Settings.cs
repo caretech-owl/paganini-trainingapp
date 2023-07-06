@@ -16,7 +16,7 @@ public class Settings : MonoBehaviour
 
         // Set current scene to last scene for navigation
         AppState.lastScene = AppState.currentScene;
-        AppState.currentScene = AppState.settingsScene;
+        AppState.currentScene = SceneSwitcher.settingsScene;
     }
 
     // Update is called once per frame

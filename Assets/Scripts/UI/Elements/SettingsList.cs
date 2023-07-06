@@ -32,7 +32,7 @@ public class SettingsList : MonoBehaviour
 
     private void ShowProfileOnClick()
     {
-        SceneManager.LoadScene(AppState.startScene);
+        SceneManager.LoadScene(SceneSwitcher.startScene);
     }
 
     private void DeleteProfileOnClick()
@@ -54,7 +54,7 @@ public class SettingsList : MonoBehaviour
         AppState.SelectedWeg = -1;
         AppState.lastScene = "";
         // TODO Navigate to start
-        SceneManager.LoadScene(AppState.startScene);
+        SceneManager.LoadScene(SceneSwitcher.startScene);
 
     }
 }

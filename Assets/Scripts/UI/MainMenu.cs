@@ -114,7 +114,7 @@ public class MainMenu : MonoBehaviour
 
     private void PhoneButtonOnClick()
     {
-        SceneManager.LoadScene(AppState.videoHelpScene);
+        SceneManager.LoadScene(SceneSwitcher.videoHelpScene);
     }
 
     private void PauseButtonOnClick(bool isContinue)
@@ -122,11 +122,11 @@ public class MainMenu : MonoBehaviour
         if (isContinue)
         {
             this.ChangeContinueToPauseButton();
-            SceneManager.LoadScene(AppState.wegeFührungScene);
+            SceneManager.LoadScene(SceneSwitcher.wegeFührungScene);
         }
         else
         {
-            SceneManager.LoadScene(AppState.pausedScene);
+            SceneManager.LoadScene(SceneSwitcher.pausedScene);
 
         }
     }

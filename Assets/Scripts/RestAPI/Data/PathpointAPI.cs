@@ -1,13 +1,76 @@
-﻿[System.Serializable]
-public class PathpointAPI
+﻿using System;
+using Newtonsoft.Json;
+using UnityEngine;
+
+public interface IPathpointAPI 
 {
-	public int ppoint_id;
-	public int erw_id;
-	public double ppoint_lon;
-	public double ppoint_lat;
-	public double ppoint_altitude;
-	public double ppoint_accuracy;
-	public int ppoint_poitype;
-	public long ppoint_timestamp;
-	public string ppoint_description;
+    public int ppoint_id { get; set; }
+    public int erw_id { get; set; }
+    public double ppoint_lon { get; set; }
+    public double ppoint_lat { get; set; }
+    public double ppoint_altitude { get; set; }
+    public double ppoint_accuracy { get; set; }
+    public int ppoint_poitype { get; set; }
+    public string ppoint_timestamp { get; set; }
+    public string ppoint_description { get; set; }
+    public string ppoint_instruction { get; set; }
+    public bool IsNew { get; set; }
+
+}
+
+public class PathpointAPIBase : BaseAPI
+{
+    public double ppoint_lon { get; set; }
+    public double ppoint_lat { get; set; }
+    public double ppoint_altitude { get; set; }
+    public double ppoint_accuracy { get; set; }
+    public int ppoint_poitype { get; set; }
+    public string ppoint_timestamp { get; set; }
+    public string ppoint_description { get; set; }
+    public string ppoint_instruction { get; set; }
+}
+
+[System.Serializable]
+public class PathpointAPI : PathpointAPIBase, IPathpointAPI
+{
+    [JsonIgnore]
+    public int ppoint_id { get; set; }
+
+    [JsonIgnore]
+    public int erw_id { get; set; }
+
+}
+
+[System.Serializable]
+public class PathpointAPIResult : PathpointAPIBase, IPathpointAPI
+{
+    [JsonRequired]
+    public int ppoint_id { get; set; }
+
+    [JsonProperty]
+    public int erw_id { get; set; }
+
+}
+
+[System.Serializable]
+public class PathpointAPIUpdate : PathpointAPIBase, IPathpointAPI
+{
+    [JsonRequired]
+    public int ppoint_id { get; set; }
+
+    [JsonIgnore]
+    public int erw_id { get; set; }
+
+}
+
+
+public class PathpointAPIBatch : BaseAPI
+{
+    public IPathpointAPI[] pathpoints;
+}
+
+
+public class PathpointAPIList
+{
+    public PathpointAPIResult[] pathpoints;
 }
