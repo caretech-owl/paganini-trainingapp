@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static PaganiniRestAPI;
 
 public class WayfindInstruction : MonoBehaviour
 {
@@ -62,8 +63,11 @@ public class WayfindInstruction : MonoBehaviour
         InstructionText.text = "Walk until you see this place.";
     }
 
-    public void LoadInstructionDirection()
+    public void LoadInstructionDirection(bool withPhotos = false)
     {
+        if (withPhotos) {
+            SlideShow.LoadSlideShow(POI.Photos);
+        }
         InstructionPanel.SetActive(true);
         DirectionSymbol.gameObject.SetActive(false);
 

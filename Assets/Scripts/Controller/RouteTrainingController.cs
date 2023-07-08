@@ -17,6 +17,7 @@ public class RouteTrainingController : MonoBehaviour
 
     private POIWatcher POIWatch;
     private LocationUtils RouteValidation;
+    private Text2SpeechUtils SpeechUtils;
 
     private RouteWalk CurrentRouteWalk;    
     private bool CurrentlyTraining = false;
@@ -32,6 +33,9 @@ public class RouteTrainingController : MonoBehaviour
 
         POIWatch = POIWatcher.Instance;
         POIWatch.InitialiseWatcher(RouteValidation);
+
+        SpeechUtils = Text2SpeechUtils.Instance;
+        SpeechUtils.Initialise();
 
         POIWatch.OnEnteredPOI -= POIWatch_OnEnteredPOI;
         POIWatch.OnLeftPOI -= POIWatch_OnLeftPOI;
@@ -96,6 +100,8 @@ public class RouteTrainingController : MonoBehaviour
 
         CurrentlyTraining = false;
         LoadArrived();
+
+        HapticUtils.VibrateForNudge();
     }
 
     private void POIWatch_OnAlongTrack(object sender, ValidationArgs e)
@@ -105,6 +111,9 @@ public class RouteTrainingController : MonoBehaviour
         LoadInstruction(POIWatch.CurrentPOIIndex);
 
         Debug.Log("POIWatch_OnAlongTrack");
+
+        HapticUtils.VibrateForNotification();
+        
     }
 
     private void POIWatch_OnOffTrack(object sender, ValidationArgs e)
@@ -113,6 +122,10 @@ public class RouteTrainingController : MonoBehaviour
         Wayfind.LoadOffTrack(e.Issue.ToString());
 
         Debug.Log($"POIWatch_OnOffTrack {e.Issue}");
+
+        HapticUtils.VibrateForAlert();
+
+        SpeechUtils.Speak("You are off-track!");
     }
 
     private void POIWatch_OnLeftPOI(object sender, POIArgs e)
@@ -124,6 +137,8 @@ public class RouteTrainingController : MonoBehaviour
         LoadInstruction(POIWatch.CurrentPOIIndex);
 
         Debug.Log("POIWatch_OnLeftPOI");
+
+        HapticUtils.VibrateForNudge();
     }
 
     private void POIWatch_OnEnteredPOI(object sender, POIArgs e)
@@ -131,10 +146,15 @@ public class RouteTrainingController : MonoBehaviour
         //Confirm that we are finally here
         GPSDebugDisplay.Log($"{POIWatch.CurrentPOIIndex} POIWatch_OnEnteredPOI distance {e.Distance}");
         
-
-        Wayfind.LoadInstructionDirection();
+        // If we are in the first landmark, the OnLeftPOI was not triggered (there was no previous POI)
+        // so let's load the instruction photos as well, not only the directions
+        Wayfind.LoadInstructionDirection(POIWatch.CurrentPOIIndex == 0);
 
         Debug.Log("POIWatch_OnEnteredPOI");
+
+        HapticUtils.VibrateForNudge();
+
+        SpeechUtils.Speak("Careful, look at the instructions!");
     }
 
     private void SendPathpointTrace(Pathpoint pathpoint, POIWatcher.POIState eventType = POIWatcher.POIState.None)
@@ -199,7 +219,7 @@ public class RouteTrainingController : MonoBehaviour
         CurrentlyTraining = true;
         POIWatch.NextPOI();
 
-        GPSDebugDisplay.gameObject.SetActive(true);
+        //GPSDebugDisplay.gameObject.SetActive(true);
         
     }
 

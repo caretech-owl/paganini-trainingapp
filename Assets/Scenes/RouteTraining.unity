@@ -4258,7 +4258,7 @@ MonoBehaviour:
   DesiredAccuracy: 5
   UpdateDistanceInMeters: 1
   GpsUpdateInterval: 3
-  RunSimulation: 0
+  RunSimulation: 1
   WalkSimulationId: -16
   SimulationUpdateInterval: 3
   OnLocationUpdated:
