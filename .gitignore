@@ -59,6 +59,7 @@ sysinfo.txt
 *.apk
 *.aab
 *.unitypackage
+*.blob
 
 # Crashlytics generated file
 crashlytics-build.properties
@@ -89,3 +90,7 @@ Assets/NatSuite.meta
 Assets/SerialPortUtilityPro.meta
 Assets/SerialPortUtilityPro/
 ARFoundationRemoteInstaller
+
+#MacOS
+.DS_Store
+*.swp

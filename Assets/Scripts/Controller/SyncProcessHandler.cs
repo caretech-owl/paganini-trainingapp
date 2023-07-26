@@ -36,7 +36,7 @@ public class SyncProcessHandler : MonoBehaviour
 
     // Next update in second
     private int nextUpdate = 1;
-    bool isSearchForTablet = true;
+    bool isSearchForTablet = false;
 
     private List<RemoteDevice> rejectedServers;
     private RemoteDevice serverDevice;
@@ -70,7 +70,9 @@ public class SyncProcessHandler : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        CurrentStatus = SyncStatus.LISTEN;
+        // To start the synchronisation protocol, it should call StartSyncProtocol.
+
+        CurrentStatus = SyncStatus.LISTEN;        
 
         // We have a user session
         if (AppState.CurrentUser != null)
@@ -78,15 +80,6 @@ public class SyncProcessHandler : MonoBehaviour
             DBConnector.Instance.Startup();
             GetWaysFromLocalDatabase();
         }
-
-        // Set the name of the device to the user's mnemonic token + the type of app
-        fileTransferServer._deviceName = AppState.CurrentUser.Mnemonic_token + ",USR";
-
-        // Initialise list of rejected servers
-        rejectedServers =  new List<RemoteDevice>();
-
-        // Initialise synchronisation folder
-        ResetSynchronisationFolders();
     }
 
 
@@ -105,9 +98,27 @@ public class SyncProcessHandler : MonoBehaviour
         }
     }
 
+
     /**************************************
      *  Public UI events (and utilities)  *
      **************************************/
+    /// <summary>
+    /// Initialise the device to device synchronisation protocol
+    /// </summary>
+    public void StartSyncProtocol()
+    {
+        isSearchForTablet = true;
+
+        // Set the name of the device to the user's mnemonic token + the type of app
+        fileTransferServer._deviceName = AppState.CurrentUser.Mnemonic_token + ",USR";
+
+        // Initialise list of rejected servers
+        rejectedServers = new List<RemoteDevice>();
+
+        // Initialise synchronisation folder
+        ResetSynchronisationFolders();
+    }
+
 
     /// <summary>
     /// Triggers a connection accept command, to start the actual sync process
@@ -182,6 +193,39 @@ public class SyncProcessHandler : MonoBehaviour
         {
             RequestConnectionDenied(reqDevice);
         }
+    }
+
+    /// <summary>
+    /// Synchronise available ways to a folder
+    /// the user.
+    /// </summary>
+    /// <param name="destinationFolder">Path to destination folder </param>
+    public void SyncroniseByFiles(string destFolder)
+    {
+        destFolder = FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder;
+
+
+        if (ways != null)
+        {
+            wayExports = new List<DetailedWayExport>();
+
+            foreach (var way in ways)
+            {
+                DetailedWayExport detailedWayExport = FilledOutRecordingReport(way);                
+                wayExports.Add(detailedWayExport);
+
+                // use destination folder
+                PrepareERWForFileExport(way.Id, destFolder);
+            }
+
+            // write down to xml
+            DetailedWayExportFiles.SerializeAsXML(wayExports, "waysForExport.xml", destFolder);
+        }
+        else
+        {
+            ErrorHandlerSingleton.GetErrorHandler().AddNewError("SyncroniseByFiles", "No ways available!");
+        }        
+
     }
 
 
@@ -259,6 +303,8 @@ public class SyncProcessHandler : MonoBehaviour
     /// </summary>
     private void ExportWaysToSharedFolder()
     {
+        string destFolder = FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder;
+
         if (ways != null)
         {
             wayExports = new List<DetailedWayExport>();
@@ -268,13 +314,13 @@ public class SyncProcessHandler : MonoBehaviour
                 DetailedWayExport detailedWayExport = FilledOutRecordingReport(way);
 
                 // Create the dummy files, representing the request messages for the way
-                File.Create(FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder + "/REQUEST-ERW-" + way.Id).Close();
+                File.Create(destFolder + "/REQUEST-ERW-" + way.Id).Close();
 
                 wayExports.Add(detailedWayExport);
             }
 
             // write down to xml
-            DetailedWayExportFiles.SerializeAsXML(wayExports, "waysForExport.xml", fileTransferServer._sharedFolder);
+            DetailedWayExportFiles.SerializeAsXML(wayExports, "waysForExport.xml", destFolder);
         }
         else
         {
@@ -289,9 +335,9 @@ public class SyncProcessHandler : MonoBehaviour
     /// After the processing, the server is notified that the ERW is ready.
     /// </summary>
     /// <param name="id"> Id of the ERW </param>
-    /// <param name="fileName">Name of manifest file to generate</param>
-    private void PrepareERW(int id, string fileName)
+    private void PrepareERWForSharing(int id)
     {
+        string destFolder = FileManagement.persistentDataPath + "/"+ fileTransferServer._sharedFolder; 
         CountOfFiles = 0;
         var way = ways.FirstOrDefault(w => w.Id == id);
 
@@ -306,11 +352,11 @@ public class SyncProcessHandler : MonoBehaviour
         List<Route> erw = Route.GetAll(x => x.WayId == way.Id && x.FromAPI == false);
         List<Pathpoint> points = Pathpoint.GetPathpointListByRoute(erw[0].Id);
            
-        detailedWayExport.Points = SerializeGPSCoordinatesAsXML(points, detailedWayExport);
+        detailedWayExport.Points = SerializeGPSCoordinatesAsXML(points, detailedWayExport, destFolder); 
         CountOfFiles++;
 
         // Get files
-        currentFolderForCopies = FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder;
+        currentFolderForCopies =  destFolder;
         exportFilesForWay = new List<DetailedWayExportFiles>();
 
         try
@@ -337,22 +383,82 @@ public class SyncProcessHandler : MonoBehaviour
         // export to xml
         List<DetailedWayExport> erwExport = new List<DetailedWayExport>();
         erwExport.Add(detailedWayExport);
-        DetailedWayExportFiles.SerializeAsXML(erwExport, $"{detailedWayExport.Name}-manifest.xml", fileTransferServer._sharedFolder);
+        DetailedWayExportFiles.SerializeAsXML(erwExport, $"{detailedWayExport.Name}-manifest.xml", destFolder);
 
         // Inform the tablet that the ERW is ready to be downloaded
         RequestErwReady();
 
     }
 
+
+    /// <summary>
+    /// Prepares the given ERW for exporting the file export method
+    /// </summary>
+    /// <param name="id"> Id of the ERW </param>
+    /// <param name="destinationFolder"> Destination folder </param>
+    private void PrepareERWForFileExport(int id, string destinationFolder)
+    {
+
+        var way = ways.FirstOrDefault(w => w.Id == id);
+
+        DetailedWayExport detailedWayExport = FilledOutRecordingReport(way);
+
+        // set destination folder for tablet
+        detailedWayExport.Folder = way.Name;
+
+        // Create Destination folder
+        destinationFolder = destinationFolder + "/" + way.Name;
+        Directory.CreateDirectory(destinationFolder);
+
+
+        // Get GPS coordinates        
+        // We take the first non uploaded Route.
+        List<Route> erw = Route.GetAll(x => x.WayId == way.Id && x.FromAPI == false);
+        List<Pathpoint> points = Pathpoint.GetPathpointListByRoute(erw[0].Id);
+
+        detailedWayExport.Points = SerializeGPSCoordinatesAsXML(points, detailedWayExport, destinationFolder);
+
+        // Get files        
+        exportFilesForWay = new List<DetailedWayExportFiles>();
+
+        try
+        {
+            CopyDirectory(FileManagement.persistentDataPath + "/" + detailedWayExport.Folder, "*.mp4", destinationFolder);
+        }
+        catch (Exception ex)
+        {
+            LogError(ex.Message);
+        }
+
+
+        try
+        {
+            CopyDirectory(FileManagement.persistentDataPath + "/" + detailedWayExport.Folder, "*.jpg", destinationFolder);
+        }
+        catch (Exception ex)
+        {
+            LogError(ex.Message);
+        }
+
+        detailedWayExport.Files = exportFilesForWay;
+
+        // export to xml
+        List<DetailedWayExport> erwExport = new List<DetailedWayExport>();
+        erwExport.Add(detailedWayExport);
+        DetailedWayExportFiles.SerializeAsXML(erwExport, $"{detailedWayExport.Name}-manifest.xml", destinationFolder);
+
+    }
+
+
     /// <summary>
     //  Writes down coordinates for specific way to xml file in shared folder
     /// </summary>
-    private string SerializeGPSCoordinatesAsXML(List<Pathpoint> points, DetailedWayExport detailedWayExport)
+    private string SerializeGPSCoordinatesAsXML(List<Pathpoint> points, DetailedWayExport detailedWayExport, string destFolder)
     {
         if (points != null)
         {
             var objType = points.GetType();
-            string filename = FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder + "/" + detailedWayExport.Name + "-coordinates.xml";
+            string filename = destFolder + "/" + detailedWayExport.Name + "-coordinates.xml";
 
             try
             {
@@ -403,6 +509,31 @@ public class SyncProcessHandler : MonoBehaviour
         foreach (string subdirectory in subdirectoryEntries)
             ProcessDirectory(subdirectory, extension);
     }
+
+    /// <summary>
+    // Processes all files in the directory passed in, recurse on any directories
+    // that are found, and process the files they contain.
+    /// </summary>
+    private void CopyDirectory(string targetDirectory, string extension, string destinationDirectory)
+    {
+        // Process the list of files found in the directory.
+        string[] fileEntries = Directory.GetFiles(targetDirectory, extension);
+        foreach (string fileName in fileEntries)
+        {
+            List<DetailedWayExportFiles> entries = DetailedWayExportFiles.
+                PrepareFileForExport(fileName, destinationDirectory, false);
+
+
+            exportFilesForWay = exportFilesForWay.Concat(entries).ToList();
+        }
+
+        // Recurse into subdirectories of this directory.
+        string[] subdirectoryEntries = Directory.GetDirectories(targetDirectory);
+        foreach (string subdirectory in subdirectoryEntries)
+            CopyDirectory(subdirectory, extension, destinationDirectory);
+
+    }
+
 
     /// <summary>
     /// Resets the synchronisation folders, clearing up contents and initialising
@@ -517,7 +648,7 @@ public class SyncProcessHandler : MonoBehaviour
             CurrentStatus = SyncStatus.ERW_PREPARE;
 
             string msg = fileUpload.GetName().Replace("REQUEST-ERW-", "");
-            PrepareERW(Int32.Parse(msg), msg);            
+            PrepareERWForSharing(Int32.Parse(msg));            
         }
         else if (fileUpload.GetName().EndsWith("-manifest.xml"))
         {
@@ -802,13 +933,13 @@ public class SyncProcessHandler : MonoBehaviour
 
 
         // write down to xml file in shared folder
-        public static void SerializeAsXML(List<DetailedWayExport> list, string fileName, string folder)
+        public static void SerializeAsXML(List<DetailedWayExport> list, string fileName, string destFolder)
         {
             var objType = list.GetType();
 
             try
             {
-                using (var xmlwriter = new XmlTextWriter(FileManagement.persistentDataPath + "/" + folder + "/" + fileName, Encoding.UTF8))
+                using (var xmlwriter = new XmlTextWriter(destFolder + "/" + fileName, Encoding.UTF8))
                 {
                     xmlwriter.Indentation = 2;
                     xmlwriter.IndentChar = ' ';
@@ -824,14 +955,14 @@ public class SyncProcessHandler : MonoBehaviour
         }
 
         // Insert logic for processing found files here.
-        public static List<DetailedWayExportFiles> PrepareFileForExport(string file, string destFolder)
+        public static List<DetailedWayExportFiles> PrepareFileForExport(string file, string destFolder, bool doSplit = true)
         {
 
             double ChunkSize = 50 * 1024 * 1024;
             // Get the file size
             long fileSize = new FileInfo(file).Length;
 
-            if (fileSize > ChunkSize)
+            if (fileSize > ChunkSize && doSplit)
             {
                 return SplitFileForExport(file, destFolder, ChunkSize);
             }

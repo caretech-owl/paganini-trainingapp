@@ -1010,7 +1010,7 @@ PrefabInstance:
     - target: {fileID: 8362229569774454563, guid: 3699330bb13b0466ab5759c2e6b65b2a,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 93.2828
+      value: 93.28284
       objectReference: {fileID: 0}
     - target: {fileID: 8362229569774454563, guid: 3699330bb13b0466ab5759c2e6b65b2a,
         type: 3}
@@ -4258,7 +4258,7 @@ MonoBehaviour:
   DesiredAccuracy: 5
   UpdateDistanceInMeters: 1
   GpsUpdateInterval: 3
-  RunSimulation: 1
+  RunSimulation: 0
   WalkSimulationId: -16
   SimulationUpdateInterval: 3
   OnLocationUpdated:
