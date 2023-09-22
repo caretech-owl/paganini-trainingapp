@@ -6374,7 +6374,7 @@ PrefabInstance:
     - target: {fileID: 1886855187885676687, guid: 14708a5ffdf814d1a969d9dc70cf3d21,
         type: 3}
       propertyPath: m_RootOrder
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1886855187885676687, guid: 14708a5ffdf814d1a969d9dc70cf3d21,
         type: 3}
@@ -6485,6 +6485,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: PhonePermissionsPrefab
+      objectReference: {fileID: 0}
+    - target: {fileID: 1886855187885676688, guid: 14708a5ffdf814d1a969d9dc70cf3d21,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7557551721296219161, guid: 14708a5ffdf814d1a969d9dc70cf3d21,
         type: 3}

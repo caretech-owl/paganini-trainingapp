@@ -112,36 +112,42 @@ public class PhoneCam : MonoBehaviour
         string deviceName = Microphone.devices.Length > 0 ? Microphone.devices[0] : null;
         Debug.Log(deviceName);
 
-        try
-        {
-            microphoneSource.clip = Microphone.Start(null, true, 1, AudioSettings.outputSampleRate);
-        }
-        catch
-        {
-            Debug.Log("Problems Initialising microphone clip");
-        }
-        
-        if (MicrophoneInitialised() > 0)
-        {
-            yield return new WaitUntil(() => MicrophoneInitialised() > 0);
-            microphoneSource.Play();
-        }
+        //try
+        //{
+        //    microphoneSource.clip = Microphone.Start(null, true, 1, AudioSettings.outputSampleRate);
+        //}
+        //catch
+        //{
+        //    Debug.Log("Problems Initialising microphone clip");
+        //}
 
+        //if (MicrophoneInitialised() > 0)
+        //{
+        //    yield return new WaitUntil(() => MicrophoneInitialised() > 0);
+        //    microphoneSource.Play();
+        //}
+
+
+        microphoneSource.clip = Microphone.Start(null, true, 1, AudioSettings.outputSampleRate);
+        yield return new WaitUntil(() => Microphone.GetPosition(null) > 0);
+        microphoneSource.Play();
+
+        
     }
 
-    private int MicrophoneInitialised()
-    {
-        try
-        {
-            return Microphone.GetPosition(null);
-        }
-        catch (Exception e)
-        {
-            return -1;
-        }
-        
+    //private int MicrophoneInitialised()
+    //{
+    //    try
+    //    {
+    //        return Microphone.GetPosition(null);
+    //    }
+    //    catch (Exception e)
+    //    {
+    //        return -1;
+    //    }
 
-    }
+
+    //}
 
 
     private void OnDestroy()
@@ -176,7 +182,8 @@ public class PhoneCam : MonoBehaviour
             var channelCount = recordMicrophone ? (int)AudioSettings.speakerMode : 0;
             clock = new RealtimeClock();
             //recorder = new MP4Recorder(videoWidth, videoHeight, fps, sampleRate, channelCount, audioBitRate: 96_000);
-            recorder = new HEVCRecorder(videoWidth, videoHeight, fps, sampleRate, channelCount, audioBitRate: 96_000, videoBitRate: 500_000);
+            //recorder = new HEVCRecorder(videoWidth, videoHeight, fps, sampleRate, channelCount, audioBitRate: 96_000, videoBitRate: 500_000);
+            recorder = new HEVCRecorder(videoWidth, videoHeight, fps, sampleRate, channelCount, videoBitRate: 600_000); 
 
             // Create recording inputs
             pixelBuffer = webCamTexture.GetPixels32();
@@ -210,7 +217,7 @@ public class PhoneCam : MonoBehaviour
      
         }
 
-        Debug.Log(Application.persistentDataPath);
+        //Debug.Log(Application.persistentDataPath);
     }
 
 

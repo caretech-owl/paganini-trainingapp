@@ -16,6 +16,8 @@ using static FTSCore;
 public class SyncProcessHandler : MonoBehaviour
 {
     public FileTransferServer fileTransferServer;
+
+    [Header("Sync UI Configuration")]
     public GameObject SmartphoneAskForConnectionText;
     public GameObject UI_AskForConnection;
     public GameObject UI_NoData;
@@ -24,6 +26,7 @@ public class SyncProcessHandler : MonoBehaviour
     public GameObject UI_WaitForSyncEnd;
     public GameObject UI_SyncFinshed;
     public GameObject UI_SyncError;
+    public GameObject UI_SyncCancel;
 
     public Progressbar Progressbar;
 
@@ -126,8 +129,9 @@ public class SyncProcessHandler : MonoBehaviour
     /// </summary>
     public void AcceptConnection()
     {
-        UI_AskForConnection.SetActive(false);
-        UI_WaitForConnectionWithTablet.SetActive(true);
+        //UI_AskForConnection.SetActive(false);
+        //UI_WaitForConnectionWithTablet.SetActive(true);
+        DisplaySyncUIPanel(UI_WaitForConnectionWithTablet);
 
         // create and copy files to synchronize
         ExportWaysToSharedFolder();
@@ -146,9 +150,10 @@ public class SyncProcessHandler : MonoBehaviour
     /// the user.
     /// </summary>
     public void DenyConnection()
-    {
-        UI_AskForConnection.SetActive(false);
-        UI_WaitForTablet.SetActive(true);
+    {        
+        //UI_AskForConnection.SetActive(false);
+        //UI_WaitForTablet.SetActive(true);
+        DisplaySyncUIPanel(UI_WaitForTablet);
 
         // inform tablet
         RequestConnectionDenied();
@@ -184,8 +189,10 @@ public class SyncProcessHandler : MonoBehaviour
             SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text = SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text.Replace("[TABLETNAME]", comp[0]);
 
             // interface to user decision
-            UI_WaitForTablet.SetActive(false);
-            UI_AskForConnection.SetActive(true);
+            //UI_WaitForTablet.SetActive(false);
+            //UI_AskForConnection.SetActive(true);
+            DisplaySyncUIPanel(UI_AskForConnection);
+
 
             CurrentStatus = SyncStatus.WAIT_ACCEPT;
 
@@ -200,9 +207,9 @@ public class SyncProcessHandler : MonoBehaviour
     /// the user.
     /// </summary>
     /// <param name="destinationFolder">Path to destination folder </param>
-    public void SyncroniseByFiles(string destFolder)
+    public string SyncroniseByFiles(string destFolder)
     {
-        destFolder = FileManagement.persistentDataPath + "/" + fileTransferServer._sharedFolder;
+        destFolder = FileManagement.persistentDataPath + "/" + destFolder;
 
 
         if (ways != null)
@@ -220,12 +227,27 @@ public class SyncProcessHandler : MonoBehaviour
 
             // write down to xml
             DetailedWayExportFiles.SerializeAsXML(wayExports, "waysForExport.xml", destFolder);
+
+            return destFolder;
         }
         else
         {
             ErrorHandlerSingleton.GetErrorHandler().AddNewError("SyncroniseByFiles", "No ways available!");
+            return null;
         }        
 
+    }
+
+
+    private void DisplaySyncUIPanel(GameObject view) {
+        UI_AskForConnection.SetActive(UI_AskForConnection == view);
+        UI_NoData.SetActive(UI_NoData == view);
+        UI_WaitForTablet.SetActive(UI_WaitForTablet == view);
+        UI_WaitForConnectionWithTablet.SetActive(UI_WaitForConnectionWithTablet == view);
+        UI_WaitForSyncEnd.SetActive(UI_WaitForSyncEnd == view);
+        UI_SyncFinshed.SetActive(UI_SyncFinshed == view);
+        UI_SyncError.SetActive(UI_SyncError == view);
+        UI_SyncCancel.SetActive(UI_SyncCancel == view);        
     }
 
 
@@ -251,8 +273,9 @@ public class SyncProcessHandler : MonoBehaviour
         else
         {
             this.ways = null;
-            UI_NoData.SetActive(true);
-            UI_WaitForTablet.SetActive(false);
+            //UI_NoData.SetActive(true);
+            //UI_WaitForTablet.SetActive(false);
+            DisplaySyncUIPanel(UI_NoData);
 
             ResetOrDisposeProcessProtocol();
         }
@@ -670,10 +693,31 @@ public class SyncProcessHandler : MonoBehaviour
                 return;
             }
 
-            UI_WaitForSyncEnd.SetActive(false);
-            UI_SyncFinshed.SetActive(true);
+            //UI_WaitForSyncEnd.SetActive(false);
+            //UI_SyncFinshed.SetActive(true);
+            DisplaySyncUIPanel(UI_SyncFinshed);
+
+            ResetOrDisposeProcessProtocol();
 
             CurrentStatus = SyncStatus.FINISH;
+        }
+        else if (fileUpload.GetName().Equals("CANCELSYNC"))
+        {
+            if (CurrentStatus == SyncStatus.LISTEN ||
+                CurrentStatus == SyncStatus.CANCEL ||
+                CurrentStatus == SyncStatus.FINISH)
+            {
+                LogError($"CANCELSYNC: Process status is {CurrentStatus.ToString()}, and can only be cancelled with a valid ongoing connetion.");
+                return;
+            }
+
+            //UI_WaitForSyncEnd.SetActive(false);
+            //UI_SyncFinshed.SetActive(true);
+            DisplaySyncUIPanel(UI_SyncCancel);
+
+            ResetOrDisposeProcessProtocol();
+
+            CurrentStatus = SyncStatus.CANCEL;
         }
         else
         {
@@ -682,8 +726,9 @@ public class SyncProcessHandler : MonoBehaviour
 
             if (TransferedCountOfFiles >= CountOfFiles)
             {
-                UI_WaitForSyncEnd.SetActive(false);
-                UI_SyncFinshed.SetActive(true);
+                //UI_WaitForSyncEnd.SetActive(false);
+                //UI_SyncFinshed.SetActive(true);
+                DisplaySyncUIPanel(UI_SyncFinshed);
             }
             else
             {
@@ -706,8 +751,9 @@ public class SyncProcessHandler : MonoBehaviour
 
         if (fileRequest._sourceName.Equals("CONNECTIONALLOWED"))
         {
-            UI_WaitForConnectionWithTablet.SetActive(false);
-            UI_WaitForSyncEnd.SetActive(true);
+            //UI_WaitForConnectionWithTablet.SetActive(false);
+            //UI_WaitForSyncEnd.SetActive(true);
+            DisplaySyncUIPanel(UI_WaitForSyncEnd);
 
             CurrentStatus = SyncStatus.ACCEPT;
 
@@ -763,7 +809,7 @@ public class SyncProcessHandler : MonoBehaviour
     private void RequestCancelProcess()
     {
         LogProcess("CancelSynchronisation: Requesting ENDOFSYNC");
-        RequestFile("ENDOFSYNC");
+        RequestFile("CANCELSYNC");
 
         CurrentStatus = SyncStatus.CANCEL;
     }
@@ -848,8 +894,9 @@ public class SyncProcessHandler : MonoBehaviour
 
         LogProcess($"Device {serverDevice.name} is disconnected.");
 
-        UI_WaitForSyncEnd.SetActive(false);
-        UI_SyncError.SetActive(true);
+        //UI_WaitForSyncEnd.SetActive(false);
+        //UI_SyncError.SetActive(true);
+        DisplaySyncUIPanel(UI_SyncError);
         ResetOrDisposeProcessProtocol();
     }
 
