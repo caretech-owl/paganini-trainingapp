@@ -10,7 +10,9 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
     public int Id { set; get; }
     public int PathpointId { set; get; }
     public string Description { set; get; }
-    public PhotoFeedback Feedback { set; get; }
+    public PhotoFeedback CleaningFeedback { set; get; }
+    public PhotoFeedback DiscussionFeedback { set; get; }
+    public long? Timestamp { set; get; }
 
 
     public byte[] Photo { set; get; }
@@ -33,6 +35,7 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
         Debug.Log("Photo ID:" + photoAPI.pphoto_id);
 
         Photo = Convert.FromBase64String(photoAPI.photo);
+        Timestamp = DateUtils.ConvertStringToTsMilliseconds(photoAPI.pphoto_timestamp);
 
         FromAPI = true;
     }
@@ -98,6 +101,8 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
         photo.ppoint_id = PathpointId;
         photo.pphoto_description = Description;
         //photo.photo = Convert.ToBase64String(Photo);
+
+        photo.pphoto_timestamp = DateUtils.ConvertMillisecondsToString(Timestamp);
 
         return photo;
     }

@@ -5,19 +5,27 @@ using UnityEngine.UI;
 
 public class LandmarkIcon : MonoBehaviour
 {
-    public enum LandmarkType {
+    public Color BackgroundColor = Color.white;
+    private Color DefaultColor = Color.white;
+
+    public enum LandmarkType
+    {
         Placeholder = -1,
         Train = 1,
         Coffee = 2,
         Work = 3,
-        Home = 4
+        Home = 4,
+        Bus = 5,
+        Park = 6
     }
-    public LandmarkType selectedLandmarkType = LandmarkType.Placeholder;
+
+    public LandmarkType SelectedLandmarkType = LandmarkType.Placeholder;
     private LandmarkType activeLandmarkType;
 
     // Start is called before the first frame update
     void Start()
     {
+        ApplyColorToBackground(BackgroundColor);
         displayLandmarkType(activeLandmarkType);
     }
 
@@ -25,11 +33,24 @@ public class LandmarkIcon : MonoBehaviour
     void Update()
     {
         // If a new selected landmark has been set, we activate it
-        if (activeLandmarkType != selectedLandmarkType)
+        if (activeLandmarkType != SelectedLandmarkType)
         {
-            displayLandmarkType(selectedLandmarkType);
+            displayLandmarkType(SelectedLandmarkType);
         }
 
+    }
+
+    public void ApplyColor(Color color)
+    {
+        DefaultColor = BackgroundColor;
+        BackgroundColor = color;
+        ApplyColorToBackground(color);
+    }
+
+    public void ResetColor()
+    {
+        BackgroundColor = DefaultColor;
+        ApplyColorToBackground(BackgroundColor);
     }
 
     // activates the selected landmark type
@@ -43,4 +64,23 @@ public class LandmarkIcon : MonoBehaviour
 
         activeLandmarkType = selected;
     }
+
+    public void SetSelectedLandmark(int typeCode)
+    {
+        SelectedLandmarkType = (LandmarkType)typeCode;
+    }
+
+    private void ApplyColorToBackground(Color color)
+    {
+        Image[] backgroundComponents = gameObject.GetComponentsInChildren<Image>(true);
+
+        foreach (var component in backgroundComponents)
+        {
+            if (component.name == "Background")
+            {
+                component.color = color;
+            }
+        }
+    }
+
 }

@@ -310,6 +310,11 @@ public class SyncProcessHandler : MonoBehaviour
         {
             detailedWayExport.RecordingName = erw[0].Name;
             detailedWayExport.RecordingDate = erw[0].Date;
+            detailedWayExport.LocalVideoResolution = erw[0].LocalVideoResolution;
+
+            detailedWayExport.StartTimestamp = (long)erw[0].StartTimestamp;
+            detailedWayExport.EndTimestamp = (long)erw[0].EndTimestamp;
+            detailedWayExport.SocialWorkerId = erw[0].SocialWorkerId;
         }
         else
         {
@@ -969,6 +974,11 @@ public class SyncProcessHandler : MonoBehaviour
 
         public System.DateTime RecordingDate { set; get; }
         public string RecordingName { set; get; }
+        public string LocalVideoResolution { set; get; }
+        public long StartTimestamp { set; get; }
+        public long EndTimestamp { set; get; }
+        public int SocialWorkerId { set; get; }
+
 
         public bool FromAPI { set; get; }
     }

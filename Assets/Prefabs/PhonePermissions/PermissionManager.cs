@@ -64,28 +64,28 @@ public class PermissionManager : MonoBehaviour
             CloseButton.interactable = true;
         }
 
-//#if PLATFORM_ANDROID
-//        int nPermissions = 0;
-//        if (Permission.HasUserAuthorizedPermission(Permission.Microphone))
-//        {
-//            PermissionButtonMikrophone.SetActive(false);
-//            nPermissions++;
-//        }
-//        if (Permission.HasUserAuthorizedPermission(Permission.Camera))
-//        {
-//            PermissionButtonCamera.SetActive(false);
-//            nPermissions++;
-//        }
-//        if (Permission.HasUserAuthorizedPermission(Permission.FineLocation))
-//        {
-//            PermissionButtonGPS.SetActive(false);
-//            nPermissions++;
-//        }
-//        if (nPermissions == 3)
-//        {
-//            CloseButton.interactable = true;
-//        }
-//#endif
+#if PLATFORM_ANDROID
+        int nPermissions = 0;
+        if (Permission.HasUserAuthorizedPermission(Permission.Microphone))
+        {
+            PermissionButtonMikrophone.SetActive(false);
+            nPermissions++;
+        }
+        if (Permission.HasUserAuthorizedPermission(Permission.Camera))
+        {
+            PermissionButtonCamera.SetActive(false);
+            nPermissions++;
+        }
+        if (Permission.HasUserAuthorizedPermission(Permission.FineLocation))
+        {
+            PermissionButtonGPS.SetActive(false);
+            nPermissions++;
+        }
+        if (nPermissions == 3)
+        {
+            CloseButton.interactable = true;
+        }
+#endif
     }
 
     public void AskForPermissionMicrophone()

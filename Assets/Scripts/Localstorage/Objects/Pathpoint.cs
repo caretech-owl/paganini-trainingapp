@@ -19,16 +19,21 @@ public class Pathpoint : BaseModel<Pathpoint>
     public string Description { set; get; }
     public string PhotoFilename { set; get; }
     public string Instruction { set; get; }
+    public double? TimeInVideo { set; get; }
+    public POIFeedback RelevanceFeedback { set; get; }
+    public POIFeedback FamiliarityFeedback { set; get; }
 
-
-
-
-    //[OneToMany(CascadeOperations = CascadeOperation.All)]
     [Ignore]
     public List<PathpointPhoto> Photos { get; set; }
     [Ignore]
     public List<string> PhotoFilenames { get; set; }
 
+    public enum POIFeedback
+    {
+        None = 0,
+        Yes = 1,
+        No = 2,
+    }
 
     public enum POIsType
     {
@@ -58,8 +63,7 @@ public class Pathpoint : BaseModel<Pathpoint>
 
         FromAPI = true;
 
-        var ts = DateTime.ParseExact(pathpoint.ppoint_timestamp, "yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
-        Timestamp = new DateTimeOffset(ts).ToUnixTimeMilliseconds();
+        Timestamp = (long)DateUtils.ConvertStringToTsMilliseconds(pathpoint.ppoint_timestamp);
     }
 
     public static List<Pathpoint> GetPathpointListByRoute(int routeId, Func<Pathpoint, bool> whereCondition = null)
@@ -150,7 +154,7 @@ public class Pathpoint : BaseModel<Pathpoint>
         pp.ppoint_altitude = Altitude;
         pp.ppoint_accuracy = Accuracy;
         pp.ppoint_poitype = (int)POIType;
-        pp.ppoint_timestamp = DateTimeOffset.FromUnixTimeMilliseconds(Timestamp).UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss");
+        pp.ppoint_timestamp = DateUtils.ConvertMillisecondsToString(Timestamp);
         pp.ppoint_description = Description;
 
 

@@ -48,8 +48,8 @@ public class WayItem : MonoBehaviour
         startName.text = w.Start;
         destinationName.text = w.Destination;
 
-        startLandmark.selectedLandmarkType = (LandmarkIcon.LandmarkType) Int32.Parse(w.StartType);
-        destinationLandmark.selectedLandmarkType = (LandmarkIcon.LandmarkType)Int32.Parse(w.DestinationType);
+        startLandmark.SetSelectedLandmark(Int32.Parse(w.StartType)); //selectedLandmarkType = (LandmarkIcon.LandmarkType) Int32.Parse(w.StartType);
+        destinationLandmark.SetSelectedLandmark(Int32.Parse(w.DestinationType)); //(LandmarkIcon.LandmarkType)Int32.Parse(w.DestinationType);
 
         this.way = w;
     }

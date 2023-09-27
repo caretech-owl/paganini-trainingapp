@@ -59,7 +59,7 @@ public class LoginWithPin : MonoBehaviour
         Debug.LogError(errorMessage);
         LoginButton.interactable = true;
 
-        //Assets.ErrorHandlerSingleton.GetErrorHandler().AddNewError("AuthFailed", errorMessage);
+        Assets.ErrorHandlerSingleton.GetErrorHandler().AddNewError("AuthFailed", errorMessage);
 
         OnLoginFail.Invoke();
     }

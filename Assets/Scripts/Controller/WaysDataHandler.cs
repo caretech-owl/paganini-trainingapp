@@ -208,8 +208,8 @@ public class WaysDataHandler : MonoBehaviour
         StartPanelWegStart.text = selectedWay.Start;
         StartPanelWegZiel.text = selectedWay.Destination;
 
-        StartPanelIconStart.GetComponent<LandmarkIcon>().selectedLandmarkType = (LandmarkIcon.LandmarkType)Int32.Parse(selectedWay.StartType);
-        StartPanelIconZiel.GetComponent<LandmarkIcon>().selectedLandmarkType = (LandmarkIcon.LandmarkType)Int32.Parse(selectedWay.DestinationType);
+        StartPanelIconStart.GetComponent<LandmarkIcon>().SetSelectedLandmark(Int32.Parse(selectedWay.StartType));
+        StartPanelIconZiel.GetComponent<LandmarkIcon>().SetSelectedLandmark(Int32.Parse(selectedWay.DestinationType));
 
         
         CheckIfLocalERW();

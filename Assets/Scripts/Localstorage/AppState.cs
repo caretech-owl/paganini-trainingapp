@@ -31,4 +31,9 @@ public static class AppState
 
     public static int screenSleepTimeout = Screen.sleepTimeout;
 
+
+    // Social Worker info
+    public static SocialWorker CurrenSocialWorker = null;
+    public static string SWAPIToken = null;
+
 }

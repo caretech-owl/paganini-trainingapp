@@ -19,6 +19,8 @@ public class PhoneCam : MonoBehaviour
     public int videoWidth = 640;
     public int videoHeight = 480;
     public int fps = 12;
+    public int BestVideoWidth = 1280;
+    public int BestVideoHeight = 720;
     public bool recordMicrophone;
 
     [Header(@"UI Configuration")]
@@ -34,11 +36,11 @@ public class PhoneCam : MonoBehaviour
     private RealtimeClock clock;
 
     private string RouteName;
-
+    private Route CurrentRoute;
 
     private void Start()
     {
-
+        CurrentRoute = Route.Get(AppState.SelectedBegehung);
     }
 
     public void StartCamera()
@@ -73,11 +75,12 @@ public class PhoneCam : MonoBehaviour
     {
 
         Way w = SessionData.Instance.GetData<Way>("SelectedWay");
-        IconFrom.GetComponent<LandmarkIcon>().selectedLandmarkType = (LandmarkIcon.LandmarkType)Int32.Parse(w.StartType);
-        IconTo.GetComponent<LandmarkIcon>().selectedLandmarkType = (LandmarkIcon.LandmarkType)Int32.Parse(w.DestinationType);
+        IconFrom.GetComponent<LandmarkIcon>().SetSelectedLandmark(Int32.Parse(w.StartType));
+        IconTo.GetComponent<LandmarkIcon>().SetSelectedLandmark(Int32.Parse(w.DestinationType));
 
 
         RouteName = AppState.currentBegehung;
+        
 
         WebCamDevice[] devices = WebCamTexture.devices;
         if (devices.Length == 0)
@@ -89,7 +92,8 @@ public class PhoneCam : MonoBehaviour
         {
             if (!devices[i].isFrontFacing)
             {
-                webCamTexture = new WebCamTexture(devices[i].name, videoWidth, videoHeight, fps);
+                var res = GetSupportedResolution(devices[i]);
+                webCamTexture = new WebCamTexture(devices[i].name, res.width, res.height, fps);
             }
         }
 
@@ -134,6 +138,32 @@ public class PhoneCam : MonoBehaviour
 
         
     }
+
+    private Resolution GetSupportedResolution(WebCamDevice device)
+    {
+        // Get all available webcam devices.
+        WebCamDevice[] devices = WebCamTexture.devices;
+        var defaultRes = new Resolution { height = videoWidth, width = videoHeight };
+
+        // Iterate through each device to check supported resolutions.
+
+        if (device.availableResolutions != null)
+        {
+            // Get the supported resolutions for the current device.
+            foreach (Resolution resolution in device.availableResolutions)
+            {
+                Debug.Log("Supported Resolution: " + resolution.width + "x" + resolution.height);
+                if (resolution.width == BestVideoWidth && resolution.height == BestVideoHeight)
+                    return resolution;
+                    //defaultRes = resolution;
+            }
+        }
+        
+
+        return defaultRes;
+    }
+
+
 
     //private int MicrophoneInitialised()
     //{
@@ -183,7 +213,7 @@ public class PhoneCam : MonoBehaviour
             clock = new RealtimeClock();
             //recorder = new MP4Recorder(videoWidth, videoHeight, fps, sampleRate, channelCount, audioBitRate: 96_000);
             //recorder = new HEVCRecorder(videoWidth, videoHeight, fps, sampleRate, channelCount, audioBitRate: 96_000, videoBitRate: 500_000);
-            recorder = new HEVCRecorder(videoWidth, videoHeight, fps, sampleRate, channelCount, videoBitRate: 600_000); 
+            recorder = new HEVCRecorder(webCamTexture.width, webCamTexture.height, fps, sampleRate, channelCount, videoBitRate: 500_000); 
 
             // Create recording inputs
             pixelBuffer = webCamTexture.GetPixels32();
@@ -191,6 +221,11 @@ public class PhoneCam : MonoBehaviour
             // Unmute microphone
             microphoneSource.mute = audioInput == null;
             AppState.recording = true;
+
+            CurrentRoute.SocialWorkerId = AppState.CurrenSocialWorker.Id;
+            CurrentRoute.StartTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            CurrentRoute.LocalVideoResolution = $"{webCamTexture.width}x{webCamTexture.height}";
+            CurrentRoute.InsertDirty();
         }
     }
 
@@ -214,7 +249,10 @@ public class PhoneCam : MonoBehaviour
 
             string VidDir= Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, RouteName ,"Videos")).FullName;
             File.Move(path, VidDir+filename);
-     
+
+            CurrentRoute.EndTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            CurrentRoute.InsertDirty();
+
         }
 
         //Debug.Log(Application.persistentDataPath);
@@ -242,7 +280,7 @@ public class PhoneCam : MonoBehaviour
                 Directory.CreateDirectory(ImgDir);
             }
 
-            JPGRecorder rec = new JPGRecorder(videoWidth, videoHeight);
+            JPGRecorder rec = new JPGRecorder(webCamTexture.width, webCamTexture.height);
             rec.CommitFrame(pixelBuffer);
             var path = await rec.FinishWriting();
             Debug.LogWarning($"Saved recording to: {path}");
@@ -256,6 +294,11 @@ public class PhoneCam : MonoBehaviour
             Debug.LogWarning(path);
             Directory.Delete(path, true);
         }
+    }
+
+    public double GetCurrentPlaybackTimeSeconds()
+    {
+        return (double)clock.timestamp / 1_000_000_000.0;
     }
 
     public void TogglePause()

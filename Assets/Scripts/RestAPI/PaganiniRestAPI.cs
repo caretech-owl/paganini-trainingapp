@@ -24,7 +24,11 @@ public class PaganiniRestAPI
     {
         //Base URL for the Rest APi
         public const string BaseUrl = "https://infinteg-main.fh-bielefeld.de/paganini/api/usr/";
+        public const string BaseSWUrl = "https://infinteg-main.fh-bielefeld.de/paganini/api/sw/";
         //public const string BaseUrl = "http://192.168.178.22:3000/usr/";
+
+        public const string SWAuthenticate = BaseSWUrl + "me/authentification";
+        public const string SwProfile = BaseSWUrl + "me/profile";
 
         public const string Authenticate = BaseUrl + "me/authentification";
 
@@ -42,7 +46,33 @@ public class PaganiniRestAPI
 
     }
 
+    public class SocialWorker
+    {
 
+        public static void Authenticate(string username, string password, UnityAction<AuthTokenAPI> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "username", username },
+                { "password", password }
+            };
+
+            RESTAPI.Instance.Get<AuthTokenAPI>(Path.SWAuthenticate, successCallback, errorCallback, headers);
+        }
+
+        public static void GetProfile(UnityAction<SocialWorkerAPI> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.SWAPIToken }
+            };
+
+            string url = Path.SwProfile;
+
+            RESTAPI.Instance.Get<SocialWorkerAPI>(url, successCallback, errorCallback, headers);
+        }
+
+    }
 
     public class User
     {

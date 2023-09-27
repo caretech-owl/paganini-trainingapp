@@ -162,11 +162,13 @@ public class RouteLocationService : MonoBehaviour
         DateTime currentTime = DateTimeOffset.FromUnixTimeMilliseconds(currentLocation.Timestamp).LocalDateTime;
         currentLocation.PhotoFilename = "recording_" + currentTime.ToString("yyyy_MM_dd_H_mm_ss_FF") + ".jpg";
 
+        currentLocation.TimeInVideo = PhoneCam.GetCurrentPlaybackTimeSeconds();
         currentLocation.Insert();
 
         //DBConnector.Instance.GetConnection().Insert(currentLocation);
 
         PhoneCam.TakePicture(currentLocation.PhotoFilename);
+        
 
     }
 

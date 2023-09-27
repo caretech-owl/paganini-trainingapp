@@ -40,6 +40,17 @@ public class BaseModel<T> where T : BaseModel<T>, new()
     }
 
     /// <summary>
+    /// Inserts or replaces the current model instance in the database, and sets
+    /// the current model as dirty
+    /// </summary>
+    public void InsertDirty()
+    {
+        IsDirty = true;
+        var conn = DBConnector.Instance.GetConnection();
+        conn.InsertOrReplace(this);
+    }
+
+    /// <summary>
     /// Inserts all model instances in the provided list into the database.
     /// </summary>
     /// <param name="list">The list of model instances to insert.</param>

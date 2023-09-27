@@ -30,7 +30,7 @@ public class LandmarkToggleList : MonoBehaviour
 
                 toggle.LandmarkType = icon;
                 toggle.Group = toggleGroup;
-                toggle.AlphaWhenInactive = 0.4f;
+                //toggle.AlphaWhenInactive = 0.2f;
 
                 Toggle t = toggle.GetComponent<Toggle>();
                 t.onValueChanged.AddListener(delegate
