@@ -299,7 +299,7 @@ public class WaysDataHandler : MonoBehaviour
         Route route = new Route();
         route.Id = selectedWay.Id;
         route.WayId = selectedWay.Id;
-        route.Date = DateTime.Now;
+        route.Date = DateTime.Now.ToUniversalTime();
         route.Name = selectedWay.Name;
         route.FromAPI = false;
         route.IsDirty = true;

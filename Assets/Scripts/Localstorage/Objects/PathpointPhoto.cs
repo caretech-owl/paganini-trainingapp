@@ -35,7 +35,12 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
         Debug.Log("Photo ID:" + photoAPI.pphoto_id);
 
         Photo = Convert.FromBase64String(photoAPI.photo);
-        Timestamp = DateUtils.ConvertStringToTsMilliseconds(photoAPI.pphoto_timestamp);
+
+        CleaningFeedback = ((PhotoFeedback?)photoAPI.pphoto_cleaning_feedback) ?? PhotoFeedback.None;
+        DiscussionFeedback = ((PhotoFeedback?)photoAPI.pphoto_discussion_feedback) ?? PhotoFeedback.None;
+
+
+        Timestamp = DateUtils.ConvertUTCStringToTsMilliseconds(photoAPI.pphoto_timestamp, "yyyy-MM-dd'T'HH:mm:ss");
 
         FromAPI = true;
     }
@@ -77,6 +82,11 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
         photo.pphoto_description = Description;
         //photo.photo = Convert.ToBase64String(Photo);
 
+        photo.pphoto_timestamp = DateUtils.ConvertMillisecondsToUTCString(Timestamp);
+
+        photo.pphoto_cleaning_feedback = (int)CleaningFeedback;
+        photo.pphoto_discussion_feedback = (int)DiscussionFeedback;
+
         return photo;
     }
 
@@ -102,7 +112,10 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
         photo.pphoto_description = Description;
         //photo.photo = Convert.ToBase64String(Photo);
 
-        photo.pphoto_timestamp = DateUtils.ConvertMillisecondsToString(Timestamp);
+        photo.pphoto_timestamp = DateUtils.ConvertMillisecondsToUTCString(Timestamp);
+
+        photo.pphoto_cleaning_feedback = (int)CleaningFeedback;
+        photo.pphoto_discussion_feedback = (int)DiscussionFeedback;
 
         return photo;
     }

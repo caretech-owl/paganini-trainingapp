@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using SQLite4Unity3d;
@@ -57,7 +58,7 @@ public class Route : BaseModel<Route>
         this.Id = erw.erw_id;
         this.WayId = erw.way_id;
         this.Name = erw.erw_name;
-        this.Date = System.DateTime.Parse(erw.erw_date);
+        this.Date = (DateTime)DateUtils.ConvertUTCStringToUTCDate(erw.erw_date, "yyyy-MM-dd'T'HH:mm:ss");
         this.Pin = erw.erw_pin;
         this.LocalVideoFilename = erw.erw_video_url;
         if (erw.status != null)
@@ -67,8 +68,8 @@ public class Route : BaseModel<Route>
         this.FromAPI = true;
 
         LocalVideoResolution = erw.erw_video_resolution;
-        StartTimestamp = DateUtils.ConvertStringToTsMilliseconds(erw.erw_start_time);
-        EndTimestamp = DateUtils.ConvertStringToTsMilliseconds(erw.erw_end_time);
+        StartTimestamp = DateUtils.ConvertUTCStringToTsMilliseconds(erw.erw_start_time, "yyyy-MM-dd'T'HH:mm:ss");
+        EndTimestamp = DateUtils.ConvertUTCStringToTsMilliseconds(erw.erw_end_time, "yyyy-MM-dd'T'HH:mm:ss");
         SocialWorkerId = erw.erw_socialworker_id ?? -1;
     }
 
@@ -85,8 +86,8 @@ public class Route : BaseModel<Route>
         };
 
         erw.erw_video_resolution = LocalVideoResolution;
-        erw.erw_start_time = DateUtils.ConvertMillisecondsToString(StartTimestamp);
-        erw.erw_end_time = DateUtils.ConvertMillisecondsToString(EndTimestamp);
+        erw.erw_start_time = DateUtils.ConvertMillisecondsToUTCString(StartTimestamp, "yyyy-MM-dd'T'HH:mm:ss");
+        erw.erw_end_time = DateUtils.ConvertMillisecondsToUTCString(EndTimestamp, "yyyy-MM-dd'T'HH:mm:ss");
 
         erw.erw_socialworker_id = SocialWorkerId != -1 ? SocialWorkerId : null;
 
