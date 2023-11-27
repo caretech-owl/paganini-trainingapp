@@ -21,6 +21,7 @@ public class RouteTrainingTracking : MonoBehaviour
 
     [Header(@"Simulation Options")]
     public bool RunSimulation = false;
+    public bool SaveSimulatedWalk = false;
     [SerializeField] private int WalkSimulationId = -8;
     [SerializeField] private int SimulationUpdateInterval = 3; // Update interval in seconds
     

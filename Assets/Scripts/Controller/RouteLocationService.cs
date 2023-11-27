@@ -1,22 +1,29 @@
 ﻿using UnityEngine;
 using UnityEngine.Android;
 using System.Collections;
-using UnityEngine.UI;
 using System;
-using System.Collections.Generic;
+using UnityEngine.Events;
+
+[System.Serializable]
+public class LocationEvent : UnityEvent<string>
+{
+}
 
 public class RouteLocationService : MonoBehaviour
 {
     /// <summary>
     /// Game Object to Display Geopositon Info in
     /// </summary>
-    public GameObject LocationSection;
+    public RecordingStatus RecordingInfo;
 
     public PhoneCam PhoneCam;
 
-    private Boolean running = false;
-    private Boolean rights = false;
+    [Header(@"Events")]
+    public LocationEvent OnLocationTrackingError;
+    public UnityEvent OnLocationTrackingStarted;
 
+    private Boolean running = false;
+    private int maxLocationTrackingAttempts = 10;
 
     private void Awake()
     {
@@ -25,42 +32,22 @@ public class RouteLocationService : MonoBehaviour
 
     private void Start()
     {
-
+        AppLogger.Instance.LogFromMethod(this.name, "Start", "Start RouteLocationService");
     }
 
+    /// <summary>
+    /// Starts tracking the device's location.
+    /// </summary>
     public void StartTracking()
     {
-        if (AppState.SelectedBegehung != -1)
-        {
-            var route = Route.Get(AppState.SelectedBegehung);
-            GameObject obj = GameObject.Find("BegehungName");
-            if (obj != null)
-            {
-                obj.GetComponent<Text>().text = route.Name;
-            }
-            else
-            {
-                Debug.Log("Component BegehungName not present!");
-            }
+        AppLogger.Instance.LogFromMethod(this.name, "StartTracking", "Checking permissions");
 
-            // var list = DBConnector.Instance.GetConnection().Query<Route>("Select * from ExploratoryRouteWalk where Id=" + AppState.SelectedBegehung);
-            //foreach(Route b in list)
-            //{
-            //    GameObject obj = GameObject.Find("BegehungName");
-            //    if (obj != null)
-            //    {
-            //        obj.GetComponent<Text>().text = b.Name;
-            //    } else {
-            //        Debug.Log("Component BegehungName not present!");
-            //    }
-            //}
-        }
 #if UNITY_ANDROID
         if (!Permission.HasUserAuthorizedPermission(Permission.FineLocation))
         {
             Permission.RequestUserPermission(Permission.FineLocation);
         }
-        this.rights = true;
+
 #elif UNITY_IOS
         PlayerSettings.iOS.locationUsageDescription = "Details to use location";
 #endif
@@ -69,58 +56,99 @@ public class RouteLocationService : MonoBehaviour
 
     private IEnumerator StartLocationService()
     {
+        AppLogger.Instance.LogFromMethod(this.name, "StartLocationService", "Starting location tracking");
+
         if (!Input.location.isEnabledByUser)
         {
-            Debug.Log("User has not enabled location");
+            FatalError("StartLocationService", "User has not enabled location", null);
             yield break;
         }
         Input.location.Start(5, 1);
+
+        int nTrials = 0;
         while (Input.location.status == LocationServiceStatus.Initializing)
         {
+            if (nTrials > maxLocationTrackingAttempts)
+            {
+                FatalError("StartLocationService", $"Failed to initialise locationt tracking after {nTrials}", null);
+                yield break;
+            }
+            AppLogger.Instance.LogFromMethod(this.name, "StartLocationService", $"Trying to initialise Status: {Input.location.status}");
+            nTrials++;
             yield return new WaitForSeconds(1);
         }
         if (Input.location.status == LocationServiceStatus.Failed)
         {
-            Debug.Log("Unable to determine device location");
+            FatalError("StartLocationService", "Unable to determine device location", null);
             yield break;
         }
         Debug.Log("Latitude : " + Input.location.lastData.latitude);
         Debug.Log("Longitude : " + Input.location.lastData.longitude);
         Debug.Log("Altitude : " + Input.location.lastData.altitude);
+        AppLogger.Instance.LogFromMethod(this.name, "StartLocationService", $"Finalised location tracking with status {Input.location.status}");
+
+        OnLocationTrackingStarted.Invoke();
     }
 
 
     private double last = 0;
     /// <summary>
-    /// Prints theGeolocation to the GUI
+    /// Continuously updates the GPS location and logs it to the database while recording.
     /// </summary>
     private void Update()
     {
         //check if tracking on
         if (!this.running) return;
-        //check if tracking mode is running
-        if (UnityEngine.Input.location.status != LocationServiceStatus.Running) return;
+        //check if tracking mode is running        
+
+        if (AppState.recording && !AppState.pausedRec && UnityEngine.Input.location.status != LocationServiceStatus.Running)
+        {
+            // Problems with GPS
+            RecordingInfo.UpdateGPSStatus(RecordingStatus.RunningStatus.Error, 0);
+            FatalError("Update","Location tracking is not running.", null);
+            return;
+        }
+        if (AppState.recording && !AppState.pausedRec && !UnityEngine.Input.location.isEnabledByUser)
+        {
+            // Problems with GPS
+            RecordingInfo.UpdateGPSStatus(RecordingStatus.RunningStatus.Error, 0);
+            FatalError("Update", "User has not enabled location tracking.", null);
+            return;
+        }
+        else if (UnityEngine.Input.location.status != LocationServiceStatus.Running)
+        {
+            return;
+        }
+
         //check if last position newer than last check
-        if (UnityEngine.Input.location.lastData.timestamp == last)return;        
+        if (UnityEngine.Input.location.lastData.timestamp == last)
+        {            
+            //Debug.Log($"Update: EnabledByUser?: {UnityEngine.Input.location.isEnabledByUser} Last Update: {last}  Timestamp: {Input.location.lastData.timestamp}" );
+            return;
+        }
         last = UnityEngine.Input.location.lastData.timestamp;
 
         //punkt in db schreiben
         if (AppState.recording&&!AppState.pausedRec)
         {
             var pathpoint = GetCurrentPathpoint();
-            pathpoint.Insert();
+            pathpoint.InsertDirty();
 
             //DBConnector.Instance.GetConnection().Insert();
             //count = DBConnector.Instance.GetConnection().Query<Pathpoint>("SELECT * FROM Pathpoint where RouteId=?", AppState.SelectedBegehung.ToString()).Count;
+
+            RecordingInfo.UpdateGPSStatus(RecordingStatus.RunningStatus.Active, (float)pathpoint.Accuracy);
         }
     }
 
 
     /// <summary>
-    /// neuen wegpunkt anlegen
+    /// Creates a new path point using the current GPS location.
     /// </summary>
+    /// <returns>A new path point object with the current GPS location information.</returns>
     private Pathpoint GetCurrentPathpoint()
     {
+        Debug.Log("GetCurrentPathpoint: Getting new Pathpoint");
         Pathpoint punkt = new Pathpoint
         {
             RouteId = AppState.SelectedBegehung,            
@@ -139,71 +167,98 @@ public class RouteLocationService : MonoBehaviour
     }
 
     /// <summary>
-    /// neuen wegpunkt mit poi marker anlegen
+    /// Marks a point of interest (POI) on the current path with the specified POI type.
     /// </summary>
+    /// <param name="poiType">The type of the point of interest to mark.</param>
     public void MarkPOI(int poiType)
     {
         Pathpoint poi = GetCurrentPathpoint();
         poi.POIType = (Pathpoint.POIsType)poiType;
 
-        poi.Insert();
+        poi.InsertDirty();
 
         //DBConnector.Instance.GetConnection().Insert(poi);
     }
 
     /// <summary>
-    /// Saves a POI with a picture
+    /// Saves a point of interest (POI) with a photo.
     /// </summary>
     public void MarkPOIPhoto()
-    {        
-        Pathpoint currentLocation = GetCurrentPathpoint();
-        currentLocation.POIType = Pathpoint.POIsType.Reassurance;
+    {
+        AppLogger.Instance.LogFromMethod(this.name, "MarkPOIPhoto", "User took a picture");
+        try
+        {
+            Pathpoint currentLocation = GetCurrentPathpoint();
+            currentLocation.POIType = Pathpoint.POIsType.Reassurance;
 
-        DateTime currentTime = DateTimeOffset.FromUnixTimeMilliseconds(currentLocation.Timestamp).LocalDateTime;
-        currentLocation.PhotoFilename = "recording_" + currentTime.ToString("yyyy_MM_dd_H_mm_ss_FF") + ".jpg";
+            DateTime currentTime = DateTimeOffset.FromUnixTimeMilliseconds(currentLocation.Timestamp).LocalDateTime;
+            currentLocation.PhotoFilename = "recording_" + currentTime.ToString("yyyy_MM_dd_H_mm_ss_FF") + ".jpg";
 
-        currentLocation.TimeInVideo = PhoneCam.GetCurrentPlaybackTimeSeconds();
-        currentLocation.Insert();
+            currentLocation.TimeInVideo = PhoneCam.GetCurrentPlaybackTimeSeconds();
+            currentLocation.InsertDirty();
 
-        //DBConnector.Instance.GetConnection().Insert(currentLocation);
+            AppLogger.Instance.LogFromMethod(this.name, "MarkPOIPhoto", $"Pathpoint inserted [{currentLocation.Latitude} {currentLocation.Longitude} {currentLocation.Accuracy}] ts {currentLocation.Timestamp}");
 
-        PhoneCam.TakePicture(currentLocation.PhotoFilename);
-        
+            PhoneCam.TakePicture(currentLocation.PhotoFilename);
+        }
+        catch (Exception e)
+        {
+            FatalError("MarkPOIPhoto", "Error taking geo-located photo for the POI.", e);
+        }
 
     }
 
     /// <summary>
-    /// Starts the Tracking Service Again
+    /// Restarts or starts the GPS tracking service for the current route.
     /// </summary>
     public void RestartTracking()
     {
-        Pathpoint.DeleteFromRoute(AppState.SelectedBegehung, null, null);
-        
-        //DBConnector.Instance.GetConnection().Execute("DELETE FROM Pathpoint where RouteId=?", AppState.SelectedBegehung.ToString());
+        AppLogger.Instance.LogFromMethod(this.name, "RestartTracking", "Restarting/Starting GPS tracking for current route");
+        Pathpoint.DeleteFromRoute(AppState.SelectedBegehung, null, null);        
       
-        this.running = true;
-      
+        this.running = true;      
     }
 
     /// <summary>
-    /// Stop service if there is no need to query location updates continuously
+    /// Stops the location tracking service.
     /// </summary>
     public void Stop()
     {
-        if (this.running == true) { 
-            UnityEngine.Input.location.Stop();
+        AppLogger.Instance.LogFromMethod(this.name, "Stop", "Stopping location tracking");
+        try
+        {
+            if (UnityEngine.Input.location.status != LocationServiceStatus.Stopped)
+            {
+                UnityEngine.Input.location.Stop();                                
+            }
+            AppLogger.Instance.LogFromMethod(this.name, "Stop", "Stopping tracking done.");
             this.running = false;
         }
+        catch (Exception e)
+        {
+            AppLogger.Instance.LogWarning("Error stopping location tracking: " + e.Message);
+        }
+
     }
 
-    /// <summary>
-    /// Trunkates Local Wegepunk table
-    /// </summary>
-    public void EndBegehung()
+
+    private void FatalError(string method, string appMessage, Exception exception)
+    {
+        var trace = exception != null ? exception.StackTrace : null;
+        AppLogger.Instance.ErrorFromMethod(this.name, method, appMessage + " StackTrace: " + trace);
+
+        Debug.Log(appMessage);
+        if (trace != null)
+            Debug.Log(trace);
+
+        Stop();
+
+        OnLocationTrackingError?.Invoke(appMessage);
+    }
+
+    private void OnDestroy()
     {
         Stop();
-        AppState.wrapBegehung = true;
     }
-
 
 }

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static LocationUtils;
 
 public class GPSDebug : MonoBehaviour
 {
@@ -41,15 +42,17 @@ public class GPSDebug : MonoBehaviour
         TsText.text = pathpoint.Timestamp.ToString();
     }
 
-
-    public void DisplayMetrics(double poiDistance, double segDistance, double segBearing, double userHeading, double segHeading)
+    //GPSDebugDisplay.DisplayMetrics(distance, minDis, minBearing, userHeading, segmentHeading);
+    public void DisplayMetrics(double poiDistance, SegmentDistanceAndBearing segmentInfo)
     {
         POIDistance.text = poiDistance.ToString();
-        SegDistance.text = segDistance.ToString();
-        SegBearing.text = segBearing.ToString();
 
-        UserHeading.text = userHeading.ToString();
-        SegmentHeading.text = segHeading.ToString();
+        POIDistance.text = poiDistance.ToString();
+        SegDistance.text = segmentInfo.MinDistanceToSegment.ToString();
+        SegBearing.text = segmentInfo.MinBearingDifference.ToString();
+
+        UserHeading.text = segmentInfo.UserHeading.ToString();
+        SegmentHeading.text = segmentInfo.SegmentHeading.ToString();
     }
 
     public void Log(string message)

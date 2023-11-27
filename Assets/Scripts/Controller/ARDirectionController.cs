@@ -173,10 +173,10 @@ public class ARDirectionController : MonoBehaviour
 
     public void CalulateAheadOrientation(Pathpoint pathpoint)
     {
-        (double minDistanceToSegment, double minBearingDifference, double userHeading, double segmentHeading, int closestSegmentIndex) = RouteValidation.CalculateMinDistanceAndBearing(pathpoint);
+        var segmentInfo = RouteValidation.CalculateMinDistanceAndBearing(pathpoint);
 
         // We target the a pathpoint in the road ahead
-        int orientationTargetIndex = Math.Min(SharedData.PathpointList.Count, closestSegmentIndex + 3);
+        int orientationTargetIndex = Math.Min(SharedData.PathpointList.Count, segmentInfo.ClosestSegmentIndex + 3);
 
         // calculate bearing to target pathpoint
         CurrentAheadBearing = RouteValidation.CalculateBearing(pathpoint, SharedData.PathpointList[orientationTargetIndex]);      

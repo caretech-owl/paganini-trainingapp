@@ -149,4 +149,46 @@ public class BaseModel<T> where T : BaseModel<T>, new()
     }
 
 
+    /// Provides utility methods for handling nullable enums when interacting with SQLite.
+    /// SQLite does not handle nullable enums directly, hence the need for conversion methods.
+
+    /// <summary>
+    /// Converts a nullable enum value to its string representation.
+    /// </summary>
+    /// <typeparam name="TEnum">The enum type.</typeparam>
+    /// <param name="enumValue">The nullable enum value to convert.</param>
+    /// <returns>The string representation of the nullable enum value.</returns>
+    /// <remarks>
+    /// SQLite does not natively support nullable enum types. These methods facilitate the conversion
+    /// between nullable enums and their string representations for proper storage and retrieval in the database.
+    /// </remarks>
+    protected string ConvertNullableEnumToString<TEnum>(TEnum? enumValue) where TEnum : struct
+    {
+        if (enumValue.HasValue)
+        {
+            return enumValue.Value.ToString();
+        }
+        return null; // Handle 'None' or 'Unknown' values
+    }
+
+    /// <summary>
+    /// Converts a string representation to a nullable enum value.
+    /// </summary>
+    /// <typeparam name="TEnum">The enum type.</typeparam>
+    /// <param name="stringValue">The string representation of the enum value.</param>
+    /// <returns>The nullable enum value parsed from the string representation.</returns>
+    /// <remarks>
+    /// SQLite does not natively support nullable enum types. These methods facilitate the conversion
+    /// between nullable enums and their string representations for proper storage and retrieval in the database.
+    /// </remarks>
+    protected TEnum? ConvertStringToNullableEnum<TEnum>(string stringValue) where TEnum : struct
+    {
+        if (!string.IsNullOrEmpty(stringValue) && Enum.TryParse(typeof(TEnum), stringValue, out object result))
+        {
+            return (TEnum)result;
+        }
+        return null;
+    }
+
+
 }

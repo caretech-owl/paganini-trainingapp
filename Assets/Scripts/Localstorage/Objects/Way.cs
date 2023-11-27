@@ -48,17 +48,6 @@ public class Way : BaseModel<Way>
 
     public WayAPI ToAPI()
     {
-        AddressAPI addrStart = new AddressAPI
-        {
-            adr_name = this.Start,
-            adr_icon = this.StartType
-        };
-
-        AddressAPI addrDestination = new AddressAPI
-        {
-            adr_name = this.Destination,
-            adr_icon = this.DestinationType
-        };
 
         WayAPI way;
 
@@ -66,16 +55,23 @@ public class Way : BaseModel<Way>
         {
             way = new WayAPI();
             way.IsNew = true;
-            way.way_start = addrStart;
-            way.way_destination = addrDestination;
+            way.way_start = new AddressAPI();
+            way.way_destination = new AddressAPI();
         }
         else
         {
             way = new WayAPIUpdate();
             way.way_id = this.Id;
-            way.way_start = null;
-            way.way_destination = null;
+            way.way_start = new AddressAPIUpdate();
+            way.way_destination = new AddressAPIUpdate();
         }
+
+
+        way.way_start.adr_name = this.Start;
+        way.way_start.adr_icon = this.StartType;
+
+        way.way_destination.adr_name = this.Destination;
+        way.way_destination.adr_icon = this.DestinationType;
 
 
         way.way_name = this.Name;

@@ -40,7 +40,7 @@ public class PhotoElementPrefab : MonoBehaviour
 
     public void FillPhoto(PathpointPhoto p)
     {
-        RenderPicture(p.Photo);
+        RenderPicture(p.Data.Photo);
     }
 
     private void RenderPicture(byte[] imageBytes)

@@ -18,6 +18,8 @@ public class RouteTrainingController : MonoBehaviour
     private POIWatcher POIWatch;
     private LocationUtils RouteValidation;
     private Text2SpeechUtils SpeechUtils;
+    private WalkEventManager WalkEventHandler;
+    private RouteWalkLogger RouteWalkLog;
 
     private RouteWalk CurrentRouteWalk;    
     private bool CurrentlyTraining = false;
@@ -37,42 +39,95 @@ public class RouteTrainingController : MonoBehaviour
         SpeechUtils = Text2SpeechUtils.Instance;
         SpeechUtils.Initialise();
 
+        RouteWalkLog = RouteWalkLogger.Instance;
+
         POIWatch.OnEnteredPOI -= POIWatch_OnEnteredPOI;
         POIWatch.OnLeftPOI -= POIWatch_OnLeftPOI;
         POIWatch.OnOffTrack -= POIWatch_OnOffTrack;
+        POIWatch.OnOffTrackEnd -= POIWatch_OnOffTrackEnd;
+        POIWatch.OnDecisionStart -= POIWatch_OnDecisionStart;
+        POIWatch.OnDecisionEnd -= POIWatch_OnDecisionEnd;
+        POIWatch.OnDecisionEnd -= POIWatch_OnDecisionEnd;
+        POIWatch.OnSegmentStart -= POIWatch_OnSegmentStart;
         POIWatch.OnAlongTrack -= POIWatch_OnAlongTrack;
         POIWatch.OnArrived -= POIWatch_OnArrived;
         POIWatch.OnWalkStatusChange -= POIWatch_OnWalkStatusChange;
         POIWatch.OnLog -= POIWatch_OnLog;
         POIWatch.OnInvalidPathpoint -= POIWatch_OnInvalidPathpoint;
+        POIWatch.OnUserLocationChanged -= POIWatch_OnUserLocationChanged;
 
         POIWatch.OnEnteredPOI += POIWatch_OnEnteredPOI;        
         POIWatch.OnLeftPOI += POIWatch_OnLeftPOI;        
-        POIWatch.OnOffTrack += POIWatch_OnOffTrack;        
+        POIWatch.OnOffTrack += POIWatch_OnOffTrack;
+        POIWatch.OnOffTrackEnd += POIWatch_OnOffTrackEnd;
+        POIWatch.OnDecisionStart += POIWatch_OnDecisionStart;
+        POIWatch.OnDecisionEnd += POIWatch_OnDecisionEnd;
+        POIWatch.OnSegmentStart += POIWatch_OnSegmentStart;
+        POIWatch.OnSegmentEnd += POIWatch_OnSegmentEnd;
         POIWatch.OnAlongTrack += POIWatch_OnAlongTrack;        
         POIWatch.OnArrived += POIWatch_OnArrived;
         POIWatch.OnWalkStatusChange += POIWatch_OnWalkStatusChange;        
         POIWatch.OnLog += POIWatch_OnLog;        
         POIWatch.OnInvalidPathpoint += POIWatch_OnInvalidPathpoint;
+        POIWatch.OnUserLocationChanged += POIWatch_OnUserLocationChanged;
 
         SharedData = RouteSharedData.Instance;
         SharedData.OnDataDownloaded -= RouteSharedData_OnDataDownloaded;
         SharedData.OnDataDownloaded += RouteSharedData_OnDataDownloaded;
 
+        WalkEventHandler = new ();
+
     }
+
+
 
     void OnDestroy()
     {
         POIWatch.OnEnteredPOI -= POIWatch_OnEnteredPOI;
         POIWatch.OnLeftPOI -= POIWatch_OnLeftPOI;
         POIWatch.OnOffTrack -= POIWatch_OnOffTrack;
+        POIWatch.OnOffTrackEnd -= POIWatch_OnOffTrackEnd;
+        POIWatch.OnDecisionStart -= POIWatch_OnDecisionStart;
+        POIWatch.OnDecisionEnd -= POIWatch_OnDecisionEnd;
+        POIWatch.OnDecisionEnd -= POIWatch_OnDecisionEnd;
+        POIWatch.OnSegmentStart -= POIWatch_OnSegmentStart;
         POIWatch.OnAlongTrack -= POIWatch_OnAlongTrack;
         POIWatch.OnArrived -= POIWatch_OnArrived;
         POIWatch.OnWalkStatusChange -= POIWatch_OnWalkStatusChange;
         POIWatch.OnLog -= POIWatch_OnLog;
         POIWatch.OnInvalidPathpoint -= POIWatch_OnInvalidPathpoint;
+        POIWatch.OnUserLocationChanged -= POIWatch_OnUserLocationChanged;
 
         SharedData.OnDataDownloaded -= RouteSharedData_OnDataDownloaded;
+    }
+
+    private void POIWatch_OnUserLocationChanged(object sender, LocationChangedArgs e)
+    {
+        if (!RouteTracking.RunSimulation || RouteTracking.SaveSimulatedWalk) {
+            CurrentRouteWalk.WalkCompletionPercentage = (float)e.SegmentInfo.ClosestSegmentIndex / (float)SharedData.PathpointList.Count;
+            CurrentRouteWalk.InsertDirty();
+        }
+        
+    }
+
+    private void POIWatch_OnDecisionEnd(object sender, DecisionArgs e)
+    {
+        WalkEventHandler.ProcessDecisionStatusChange(e);
+    }
+
+    private void POIWatch_OnDecisionStart(object sender, DecisionArgs e)
+    {
+        WalkEventHandler.ProcessDecisionStatusChange(e);
+    }
+
+    private void POIWatch_OnSegmentEnd(object sender, SegmentCompletedArgs e)
+    {
+        WalkEventHandler.ProcessSegmentCompleteStatusChange(e);
+    }
+
+    private void POIWatch_OnSegmentStart(object sender, SegmentCompletedArgs e)
+    {
+        WalkEventHandler.ProcessSegmentCompleteStatusChange(e);
     }
 
     private void POIWatch_OnInvalidPathpoint(object sender, PathpointInvalidArgs e)
@@ -92,6 +147,8 @@ public class RouteTrainingController : MonoBehaviour
     {
         GPSDebugDisplay.Log($"{POIWatch.CurrentPOIIndex} POIWatch_OnWalkStatusChange IsWalking: {e.IsWalking} Pace: {e.Pace}");
         Debug.Log($"{POIWatch.CurrentPOIIndex} POIWatch_OnWalkStatusChange IsWalking: {e.IsWalking} Pace: {e.Pace}");
+
+        WalkEventHandler.ProcessWalkStatusChange(e);
     }
 
     private void POIWatch_OnArrived(object sender, POIArgs e)
@@ -99,14 +156,25 @@ public class RouteTrainingController : MonoBehaviour
         GPSDebugDisplay.Log($"{POIWatch.CurrentPOIIndex} POIWatch_OnArrived distance {e.Distance}");
 
         CurrentlyTraining = false;
+
+        if (!RouteTracking.RunSimulation)
+        {
+            CurrentRouteWalk.WalkCompletion = RouteWalk.RouteWalkCompletion.Completed;
+            CurrentRouteWalk.EndDateTime = DateTime.Now; 
+            CurrentRouteWalk.InsertDirty();
+        }
+
         LoadArrived();
 
         HapticUtils.VibrateForNudge();
+
+        // We save the local route walk data
+        SaveLocalRouteWalk();
     }
 
     private void POIWatch_OnAlongTrack(object sender, ValidationArgs e)
     {
-        GPSDebugDisplay.Log($"{POIWatch.CurrentPOIIndex} POIWatch_OnAlongTrack dist:{e.MinDistanceToSegment} bear:{e.MinBearingDifference} seg-b:{e.SegmentHeading} usr-b: {e.UserHeading}");
+        GPSDebugDisplay.Log($"{POIWatch.CurrentPOIIndex} POIWatch_OnAlongTrack {e.SegmentInfo}");
         //Wayfind.LoadOnTrack();
         LoadInstruction(POIWatch.CurrentPOIIndex);
 
@@ -118,14 +186,21 @@ public class RouteTrainingController : MonoBehaviour
 
     private void POIWatch_OnOffTrack(object sender, ValidationArgs e)
     {
-        GPSDebugDisplay.Log($"{POIWatch.CurrentPOIIndex} POIWatch_OnOffTrack dist:{e.MinDistanceToSegment} bear:{e.MinBearingDifference} seg-b:{e.SegmentHeading} usr-b: {e.UserHeading} issue: {e.Issue}");
+        GPSDebugDisplay.Log($"{POIWatch.CurrentPOIIndex} POIWatch_OnOffTrack {e.SegmentInfo} issue: {e.Issue}");
         Wayfind.LoadOffTrack(e.Issue.ToString());
+
+        WalkEventHandler.ProcessOfftrackStatusChange(e);
 
         Debug.Log($"POIWatch_OnOffTrack {e.Issue}");
 
         HapticUtils.VibrateForAlert();
 
         SpeechUtils.Speak("You are off-track!");
+    }
+
+    private void POIWatch_OnOffTrackEnd(object sender, ValidationArgs e)
+    {        
+        WalkEventHandler.ProcessOfftrackStatusChange(e);
     }
 
     private void POIWatch_OnLeftPOI(object sender, POIArgs e)
@@ -179,6 +254,9 @@ public class RouteTrainingController : MonoBehaviour
     public void StartTraining()
     {
         SharedData.DownloadRouteDefinition();
+
+        // We save any pending route walk
+        SaveLocalRouteWalk();
     }
 
     public void LoadTrainingComponents()
@@ -204,7 +282,7 @@ public class RouteTrainingController : MonoBehaviour
 
     public void ConfirmUserReady()
     {
-        if (!RouteTracking.RunSimulation)
+        if (!RouteTracking.RunSimulation || RouteTracking.SaveSimulatedWalk)
         {
             // save route walk
             var lastWalk = RouteWalk.GetWithMinId(x => x.Id);
@@ -213,7 +291,7 @@ public class RouteTrainingController : MonoBehaviour
             CurrentRouteWalk.Id = (lastWalk != null ? lastWalk.Id : 0) - 1;
             CurrentRouteWalk.StartDateTime = DateTime.Now;
             CurrentRouteWalk.RouteId = SharedData.CurrentRoute.Id;
-            CurrentRouteWalk.Insert();
+            CurrentRouteWalk.InsertDirty();
         }
 
         CurrentlyTraining = true;
@@ -227,20 +305,29 @@ public class RouteTrainingController : MonoBehaviour
     {
         if (CurrentlyTraining)
         {
+            // Let's initialise the pathpoint log, and inform the
+            // walk event manager about it
+            PathpointLog CurrentLog = new PathpointLog(pathpoint);
+            var lastLog = PathpointLog.GetWithMinId(x => x.Id);
+            CurrentLog.Id = (lastLog != null ? lastLog.Id : 0) - 1;
+
+            WalkEventHandler.SetCurrentPathpointLog(CurrentLog);
+
+            // We process the current location with POI Watch, which identify
+            // navigation events. Some statistics are returned in the log
             PathpointLog log = POIWatch.UpdateUserLocation(pathpoint);
-            if (log != null && !RouteTracking.RunSimulation)
+            if (log != null && (!RouteTracking.RunSimulation || RouteTracking.SaveSimulatedWalk))
             {
-                var lastLog = PathpointLog.GetWithMinId(x => x.Id);
+                log.Id = CurrentLog.Id;
                 log.RouteWalkId = CurrentRouteWalk.Id;
-                log.Id = (lastLog != null ? lastLog.Id : 0) - 1;
                 // Store raw
-                log.Latitude = pathpoint.Latitude;
-                log.Longitude = pathpoint.Longitude;
-                log.Timestamp = pathpoint.Timestamp;
-                log.Accuracy = pathpoint.Accuracy;
-                log.Altitude = pathpoint.Altitude;
+                log.Latitude = CurrentLog.Latitude;
+                log.Longitude = CurrentLog.Longitude;
+                log.Timestamp = CurrentLog.Timestamp;
+                log.Accuracy = CurrentLog.Accuracy;
+                log.Altitude = CurrentLog.Altitude;
                 // End Store raw
-                log.Insert();
+                log.InsertDirty();
             }
 
             if (log != null) {
@@ -283,9 +370,9 @@ public class RouteTrainingController : MonoBehaviour
             GPSDebugDisplay.Ping();
 
             var distance = LocationUtils.HaversineDistance(pathpoint, SharedData.POIList[POIWatch.CurrentPOIIndex]);
-            (double minDis, double minBearing, double userHeading, double segmentHeading, int closestSegmentIndex) = RouteValidation.CalculateMinDistanceAndBearing(pathpoint);
+            var segmentInfo = RouteValidation.CalculateMinDistanceAndBearing(pathpoint);
 
-            GPSDebugDisplay.DisplayMetrics(distance, minDis, minBearing, userHeading, segmentHeading);
+            GPSDebugDisplay.DisplayMetrics(distance, segmentInfo);
 
         }
     }
@@ -320,4 +407,22 @@ public class RouteTrainingController : MonoBehaviour
     }
 
 
+    private void SaveLocalRouteWalk()
+    {
+        RouteWalkLog.UploadRouteWalksForRoute(SharedData.CurrentRoute);
+    }
+
+    // Terminate correctly the route.
+    private void OnApplicationQuit()
+    {
+        if (CurrentRouteWalk.WalkCompletion != RouteWalk.RouteWalkCompletion.Completed)
+        {
+            CurrentRouteWalk.WalkCompletion = RouteWalk.RouteWalkCompletion.Cancelled;
+            CurrentRouteWalk.EndDateTime = DateTime.Now;
+            CurrentRouteWalk.InsertDirty();
+        }
+    }
+
 }
+
+

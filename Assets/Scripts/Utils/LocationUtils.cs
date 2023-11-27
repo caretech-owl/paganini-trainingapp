@@ -15,11 +15,26 @@ public class LocationUtils : PersistentLazySingleton<LocationUtils>
 
     public enum NavigationIssue
     {
-        None,
-        WrongDirection,
-        MissedTurn,
-        WrongTurn
+        Deviation = 1,
+        WrongDirection = 2,
+        MissedTurn = 3,
+        WrongTurn = 4
     }
+
+    public class SegmentDistanceAndBearing
+    {
+        public double MinDistanceToSegment { get; set; }
+        public double MinBearingDifference { get; set; }
+        public double UserHeading { get; set; }
+        public double SegmentHeading { get; set; }
+        public int ClosestSegmentIndex { get; set; }
+
+        public override string ToString()
+        {
+            return $"dist:{MinDistanceToSegment} bear: {MinBearingDifference} seg - b:{SegmentHeading} usr - b: {UserHeading}";
+        }
+    }
+
 
     public void Initialise(LocationUtilsConfig locationUtilsConfig)
     {
@@ -51,11 +66,20 @@ public class LocationUtils : PersistentLazySingleton<LocationUtils>
     /// </summary>
     /// <param name="coord">The first coordinate as a Pathpoint object.</param>
     /// <param name="target">The second coordinate as a Pathpoint object.</param>
-    /// <param name="distanceThreshold">The distance threshold in meters.</param>
     /// <returns>True if the distance is below the threshold, false otherwise.</returns>
     public bool IsPathpointOnTarget(Pathpoint coord, Pathpoint target)
     {
-        return HaversineDistance(coord, target) <= config.onTargetDistanceThreshold;
+        double haversineDistance = HaversineDistance(coord, target);
+
+        // We consider the coordinates as ellipsis and take the sum of the ratios (accuracy of measurement),
+        // as the distance where we could already be on the POI
+
+        double minAccuracyBasedProdimity = coord.Accuracy + target.Accuracy;
+        // Adjust the threshold based on the sum of accuracies
+        double adjustedThreshold = config.onTargetDistanceThreshold < minAccuracyBasedProdimity ? config.onTargetDistanceThreshold : config.onTargetDistanceThreshold;
+
+        return haversineDistance <= adjustedThreshold;
+
     }
 
     /// <summary>
@@ -157,7 +181,7 @@ public class LocationUtils : PersistentLazySingleton<LocationUtils>
     /// </summary>
     /// <param name="userLocation">A Pathpoint object representing the user's current location.</param>
     /// <returns>A tuple containing the minimum distance to the nearest route segment and the minimum bearing difference between the user's heading and the segment's heading.</returns>
-    public (double minDistanceToSegment, double minBearingDifference, double userHeading, double segmentHeading, int closestSegmentIndex) CalculateMinDistanceAndBearing(Pathpoint userLocation)
+    public SegmentDistanceAndBearing CalculateMinDistanceAndBearing(Pathpoint userLocation)
     {
         double userHeadingSum = 0;
         double userHeading = 0;
@@ -199,7 +223,15 @@ public class LocationUtils : PersistentLazySingleton<LocationUtils>
         //Debug.Log($"CalculateMinDistanceAndBearing:{closestSegmentIndex} minDistanceToSegment:{minDistanceToSegment} minBearingDifference:{minBearingDifference} userHeading:{userHeading} segmentHeading:{userHeading}");
 
         lastClosestSegmentIndex = closestSegmentIndex;
-        return (minDistanceToSegment, minBearingDifference, userHeading, segmentHeading, lastClosestSegmentIndex);
+
+        return new SegmentDistanceAndBearing
+        {
+            MinDistanceToSegment = minDistanceToSegment,
+            MinBearingDifference = minBearingDifference,
+            UserHeading = userHeading,
+            SegmentHeading = segmentHeading,
+            ClosestSegmentIndex = lastClosestSegmentIndex
+        };
     }
 
 
@@ -211,18 +243,16 @@ public class LocationUtils : PersistentLazySingleton<LocationUtils>
     /// Determines if the user is off-track based on their distance to the nearest route segment and the difference between their heading and the segment's heading.
     /// </summary>
     /// <param name="userLocation">A Pathpoint object representing the user's current location.</param>
-    /// <returns>True if the user is off-track, false otherwise.</returns>
-    public (bool isOffTrack, NavigationIssue issue) IsUserOffTrack(Pathpoint userLocation, int? lastPOIIndex = null)
+    /// <param name="segmentInfo">A structure containing information about the user's distance to the nearest route segment and bearing differences.</param>
+    /// <param name="lastPOIIndex">The index of the last Point of Interest (POI) encountered by the user, if applicable.</param>
+    /// <returns>A tuple containing a boolean indicating if the user is off-track and a navigation issue enum describing the type of navigation issue, if any.</returns>
+    public (bool isOffTrack, NavigationIssue issue) IsUserOffTrack(Pathpoint userLocation, SegmentDistanceAndBearing segmentInfo, int? lastPOIIndex = null)
     {
-        //UpdateUserLocationHistory(userLocation);
-
-        (double minDistanceToSegment, double minBearingDifference, double userHeading, double segmentHeading, int closestSegmentIndex) = CalculateMinDistanceAndBearing(userLocation);
-
         bool isOfftrack = false;
-        NavigationIssue issue = NavigationIssue.None;
+        NavigationIssue issue = NavigationIssue.Deviation;
 
        // is the user walking in the wrong direction?
-        if (minBearingDifference > config.oppositeHeadingThreshold && LastValidLocation != null )
+        if (segmentInfo.MinBearingDifference > config.oppositeHeadingThreshold && LastValidLocation != null )
         {
             double distanceToValid = HaversineDistance(userLocation, LastValidLocation);
             if (LastValidLocation != null && distanceToValid > config.oppositeDistanceThreshold)
@@ -233,39 +263,39 @@ public class LocationUtils : PersistentLazySingleton<LocationUtils>
             Debug.Log($"-> {distanceToValid} > {config.deviationDistanceThreshold} ?");
         }
         // is the user walking at a distance offTrackThreshould from the route (e.g., walking in parallel to the route)
-        else if (minDistanceToSegment > config.offTrackThreshold)
+        else if (segmentInfo.MinDistanceToSegment > config.offTrackThreshold)
         {
             isOfftrack = true;
         }
-        // is the featuring a bearing difference larger than the threshould? and away from the route
-        else if (minBearingDifference > config.deviationHeadingThreshold && minDistanceToSegment > config.deviationDistanceThreshold)
+        // is the user featuring a bearing difference larger than the threshould? and away from the route
+        else if (segmentInfo.MinBearingDifference > config.deviationHeadingThreshold && segmentInfo.MinDistanceToSegment > config.deviationDistanceThreshold)
         {
             isOfftrack = true;
         }
 
         // Let's keep the last valid location
-        if (minBearingDifference < config.deviationDistanceThreshold && minDistanceToSegment < config.deviationDistanceThreshold)
+        if (segmentInfo.MinBearingDifference < config.deviationDistanceThreshold && segmentInfo.MinDistanceToSegment < config.deviationDistanceThreshold)
         {
             LastValidLocation = userLocation;
             //Debug.Log("Last valid location!");
         }
 
         // Let's keep the last valid direction
-        if (minBearingDifference < config.deviationHeadingThreshold)
+        if (segmentInfo.MinBearingDifference < config.deviationHeadingThreshold)
         {
-            lastValidBearing = userHeading;
+            lastValidBearing = segmentInfo.UserHeading;
         }
 
-
+        // We try to detect the type of off-track in case the user just left a decision point (POI)
         if (lastPOIIndex != null)
         {
             double? expectedBearing = CalculateMovingBearing((int)lastPOIIndex);            
 
-            if (expectedBearing != null && CalculateBearingDifference(userHeading, (double)expectedBearing) < config.wrongTurnHeadingThreshold) 
+            if (expectedBearing != null && CalculateBearingDifference(segmentInfo.UserHeading, (double)expectedBearing) < config.wrongTurnHeadingThreshold) 
             {
                 issue = NavigationIssue.WrongTurn;
             }
-            else if (CalculateBearingDifference(userHeading, lastValidBearing.Value) < config.deviationHeadingThreshold) 
+            else if (CalculateBearingDifference(segmentInfo.UserHeading, lastValidBearing.Value) < config.deviationHeadingThreshold) 
             {
                 issue = NavigationIssue.MissedTurn;
             }

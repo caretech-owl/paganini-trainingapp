@@ -2,7 +2,7 @@ using SQLite4Unity3d;
 using System.Linq;
 using System.Collections.Generic;
 using System;
-using UnityEngine;
+using static PaganiniRestAPI;
 
 public class PathpointPhoto : BaseModel<PathpointPhoto>
 {
@@ -14,8 +14,11 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
     public PhotoFeedback DiscussionFeedback { set; get; }
     public long? Timestamp { set; get; }
 
+    //public byte[] Photo { set; get; }
+    public int? PhotoId { set; get; }
 
-    public byte[] Photo { set; get; }
+    [Ignore]
+    public PhotoData Data { get; set; }
 
     public enum PhotoFeedback
     {
@@ -26,19 +29,18 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
 
     public PathpointPhoto() { }
 
+
     public PathpointPhoto(IPathpointPhotoAPI photoAPI)
     {
         Id = photoAPI.pphoto_id;
         PathpointId = photoAPI.ppoint_id;
         Description = photoAPI.pphoto_description;
-
-        Debug.Log("Photo ID:" + photoAPI.pphoto_id);
-
-        Photo = Convert.FromBase64String(photoAPI.photo);
+        //Photo = Convert.FromBase64String(photoAPI.photo);
 
         CleaningFeedback = ((PhotoFeedback?)photoAPI.pphoto_cleaning_feedback) ?? PhotoFeedback.None;
         DiscussionFeedback = ((PhotoFeedback?)photoAPI.pphoto_discussion_feedback) ?? PhotoFeedback.None;
 
+        PhotoId = photoAPI.photo_id;
 
         Timestamp = DateUtils.ConvertUTCStringToTsMilliseconds(photoAPI.pphoto_timestamp, "yyyy-MM-dd'T'HH:mm:ss");
 
@@ -54,11 +56,42 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
 
         // Query all Ways and their related Routes using sqlite-net's built-in mapping functionality
 
-        photos = conn.Table<PathpointPhoto>().Where(p => p.PathpointId == pathpointId).ToList();
+        photos = conn.Table<PathpointPhoto>().Where(p => p.PathpointId == pathpointId)
+            .OrderBy(item => item.Timestamp)
+            .ThenByDescending(item => item.Id)
+            .ToList();
+
+        // get PhotoData
+
+        foreach (var photo in photos)
+        {
+            photo.Data = PhotoData.Get(photo.PhotoId);
+        }
+
 
         return photos;
     }
 
+    public static PathpointPhoto GetDefaultPhoto(List<PathpointPhoto> photos)
+    {
+        if (photos == null) return null;
+
+        foreach (var photo in photos)
+        {
+            if (photo.CleaningFeedback != PhotoFeedback.Delete && photo.DiscussionFeedback != PhotoFeedback.Delete)
+            {
+                return photo;
+            }
+        }
+
+        // We use one of the discarded ones
+        if (photos.Count > 0)
+        {
+            return photos[0];
+        }
+
+        return null;
+    }
 
     public IPathpointPhotoAPI ToAPI()
     {
@@ -105,7 +138,7 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
         else
         {
             photo = new PathpointPhotoAPIBatchCreateElement();
-            photo.IsNew = true;            
+            photo.IsNew = true;
         }
 
         photo.ppoint_id = PathpointId;
@@ -128,7 +161,6 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
     /// <param name="pathpointFromAPI">Indicates whether to consider only photos of pathtpoint from the API.</param>
     /// <param name="wherePhoto">An optional predicate to further filter the photos.</param>
     /// <returns>A list of PathpointPhotos.</returns>
-
     public static List<PathpointPhoto> GetListByRoute(int routeId, bool pathpointFromAPI, Func<PathpointPhoto, bool> wherePhoto = null)
     {
         List<PathpointPhoto> photos;
@@ -154,7 +186,35 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
     }
 
 
+    /// <summary>
+    /// Returns a list of PathpointPhotos for a given route, filtered by an optional predicate.
+    /// </summary>
+    /// <param name="routeId">The ID of the route to filter by.</param>
+    /// <param name="wherePhoto">An optional predicate to further filter the photos.</param>
+    /// <returns>A list of PathpointPhotos.</returns>
+    public static List<PathpointPhoto> GetListByRoute(int routeId, Func<PathpointPhoto, bool> wherePhoto = null)
+    {
+        List<PathpointPhoto> photos;
 
+        var conn = DBConnector.Instance.GetConnection();
+
+        // Query all PathpointPhotos and their related Pathpoints using sqlite-net's raw query
+        string cmdText = @"SELECT pp.* FROM PathpointPhoto pp
+                       JOIN Pathpoint p ON pp.PathpointId = p.Id
+                       WHERE p.RouteId = ?";
+        photos = conn.Query<PathpointPhoto>(cmdText, routeId);
+
+        // Apply the additional filter, if provided
+        if (wherePhoto != null)
+        {
+            photos = photos.Where(wherePhoto).ToList();
+        }
+
+        // Order the resulting photos by PathpointId
+        photos = photos.OrderBy(p => p.PathpointId).ToList();
+
+        return photos;
+    }
 
     public static void DeleteFromPOIs(int routeId, bool pathpointFromAPI, bool pathphotoFromAPI)
     {
@@ -181,4 +241,52 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
         cmd.ExecuteNonQuery();
 
     }
+
+    public static void DeleteFromPOIs(int routeId)
+    {
+        //Pathpoint.DeleteFromRoute(CurrentRoute.Id, new bool[] { false }, new Pathpoint.POIsType[] { Pathpoint.POIsType.Landmark, Pathpoint.POIsType.Reassurance });
+
+        //// Open the SQLliteConnection
+        var conn = DBConnector.Instance.GetConnection();
+
+        // Prepare the base DELETE command text
+        string cmdText = "DELETE FROM PathpointPhoto " +
+                         "WHERE PathpointId IN (" +
+                         "    SELECT p.Id " +
+                         "    FROM Pathpoint p " +
+                         "    WHERE p.RouteId = ? " +
+                         ") ";
+
+
+        List<object> parameters = new List<object> { routeId };
+
+        //// Prepare the SQLiteCommand with the command text and parameters
+        SQLiteCommand cmd = conn.CreateCommand(cmdText, parameters.ToArray());
+
+        // Execute the command
+        cmd.ExecuteNonQuery();
+
+    }
+
+    public static void DeleteByPOI(int poiId)
+    {
+
+        //// Open the SQLliteConnection
+        var conn = DBConnector.Instance.GetConnection();
+
+        // Prepare the base DELETE command text
+        string cmdText = "DELETE FROM PathpointPhoto " +
+                         "WHERE PathpointId = ? ";
+
+        List<object> parameters = new List<object> { poiId };
+
+        //// Prepare the SQLiteCommand with the command text and parameters
+        SQLiteCommand cmd = conn.CreateCommand(cmdText, parameters.ToArray());
+
+        // Execute the command
+        cmd.ExecuteNonQuery();
+
+    }
+
+
 }

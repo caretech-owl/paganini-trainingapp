@@ -20,6 +20,11 @@ public class PathpointLog : BaseModel<PathpointLog>
     public int? SegPOIStartId { set; get; }
     public int? SegPOIEndId { set; get; }
 
+    // basic walking stats
+    public bool? IsWalking { set; get; }
+    public double WalkingPace { set; get; }
+    public double TotalWalkedDistance { set; get; }
+    public double TotalWalkingTime { set; get; }
 
     public PathpointLog() { }
 
@@ -31,118 +36,80 @@ public class PathpointLog : BaseModel<PathpointLog>
         Timestamp = pathpoint.Timestamp;
     }
 
-    //public PathpointLog(PathpointAPIResult pathpoint)
-    //{
 
-    //    Id = pathpoint.ppoint_id;
-    //    RouteId = pathpoint.erw_id;
-    //    Longitude = pathpoint.ppoint_lon;
-    //    Latitude = pathpoint.ppoint_lat;
-    //    Altitude = pathpoint.ppoint_altitude;
-    //    Accuracy = pathpoint.ppoint_accuracy;
+    public PathpointLog(IRouteWalkPathAPI pathAPI)
+    {
+        Id = pathAPI.rpath_id;
+        RouteWalkId = pathAPI.rw_id;
+        Longitude = pathAPI.rpath_lon;
+        Latitude = pathAPI.rpath_lat;
+        Altitude = pathAPI.rpath_altitude;
+        Accuracy = pathAPI.rpath_accuracy;
+        Timestamp = (long)DateUtils.ConvertUTCStringToTsMilliseconds(pathAPI.rpath_timestamp, "yyyy-MM-dd'T'HH:mm:ss");
+        TargetPOIId = pathAPI.rpath_target_ppoint_id;
+        SegPOIStartId = pathAPI.seg_start_ppoint_id;
+        SegPOIEndId = pathAPI.seg_end_ppoint_id;
+        IsWalking = pathAPI.stat_is_walking;
+        WalkingPace = pathAPI.stat_walking_pace;
+        TotalWalkedDistance = pathAPI.stat_curr_walking_distance;
+        TotalWalkingTime = pathAPI.stat_curr_walking_time;
+    }
 
-    //    FromAPI = true;
+    public IRouteWalkPathAPI ToAPI()
+    {
+        IRouteWalkPathAPI pathAPI = new RouteWalkPathAPI();
 
-    //    var ts = DateTime.ParseExact(pathpoint.ppoint_timestamp, "yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
-    //    Timestamp = new DateTimeOffset(ts).ToUnixTimeMilliseconds();
-    //}
+        pathAPI.rpath_id = Id;
+        pathAPI.rw_id = RouteWalkId;
+        pathAPI.rpath_lon = Longitude;
+        pathAPI.rpath_lat = Latitude;
+        pathAPI.rpath_altitude = Altitude;
+        pathAPI.rpath_accuracy = Accuracy;
+        pathAPI.rpath_timestamp = DateUtils.ConvertMillisecondsToUTCString(Timestamp, "yyyy-MM-dd'T'HH:mm:ss");
+        pathAPI.rpath_target_ppoint_id = TargetPOIId;
+        pathAPI.seg_start_ppoint_id = SegPOIStartId;
+        pathAPI.seg_end_ppoint_id = SegPOIEndId;
+        pathAPI.stat_is_walking = IsWalking;
+        pathAPI.stat_walking_pace = WalkingPace;
+        pathAPI.stat_curr_walking_distance = TotalWalkedDistance;
+        pathAPI.stat_curr_walking_time = TotalWalkingTime;
 
-    //public static List<Pathpoint> GetPathpointListByRoute(int routeId, Func<Pathpoint, bool> whereCondition = null)
-    //{
-    //    List<Pathpoint> pathpoints;
-
-    //    var conn = DBConnector.Instance.GetConnection();
-
-    //    // Query all Ways and their related Routes using sqlite-net's built-in mapping functionality
-
-    //    var pathpointQuery = conn.Table<Pathpoint>().Where(p => p.RouteId == routeId).AsEnumerable();
-
-    //    if (whereCondition != null)
-    //    {
-    //        pathpointQuery = pathpointQuery.Where(whereCondition);
-    //    }
-
-    //    pathpoints = pathpointQuery.OrderBy(p => p.Timestamp).ToList();
-
-    //    return pathpoints;
-    //}
-
-
-    ///// <summary>
-    ///// Deletes Pathpoint records from the database based on the specified route ID, 'FromAPI' flags, and POI types.
-    ///// </summary>
-    ///// <param name="routeId">The ID of the route to which the Pathpoint records are associated.</param>
-    ///// <param name="fromAPI">An array of boolean values representing the 'FromAPI' flag of the Pathpoint records to be deleted. If multiple values are provided, records matching any of the values will be deleted.</param>
-    ///// <param name="types">An array of Pathpoint.POIsType enum values representing the POI types of the Pathpoint records to be deleted. If multiple values are provided, records matching any of the types will be deleted.</param>
-    ///// <remarks>
-    ///// The method constructs an SQL DELETE command with the specified conditions and executes it using an SQLiteCommand object.
-    ///// </remarks>
-    //public static void DeleteFromRoute(int routeId, bool[] fromAPI, Pathpoint.POIsType[] types)
-    //{
-    //    // Open the SQLliteConnection
-    //    var conn = DBConnector.Instance.GetConnection();
-
-    //    // Prepare the base DELETE command text
-    //    string cmdText = "DELETE FROM Pathpoint WHERE RouteId = ?";
-
-    //    List<object> parameters = new List<object> { routeId };
-
-    //    // Add conditions for FromAPI
-    //    if (fromAPI != null && fromAPI.Length > 0)
-    //    {
-    //        var fromAPIConditions = string.Join(" OR ", fromAPI.Select((val, idx) => $"FromAPI = ?"));
-    //        cmdText += $" AND ({fromAPIConditions})";
-    //        parameters.AddRange(fromAPI.OfType<object>());
-    //    }
-
-    //    // Add conditions for POIType
-    //    if (types != null && types.Length > 0)
-    //    {
-    //        var typeConditions = string.Join(" OR ", types.Select((val, idx) => $"POIType = ?"));
-    //        cmdText += $" AND ({typeConditions})";
-    //        parameters.AddRange(types.OfType<object>());
-    //    }
-
-    //    // Prepare the SQLiteCommand with the command text and parameters
-    //    SQLiteCommand cmd = conn.CreateCommand(cmdText, parameters.ToArray());
-
-    //    // Execute the command
-    //    cmd.ExecuteNonQuery();
-    //}
+        return pathAPI;
+    }
 
 
+    public static void ChangeParent(int oldRwId, int newRwId)
+    {
+        // Open the SQLliteConnection
+        var conn = DBConnector.Instance.GetConnection();
 
-    //public IPathpointAPI ToAPI()
-    //{
-    //    IPathpointAPI pp;
-    //    // For an update statement
-    //    if (FromAPI)
-    //    {
-    //        pp = new PathpointAPIUpdate();
-    //        pp.ppoint_id = Id;
-    //        pp.IsNew = false;
-    //    }
-    //    // For a post statement
-    //    else
-    //    {
-    //        pp = new PathpointAPI();
-    //        pp.IsNew = true;
-    //    }
+        // Create the SQL command with the update query and parameters
+        string cmdText = "UPDATE PathpointLog SET RouteWalkId = ? WHERE RouteWalkId = ?";
+        SQLiteCommand cmd = conn.CreateCommand(cmdText, newRwId, oldRwId);
+
+        // Execute the command
+        cmd.ExecuteNonQuery();
+
+    }
 
 
-    //    pp.ppoint_lon = Longitude;
-    //    pp.ppoint_lat = Latitude;
-    //    pp.ppoint_altitude = Altitude;
-    //    pp.ppoint_accuracy = Accuracy;
-    //    pp.ppoint_poitype = (int)POIType;
-    //    pp.ppoint_timestamp = DateTimeOffset.FromUnixTimeMilliseconds(Timestamp).UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss");
-    //    pp.ppoint_description = Description;
+    public static void DeleteFromRouteWalk(int routeWalkId)
+    {
+        //// Open the SQLliteConnection
+        var conn = DBConnector.Instance.GetConnection();
+
+        // Prepare the base DELETE command text
+        string cmdText = @"DELETE FROM PathpointLog 
+                         WHERE RouteWalkId = ?";
 
 
+        List<object> parameters = new List<object> { routeWalkId };
 
-    //    return pp;
-    //}
+        //// Prepare the SQLiteCommand with the command text and parameters
+        SQLiteCommand cmd = conn.CreateCommand(cmdText, parameters.ToArray());
 
-
+        // Execute the command
+        cmd.ExecuteNonQuery();
+    }
 
 }

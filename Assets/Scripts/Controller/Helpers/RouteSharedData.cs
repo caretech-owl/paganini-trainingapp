@@ -65,14 +65,35 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
 
     private void DownloadPathpoints()
     {
+        Debug.Log("Downloading Pathpoints.");
         PaganiniRestAPI.Pathpoint.GetAll(CurrentRoute.Id, GetPathpointsSucceeded, LoadFailed);
     }
 
-    private void DownloadPhotos()
+
+    private void DownloadPathpointPhotos()
     {
+        Debug.Log("Downloading Pathpoint photos.");
         PaganiniRestAPI.PathpointPOI.GetAll(CurrentRoute.Id, GetPathpointPOIsSucceeded, LoadFailed);
     }
 
+    private void DownloadPhotoData()
+    {
+        Debug.Log("Downloading Photo Data.");
+
+        var lastUpdate = PhotoData.GetLastUpdateByRoute(CurrentRoute.Id);
+
+        Dictionary<string, string> query = new Dictionary<string, string> { };
+        if (lastUpdate != null)
+        {
+            var sinceDate = DateUtils.ConvertMillisecondsToUTCString(lastUpdate, "yyyy-MM-dd'T'HH:mm:ss");
+            query = new Dictionary<string, string>
+            {
+                { "sinceDate", sinceDate }
+            };
+        }
+
+        PaganiniRestAPI.PhotoData.GetAll(CurrentRoute.Id, query, GetPhotoDataSucceeded, LoadFailed);
+    }
 
     /**********************
      * Event handlers     *
@@ -95,11 +116,12 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
 
         }
 
-        DownloadPhotos();
+        DownloadPathpointPhotos();
     }
 
     private void GetPathpointPOIsSucceeded(PathpointPOIAPIList res)
     {
+        Debug.Log("Processing Photos.");
         PathpointPhoto.DeleteNonDirtyCopies();
 
         if (res != null && res.pois != null)
@@ -119,7 +141,27 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
 
             }
         }
+                
+        DownloadPhotoData();
+    }
 
+    private void GetPhotoDataSucceeded(PhotoDataAPIList res)
+    {
+        int nUpdated = 0;
+        if (res != null && res.data != null)
+        {
+            foreach (var photo in res.data)
+            {
+                if (!CurrentRoute.FromAPI || !PhotoData.CheckIfExists(p => p.IsDirty && p.Id == photo.photo_id))
+                {
+                    PhotoData data = new PhotoData(photo);
+                    data.Insert();
+                    nUpdated++;
+                }
+            }
+        }
+
+        Debug.Log($"Done Downloading Route Definition. (Updated = {nUpdated} photos)");
         // Load editor
         OnDataDownloaded?.Invoke(this, EventArgs.Empty);
     }

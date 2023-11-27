@@ -49,4 +49,14 @@ public class User : BaseModel<User>
         return user;
     }
 
+    public static List<User> ToModelList(UserAPIList collection)
+    {
+        List<User> list = new List<User> { };
+
+        foreach (var userAPI in collection.users)
+        {
+            list.Add(new User(userAPI));
+        }
+        return list;
+    }
 }

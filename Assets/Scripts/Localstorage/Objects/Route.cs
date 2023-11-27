@@ -44,12 +44,12 @@ public class Route : BaseModel<Route>
 
     public static Dictionary<RouteStatus, string> RouteStatusDescriptions = new Dictionary<RouteStatus, string>()
     {
-        { RouteStatus.New, "New route" },
-        { RouteStatus.DraftPrepared, "Draft prepared" },
-        { RouteStatus.DraftNegotiated, "Draft negotiated" },
-        { RouteStatus.Training, "Training in progress" },
-        { RouteStatus.Completed, "Route completed" },
-        { RouteStatus.Discarded, "Route discarded" },
+        { RouteStatus.New, "In Bearbeitun" },
+        { RouteStatus.DraftPrepared, "In Diskussion" },
+        { RouteStatus.DraftNegotiated, "Bei Trainingsanpassung" },
+        { RouteStatus.Training, "In Training" },
+        { RouteStatus.Completed, "Abgeschlossen" },
+        { RouteStatus.Discarded, "Verworfen" },
     };
 
     public Route() { }

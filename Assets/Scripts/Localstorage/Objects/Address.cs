@@ -1,9 +1,9 @@
 using SQLite4Unity3d;
 
-public class Address: BaseModel<Address>
+public class Address : BaseModel<Address>
 {
     [PrimaryKey]
-    public int Id { set; get; }
+    public int? Id { set; get; }
     public string Streetname { set; get; }
     public string Housenumber { set; get; }
     public int Zipcode { set; get; }

@@ -6,6 +6,8 @@ using UnityEngine.UI;
 public class TrainingProgressBar : MonoBehaviour
 {
     [SerializeField] private Slider RouteSlider;
+    [SerializeField] private LandmarkIcon RouteStartIcon;
+    [SerializeField] private LandmarkIcon RouteEndIcon;
 
 
     private RouteSharedData SharedData;
@@ -34,14 +36,18 @@ public class TrainingProgressBar : MonoBehaviour
     private void OnDestroy()
     {
         POIWatch.OnEnteredPOI -= POIWatch_OnEnteredPOI;
+        POIWatch.OnUserLocationChanged -= POIWatch_OnUserLocationChanged;
     }
 
     public void Initialise() {
         RouteSlider.minValue = 1;
         RouteSlider.maxValue = 100;
 
-        //RouteSlider.value = POIWatch.CurrentPOIIndex;
+        RouteStartIcon.SetSelectedLandmark(SharedData.CurrentWay.StartType);
+        RouteEndIcon.SetSelectedLandmark(SharedData.CurrentWay.DestinationType);
     }
+
+    // TODO: Detect walking status change to reflect in the walking figure
 
 
     /* Events */
@@ -53,8 +59,9 @@ public class TrainingProgressBar : MonoBehaviour
 
     private void POIWatch_OnUserLocationChanged(object sender, LocationChangedArgs e)
     {
+
         if (POIWatch.GetCurrentState() != POIWatcher.POIState.OffTrack) {
-            RouteSlider.value = (float)(e.ClosestSegmentIndex / SharedData.PathpointList.Count) * 100;
+            RouteSlider.value = Mathf.Round(((float)e.SegmentInfo.ClosestSegmentIndex / (float)SharedData.PathpointList.Count) * 100);
         }
         
     }

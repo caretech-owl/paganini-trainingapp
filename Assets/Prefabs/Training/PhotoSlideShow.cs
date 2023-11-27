@@ -111,7 +111,7 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
 
             Image slideImage = newSlide.AddComponent<Image>();
             Texture2D texture = new Texture2D(2, 2);
-            texture.LoadImage(pathpointPhotos[i].Photo);
+            texture.LoadImage(pathpointPhotos[i].Data.Photo);
             slideImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
 
             // Set Preserve Aspect to true

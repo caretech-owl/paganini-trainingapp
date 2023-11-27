@@ -80,13 +80,13 @@ public class WayfindInstruction : MonoBehaviour
             Debug.Log("POI is null!!");
             return;
         }
-        if (Enum.TryParse(POI.Instruction, out directionType))
+        if (Enum.TryParse(POI.Instruction.ToString(), out directionType))
         {
             DirectionSymbol.gameObject.SetActive(true);
             DirectionSymbol.RenderDirection(directionType);
             InstructionText.text = directionType.GetDescription();
         }
-               
+
     }
 
     public void LoadOffTrack(string reason)

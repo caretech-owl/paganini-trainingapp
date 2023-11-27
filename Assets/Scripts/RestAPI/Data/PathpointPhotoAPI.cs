@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
 
-public interface IPathpointPhotoAPI 
+public interface IPathpointPhotoAPI
 {
     public int pphoto_id { get; set; }
     public int ppoint_id { get; set; }
     public string pphoto_description { get; set; }
-    public string photo { get; set; }
+    public IPhotoDataAPI data { get; set; }
+    public int photo_id { get; set; }
     public string photo_reference { get; set; }
     public string pphoto_timestamp { get; set; }
     public int? pphoto_cleaning_feedback { get; set; }
@@ -19,7 +20,7 @@ public interface IPathpointPhotoAPI
 public class PathpointPhotoAPIBase : BaseAPI
 {
     public string pphoto_description { get; set; }
-    public string photo { get; set; }
+    public IPhotoDataAPI data { get; set; }
     public string pphoto_timestamp { get; set; }
     public int? pphoto_cleaning_feedback { get; set; }
     public int? pphoto_discussion_feedback { get; set; }
@@ -37,6 +38,12 @@ public class PathpointPhotoAPI : PathpointPhotoAPIBase, IPathpointPhotoAPI
 
     [JsonProperty]
     public string photo_reference { get; set; }
+
+    [JsonProperty]
+    public PhotoDataAPI data { get; set; }
+
+    [JsonIgnore]
+    public int photo_id { get; set; }
 }
 
 [System.Serializable]
@@ -50,6 +57,12 @@ public class PathpointPhotoAPIResult : PathpointPhotoAPIBase, IPathpointPhotoAPI
 
     [JsonIgnore]
     public string photo_reference { get; set; }
+
+    [JsonIgnore]
+    public PhotoDataAPIResult data { get; set; }
+
+    [JsonProperty]
+    public int photo_id { get; set; }
 }
 
 [System.Serializable]
@@ -63,6 +76,12 @@ public class PathpointPhotoAPIUpdate : PathpointPhotoAPIBase, IPathpointPhotoAPI
 
     [JsonIgnore]
     public string photo_reference { get; set; }
+
+    [JsonProperty]
+    public PhotoDataAPIUpdate data { get; set; }
+
+    [JsonIgnore]
+    public int photo_id { get; set; }
 }
 
 [System.Serializable]
@@ -76,6 +95,12 @@ public class PathpointPhotoAPIBatchCreateElement : PathpointPhotoAPIBase, IPathp
 
     [JsonProperty]
     public string photo_reference { get; set; }
+
+    [JsonProperty]
+    public PhotoDataAPI data { get; set; }
+
+    [JsonIgnore]
+    public int photo_id { get; set; }
 }
 
 [System.Serializable]
@@ -89,6 +114,12 @@ public class PathpointPhotoAPIBatchUpdateElement : PathpointPhotoAPIBase, IPathp
 
     [JsonProperty]
     public string photo_reference { get; set; }
+
+    [JsonProperty]
+    public PhotoDataAPIUpdate data { get; set; }
+
+    [JsonIgnore]
+    public int photo_id { get; set; }
 }
 
 

@@ -16,7 +16,8 @@ public class LandmarkIcon : MonoBehaviour
         Work = 3,
         Home = 4,
         Bus = 5,
-        Park = 6
+        Park = 6,
+        Shopping = 7
     }
 
     public LandmarkType SelectedLandmarkType = LandmarkType.Placeholder;
@@ -68,6 +69,11 @@ public class LandmarkIcon : MonoBehaviour
     public void SetSelectedLandmark(int typeCode)
     {
         SelectedLandmarkType = (LandmarkType)typeCode;
+    }
+
+    public void SetSelectedLandmark(string typeCode)
+    {
+        SelectedLandmarkType = (LandmarkType) int.Parse(typeCode);
     }
 
     private void ApplyColorToBackground(Color color)

@@ -17,9 +17,11 @@ public class Pathpoint : BaseModel<Pathpoint>
     public POIsType POIType { set; get; }
     public long Timestamp { set; get; }
     public string Description { set; get; }
+    public string Notes { set; get; }
     public string PhotoFilename { set; get; }
-    public string Instruction { set; get; }
+    public NavDirection Instruction { set; get; }
     public double? TimeInVideo { set; get; }
+    public POIFeedback CleaningFeedback { set; get; }
     public POIFeedback RelevanceFeedback { set; get; }
     public POIFeedback FamiliarityFeedback { set; get; }
 
@@ -35,6 +37,14 @@ public class Pathpoint : BaseModel<Pathpoint>
         No = 2,
     }
 
+    public enum NavDirection
+    {
+        None = 0,
+        Straight = 1,
+        RightTurn = 2,
+        LeftTurn = 3        
+    }
+
     public enum POIsType
     {
         [XmlEnum("-1")]
@@ -42,7 +52,11 @@ public class Pathpoint : BaseModel<Pathpoint>
         [XmlEnum("1")]
         Reassurance = 1,
         [XmlEnum("2")]
-        Landmark = 2
+        Landmark = 2,
+        [XmlEnum("3")]
+        WayStart = 3,
+        [XmlEnum("4")]
+        WayDestination = 4
     }
 
 
@@ -59,14 +73,21 @@ public class Pathpoint : BaseModel<Pathpoint>
         Accuracy = pathpoint.ppoint_accuracy;
         POIType = (POIsType)pathpoint.ppoint_poitype;
         Description = pathpoint.ppoint_description;
-        Instruction = pathpoint.ppoint_instruction == "None" ? "" : pathpoint.ppoint_instruction;
+        Notes = pathpoint.ppoint_notes;
+
+        string direction = pathpoint.ppoint_instruction == "" || pathpoint.ppoint_instruction == null ? "None" : pathpoint.ppoint_instruction;
+        Instruction = Enum.Parse<NavDirection>(direction);
 
         RelevanceFeedback = ((POIFeedback?)pathpoint.ppoint_relevance_feedback) ?? POIFeedback.None;
         FamiliarityFeedback = ((POIFeedback?)pathpoint.ppoint_familiarity_feedback) ?? POIFeedback.None;
+        CleaningFeedback = ((POIFeedback?)pathpoint.ppoint_cleaning_feedback) ?? POIFeedback.None;
 
         FromAPI = true;
 
         Timestamp = (long)DateUtils.ConvertUTCStringToTsMilliseconds(pathpoint.ppoint_timestamp, "yyyy-MM-dd'T'HH:mm:ss");
+
+
+        TimeInVideo = pathpoint.ppoint_time_in_video == null ? null : Double.Parse(pathpoint.ppoint_time_in_video);
     }
 
     public static List<Pathpoint> GetPathpointListByRoute(int routeId, Func<Pathpoint, bool> whereCondition = null)
@@ -159,12 +180,13 @@ public class Pathpoint : BaseModel<Pathpoint>
         pp.ppoint_poitype = (int)POIType;
         pp.ppoint_timestamp = DateUtils.ConvertMillisecondsToUTCString(Timestamp, "yyyy-MM-dd'T'HH:mm:ss");
         pp.ppoint_description = Description;
-        pp.ppoint_instruction = Instruction == "" ? "None" : Instruction;
-        pp.ppoint_time_in_video = TimeInVideo != null ? TimeInVideo.ToString() : null;
+        pp.ppoint_notes = Notes;
+        pp.ppoint_instruction = Instruction.ToString();
+        pp.ppoint_time_in_video = TimeInVideo != null ? TimeInVideo.Value.ToString("0.00", CultureInfo.InvariantCulture) : null;
 
         pp.ppoint_relevance_feedback = (int)RelevanceFeedback;
         pp.ppoint_familiarity_feedback = (int)FamiliarityFeedback;
-
+        pp.ppoint_cleaning_feedback = (int)CleaningFeedback;
 
         return pp;
     }

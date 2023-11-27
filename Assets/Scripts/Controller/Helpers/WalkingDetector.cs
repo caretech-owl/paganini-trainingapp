@@ -29,8 +29,12 @@ public class WalkingDetector
         processNoise[1, 1] = 0.1;
         processNoise[2, 2] = 0.1;
         processNoise[3, 3] = 0.1;
-        measurementNoise[0, 0] = 0.1;
-        measurementNoise[1, 1] = 0.1;
+        //measurementNoise[0, 0] = 0.1;
+        //measurementNoise[1, 1] = 0.1;
+        // EXPERIMENTAL! Update the measurement noise matrix based on expected GPS accuracy
+        measurementNoise[0, 0] = Math.Pow(expectedGPSAccuracy / 100, 2);
+        measurementNoise[1, 1] = Math.Pow(expectedGPSAccuracy / 100, 2);
+
 
         // Set the transition matrix
         transitionMatrix[0, 0] = 1;
@@ -66,6 +70,10 @@ public class WalkingDetector
             initialised = true;
             return rawLocation;
         }
+
+        // EXPERIMENTAL! Update the measurement noise matrix based on current GPS accuracy
+        measurementNoise[0, 0] = Math.Pow(rawLocation.Accuracy / 100, 2);
+        measurementNoise[1, 1] = Math.Pow(rawLocation.Accuracy / 100, 2);
 
         // Convert the raw location to the measurement matrix format
         var measurement = Matrix<double>.Build.Dense(2, 1);

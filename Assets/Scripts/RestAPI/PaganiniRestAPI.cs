@@ -5,6 +5,7 @@ using static ServerCommunication;
 using UnityEngine.Events;
 using System;
 using static PaganiniRestAPI;
+using System.Text;
 
 public class PaganiniRestAPI
 {
@@ -40,9 +41,40 @@ public class PaganiniRestAPI
         public const string UsrRoutesList = UsrWays + "/routes";
         public const string UsrRoutes = BaseUrl + "me/routes/{0}";
 
+        public const string UsrRoutePhotoList = UsrRoutes + "/photos";
         public const string UsrPOIList = UsrRoutes + "/pois";
 
+        public const string UsrPhotoDataList = UsrRoutePhotoList + "/data";
+
         public const string UsrPathpointList = UsrRoutes + "/pathpoints";
+
+        public const string UsrRouteWalkList = UsrRoutes + "/routewalks";
+        public const string UsrRouteWalks = BaseUrl + "/me/routewalks/{0}";
+        public const string UsrRouteWalkEventList = UsrRouteWalks + "/events";
+        public const string UsrRouteWalkPathLogList = UsrRouteWalks + "/pathlog";
+
+
+
+        // Function to build a query string from a dictionary
+        public static string BuildQueryString(Dictionary<string, string> query)
+        {
+            if (query == null || query.Count == 0)
+            {
+                return string.Empty; // No query parameters, return an empty string
+            }
+
+            var queryString = new StringBuilder("?");
+            foreach (var kvp in query)
+            {
+                // Encode and append each key-value pair to the query string
+                queryString.Append(Uri.EscapeDataString(kvp.Key));
+                queryString.Append("=");
+                queryString.Append(Uri.EscapeDataString(kvp.Value));
+                queryString.Append("&");
+            }
+
+            return queryString.ToString().TrimEnd('&');
+        }
 
     }
 
@@ -166,6 +198,76 @@ public class PaganiniRestAPI
 
             string url = string.Format(Path.UsrPOIList, routeId);
             RESTAPI.Instance.Get<PathpointPOIAPIList>(url, successCallback, errorCallback, headers);
+        }
+
+    }
+
+    public class PhotoData
+    {
+        public static void GetAll(Int32 routeId, Dictionary<string, string> query, UnityAction<PhotoDataAPIList> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }
+            };
+
+            var queryString = Path.BuildQueryString(query);
+
+            string url = string.Format(Path.UsrPhotoDataList, routeId) + queryString;
+            Debug.Log(url);
+
+            RESTAPI.Instance.Get<PhotoDataAPIList>(url, successCallback, errorCallback, headers);
+        }
+
+    }
+
+    public class RouteWalk
+    {
+
+        public static void Create(Int32 routeId, RouteWalkAPI routeWalkAPI, UnityAction<RouteWalkAPIResult> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }
+            };
+
+
+            string url = string.Format(Path.UsrRouteWalkList, routeId);
+            RESTAPI.Instance.Post<RouteWalkAPIResult>(url, routeWalkAPI, successCallback, errorCallback, headers);
+        }
+
+    }
+
+    public class RouteWalkEvent
+    {
+
+        public static void BatchCreate(Int32 routeWalkId, RouteWalkEventAPIBatch batch, UnityAction<RouteWalkEventAPIList> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }
+            };
+
+
+            string url = string.Format(Path.UsrRouteWalkEventList, routeWalkId);
+            RESTAPI.Instance.Post<RouteWalkEventAPIList>(url, batch, successCallback, errorCallback, headers);
+        }
+
+    }
+
+    public class RouteWalkPathLog
+    {
+
+        public static void BatchCreate(Int32 routeWalkId, RouteWalkPathAPIBatch batch, UnityAction<RouteWalkPathAPIList> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }
+            };
+
+
+            string url = string.Format(Path.UsrRouteWalkPathLogList, routeWalkId);
+            RESTAPI.Instance.Post<RouteWalkPathAPIList>(url, batch, successCallback, errorCallback, headers);
         }
 
     }

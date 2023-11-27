@@ -10,3 +10,8 @@ public class UserAPI
     public bool user_activatetts;
     public bool user_vibration;
 }
+
+public class UserAPIList
+{
+    public UserAPI[] users;
+}
