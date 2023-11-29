@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using NatSuite.Recorders.Clocks;
 using UnityEngine;
 
 
@@ -23,6 +24,7 @@ public class RouteTrainingController : MonoBehaviour
 
     private RouteWalk CurrentRouteWalk;    
     private bool CurrentlyTraining = false;
+    private RealtimeClock clock;
 
     public GPSDebug GPSDebugDisplay;
     public SocketsAPI RealTimeAPI;
@@ -257,6 +259,8 @@ public class RouteTrainingController : MonoBehaviour
 
         // We save any pending route walk
         SaveLocalRouteWalk();
+
+        clock = new RealtimeClock();
     }
 
     public void LoadTrainingComponents()
@@ -326,6 +330,7 @@ public class RouteTrainingController : MonoBehaviour
                 log.Timestamp = CurrentLog.Timestamp;
                 log.Accuracy = CurrentLog.Accuracy;
                 log.Altitude = CurrentLog.Altitude;
+                log.TotalWalkingTime = clock.timestamp;
                 // End Store raw
                 log.InsertDirty();
             }

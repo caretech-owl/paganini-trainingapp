@@ -337,6 +337,7 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
                     args.DistanceWalked = OfftrackStats.DistanceWalked;
                     args.WalkingSteps = OfftrackStats.WalkingSteps;
                     args.MaxDistanceFromTrack = OfftrackStats.MaxDistanceFromTrack;
+                    args.WalkingPace = OfftrackStats.WalkingPace;
 
                     OnOffTrackEnd?.Invoke(this, args);
                 }
@@ -433,6 +434,7 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
                     DecisionStats.OnTargetPOI = false;
                     DecisionStats.IsCorrectDecision = false;
                     DecisionStats.NavIssue = issue;
+
                     OnDecisionEnd?.Invoke(this, DecisionStats);
                 }
 
@@ -470,6 +472,7 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
                     var args = new ValidationArgs(userLocation, segmentInfo, true);
                     args.DistanceWalked = OfftrackStats.DistanceWalked;
                     args.WalkingSteps = OfftrackStats.WalkingSteps;
+                    args.WalkingPace = OfftrackStats.WalkingPace;
                     args.MaxDistanceFromTrack = OfftrackStats.MaxDistanceFromTrack;
 
                     OnOffTrackEnd?.Invoke(this, args);

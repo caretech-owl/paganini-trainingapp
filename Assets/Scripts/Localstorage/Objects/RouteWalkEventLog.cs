@@ -108,6 +108,8 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
     public RouteWalkEventLog(DecisionMadeEvent walkEvent) {
         populateEvent(walkEvent);
         EvenLogType = RouteWalkEventLogBase.RouteEvenLogType.DecisionMade;
+        DistanceWalked = walkEvent.DistanceWalked;
+        WalkingPace = walkEvent.WalkingPace;
         IsCorrectDecision = walkEvent.IsCorrectDecision;
         NavIssue = walkEvent.NavIssue;
         DecisionExpected = walkEvent.DecisionExpected;
@@ -140,6 +142,11 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
         EvenLogType = RouteWalkEventLogBase.RouteEvenLogType.POIReached;
         DistanceWalked = walkEvent.DistanceWalked;
         WalkingPace = walkEvent.WalkingPace;
+
+        SegPOIStartId = walkEvent.SegPOIStartId;
+        SegExpectedPOIEndId = walkEvent.SegExpectedPOIEndId;
+        SegReachedPOIEndId = walkEvent.SegReachedPOIEndId;
+        DistanceCorrectlyWalked = walkEvent.DistanceCorrectlyWalked;
     }
 
     public RouteWalkEventLog(IRouteWalkEventAPI eventAPI)
