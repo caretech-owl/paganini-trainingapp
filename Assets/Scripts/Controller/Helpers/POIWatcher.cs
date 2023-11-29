@@ -403,13 +403,14 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
         var segmentInfo = routeValidation.CalculateMinDistanceAndBearing(userLocation);
 
 
-        Debug.Log($"[{LocationCount}] {CurrentPOIIndex} (Acc ERW{Math.Round(pathpoint.Accuracy).ToString().PadLeft(2)}| User {Math.Round(userLocation.Accuracy).ToString().PadRight(2)})"+
-                  $" - POI distance: {Math.Round(currentDistance, 3).ToString("F3").PadLeft(6)} Closest Seg Index: {segmentInfo.ClosestSegmentIndex} Distance to Seg: {Math.Round(segmentInfo.MinDistanceToSegment, 3).ToString("F3")} | Seg-Bear: {Math.Round(segmentInfo.SegmentHeading, 3).ToString("F3")} User-Bear: {Math.Round(segmentInfo.UserHeading,3).ToString("F3")}  Diff-Bear: {Math.Round(segmentInfo.MinBearingDifference,3).ToString("F3")} | isWalking: {isWalking} Pace: {Math.Round(walkPace,3).ToString("F3")} |"+
-                  $" Tot Walk Distance: { Math.Round(TotalWalkingDistance,3).ToString("F3")}");
+        Debug.Log($"[{LocationCount}] {CurrentPOIIndex} (Acc ERW{Math.Round(pathpoint.Accuracy).ToString().PadLeft(2)}| User {Math.Round(userLocation.Accuracy).ToString().PadRight(2)})" +
+                  $" - POI distance: {Math.Round(currentDistance, 3).ToString("F3").PadLeft(6)} Closest Seg Index: {segmentInfo.ClosestSegmentIndex} Distance to Seg: {Math.Round(segmentInfo.MinDistanceToSegment, 3).ToString("F3")} | Seg-Bear: {Math.Round(segmentInfo.SegmentHeading, 3).ToString("F3")} User-Bear: {Math.Round(segmentInfo.UserHeading, 3).ToString("F3")}  Diff-Bear: {Math.Round(segmentInfo.MinBearingDifference, 3).ToString("F3")} | isWalking: {isWalking} Pace: {Math.Round(walkPace, 3).ToString("F3")} |" +
+                  $" Tot Walk Distance: {Math.Round(TotalWalkingDistance, 3).ToString("F3")}");
 
 
         // We are not on a POI and we stopped. We do not check off-track then
-        if (currentState != POIState.OnPOI && !isWalking)
+        // Revisit this, to instead skip the off track and still do statistics
+        if (currentState != POIState.OnPOI && !isWalking && !justLeft)
         {
             return pathpointLog;
         }
@@ -541,6 +542,8 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
 
         // Let's inform that there is a new valid user location (curated)
         OnUserLocationChanged?.Invoke(this, new LocationChangedArgs(userLocation, segmentInfo, isWalking, walkPace));
+
+        //Debug.Log("Pathpoint Log: " + pathpointLog.ToString());
 
 
         return pathpointLog;

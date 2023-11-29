@@ -49,8 +49,8 @@ public class RouteTrainingController : MonoBehaviour
         POIWatch.OnOffTrackEnd -= POIWatch_OnOffTrackEnd;
         POIWatch.OnDecisionStart -= POIWatch_OnDecisionStart;
         POIWatch.OnDecisionEnd -= POIWatch_OnDecisionEnd;
-        POIWatch.OnDecisionEnd -= POIWatch_OnDecisionEnd;
         POIWatch.OnSegmentStart -= POIWatch_OnSegmentStart;
+        POIWatch.OnSegmentEnd -= POIWatch_OnSegmentEnd;
         POIWatch.OnAlongTrack -= POIWatch_OnAlongTrack;
         POIWatch.OnArrived -= POIWatch_OnArrived;
         POIWatch.OnWalkStatusChange -= POIWatch_OnWalkStatusChange;
@@ -91,8 +91,8 @@ public class RouteTrainingController : MonoBehaviour
         POIWatch.OnOffTrackEnd -= POIWatch_OnOffTrackEnd;
         POIWatch.OnDecisionStart -= POIWatch_OnDecisionStart;
         POIWatch.OnDecisionEnd -= POIWatch_OnDecisionEnd;
-        POIWatch.OnDecisionEnd -= POIWatch_OnDecisionEnd;
         POIWatch.OnSegmentStart -= POIWatch_OnSegmentStart;
+        POIWatch.OnSegmentEnd -= POIWatch_OnSegmentEnd;
         POIWatch.OnAlongTrack -= POIWatch_OnAlongTrack;
         POIWatch.OnArrived -= POIWatch_OnArrived;
         POIWatch.OnWalkStatusChange -= POIWatch_OnWalkStatusChange;
@@ -107,6 +107,7 @@ public class RouteTrainingController : MonoBehaviour
     {
         if (!RouteTracking.RunSimulation || RouteTracking.SaveSimulatedWalk) {
             CurrentRouteWalk.WalkCompletionPercentage = (float)e.SegmentInfo.ClosestSegmentIndex / (float)SharedData.PathpointList.Count;
+            CurrentRouteWalk.EndDateTime = DateTime.Now;
             CurrentRouteWalk.InsertDirty();
         }
         
@@ -159,7 +160,7 @@ public class RouteTrainingController : MonoBehaviour
 
         CurrentlyTraining = false;
 
-        if (!RouteTracking.RunSimulation)
+        if (!RouteTracking.RunSimulation || RouteTracking.SaveSimulatedWalk)
         {
             CurrentRouteWalk.WalkCompletion = RouteWalk.RouteWalkCompletion.Completed;
             CurrentRouteWalk.EndDateTime = DateTime.Now; 
@@ -414,7 +415,7 @@ public class RouteTrainingController : MonoBehaviour
 
     private void SaveLocalRouteWalk()
     {
-        RouteWalkLog.UploadRouteWalksForRoute(SharedData.CurrentRoute);
+        //RouteWalkLog.UploadRouteWalksForRoute(SharedData.CurrentRoute);
     }
 
     // Terminate correctly the route.

@@ -36,6 +36,13 @@ public class PathpointLog : BaseModel<PathpointLog>
         Timestamp = pathpoint.Timestamp;
     }
 
+    public override string ToString()
+    {
+        return $"Id: {Id}, RouteWalkId: {RouteWalkId}, Longitude: {Longitude}, Latitude: {Latitude}, Altitude: {Altitude}, Accuracy: {Accuracy}, Timestamp: {Timestamp}, " +
+               $"TargetPOIId: {TargetPOIId}, SegPOIStartId: {SegPOIStartId}, SegPOIEndId: {SegPOIEndId}, " +
+               $"IsWalking: {IsWalking}, WalkingPace: {WalkingPace}, TotalWalkedDistance: {TotalWalkedDistance}, TotalWalkingTime: {TotalWalkingTime}";
+    }
+
 
     public PathpointLog(IRouteWalkPathAPI pathAPI)
     {

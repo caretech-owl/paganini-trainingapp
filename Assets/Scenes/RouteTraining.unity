@@ -4721,7 +4721,7 @@ MonoBehaviour:
   GpsUpdateInterval: 3
   RunSimulation: 1
   SaveSimulatedWalk: 1
-  WalkSimulationId: 1
+  WalkSimulationId: -6
   SimulationUpdateInterval: 1
   OnLocationUpdated:
     m_PersistentCalls:
@@ -4925,7 +4925,7 @@ AudioListener:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1604196369}
-  m_Enabled: 1
+  m_Enabled: 0
 --- !u!20 &1604196371
 Camera:
   m_ObjectHideFlags: 0

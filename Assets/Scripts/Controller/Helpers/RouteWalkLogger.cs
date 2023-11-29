@@ -241,6 +241,25 @@ public class WalkEventManager
         CurrentPathpointLog = log;
     }
 
+    private void LogEventStart(string eventName, RouteWalkEventLogBase walkEvent)
+    {
+        //Debug.Log($"[EVENT START] - {eventName}: " +
+        //          $"StartPathpointLogId: {walkEvent.StartPathpointLogId}, " +
+        //          $"StartTimestamp: {walkEvent.StartTimestamp}, " +
+        //          $"RouteWalkId: {walkEvent.RouteWalkId}, " +
+        //          $"TargetPOIId: {walkEvent.TargetPOIId}");
+    }
+
+    private void LogEventEnd(string eventName, RouteWalkEventLogBase walkEvent)
+    {
+        //Debug.Log($"[EVENT END] - {eventName}: " +
+        //          $"EndPathpointLogId: {walkEvent.EndPathpointLogId}, " +
+        //          $"EndTimestamp: {walkEvent.EndTimestamp}, " +
+        //          $"DurationEvent: {walkEvent.DurationEvent}, " +
+        //          $"RouteWalkId: {walkEvent.RouteWalkId}, " +
+        //          $"TargetPOIId: {walkEvent.TargetPOIId}");
+    }
+
     public void ProcessWalkStatusChange(WalkingStatusArgs args)
     {
         // The user stopped
@@ -248,6 +267,8 @@ public class WalkEventManager
         {
             CurrentWalkStoppedEvent = new WalkStoppedEvent();
             PopulateStartEventBase(CurrentWalkStoppedEvent, args.TargetPOI);
+
+            LogEventStart("CurrentWalkStoppedEvent", CurrentWalkStoppedEvent);
         }
         // We are resuming walking
         else if (CurrentWalkStoppedEvent != null && args.IsWalking)
@@ -258,8 +279,14 @@ public class WalkEventManager
             e.Id = GetLastRouteWalkEventLog();
             e.InsertDirty();
 
+            LogEventEnd("CurrentWalkStoppedEvent", CurrentWalkStoppedEvent);
+
             // we free the event
             CurrentWalkStoppedEvent = null;
+        }
+        else
+        {
+            Debug.Log("CurrentWalkStoppedEvent: We need to handle better this case:" + args);
         }
 
     }
@@ -271,6 +298,8 @@ public class WalkEventManager
         {
             CurrentOfftrackEvent = new OffTrackEvent();
             PopulateStartEventBase(CurrentOfftrackEvent, args.TargetPOI);
+
+            LogEventStart("CurrentOfftrackEvent", CurrentOfftrackEvent);
         }
         // We are resuming walking
         else if (CurrentOfftrackEvent != null && args.OnTrack)
@@ -285,8 +314,14 @@ public class WalkEventManager
             e.Id = GetLastRouteWalkEventLog();
             e.InsertDirty();
 
+            LogEventEnd("CurrentOfftrackEvent", CurrentOfftrackEvent);
+
             // we free the event
             CurrentOfftrackEvent = null;
+        }
+        else
+        {
+            //Debug.Log("CurrentOfftrackEvent: We need to handle better this case:" + args);
         }
     }
 
@@ -299,6 +334,8 @@ public class WalkEventManager
             PopulateStartEventBase(CurrentDecisionEvent, args.TargetPOI);
 
             CurrentDecisionEvent.DecisionExpected = args.DecisionExpected;
+
+            LogEventStart("CurrentDecisionEvent", CurrentDecisionEvent);
 
         }
         // We left the POI and made a decision
@@ -315,20 +352,28 @@ public class WalkEventManager
             e.Id = GetLastRouteWalkEventLog();
             e.InsertDirty();
 
+            LogEventEnd("CurrentDecisionEvent", CurrentDecisionEvent);
+
             // we free the event
             CurrentDecisionEvent = null;
+        }
+        else
+        {
+           // Debug.Log("CurrentDecisionEvent: We need to handle better this case:" + args);
         }
     }
 
     public void ProcessSegmentCompleteStatusChange(SegmentCompletedArgs args)
     {
-        // The user is off-track
+
         if (CurrentSegmentEvent == null && !args.HasArrived)
         {
             CurrentSegmentEvent = new SegmentCompletedEvent();
             PopulateStartEventBase(CurrentSegmentEvent, args.TargetPOI);
             CurrentSegmentEvent.SegPOIStartId = args.SegPOIStartId;
             CurrentSegmentEvent.SegExpectedPOIEndId = args.SegExpectedPOIEndId;
+
+            LogEventStart("CurrentSegmentEvent", CurrentSegmentEvent);
 
         }
         // We left the POI and made a decision
@@ -345,8 +390,14 @@ public class WalkEventManager
             e.Id = GetLastRouteWalkEventLog();
             e.InsertDirty();
 
+            LogEventEnd("CurrentSegmentEvent", CurrentSegmentEvent);
+
             // we free the event
             CurrentSegmentEvent = null;
+        }
+        else
+        {
+           // Debug.Log("CurrentSegmentEvent: We need to handle better this case:" + args);
         }
     }
 

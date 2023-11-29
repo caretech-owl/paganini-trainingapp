@@ -73,10 +73,10 @@ public class LocationUtils : PersistentLazySingleton<LocationUtils>
 
         // We consider the coordinates as ellipsis and take the sum of the ratios (accuracy of measurement),
         // as the distance where we could already be on the POI
-
+        
         double minAccuracyBasedProdimity = coord.Accuracy + target.Accuracy;
         // Adjust the threshold based on the sum of accuracies
-        double adjustedThreshold = config.onTargetDistanceThreshold < minAccuracyBasedProdimity ? config.onTargetDistanceThreshold : config.onTargetDistanceThreshold;
+        double adjustedThreshold = config.onTargetDistanceThreshold < minAccuracyBasedProdimity ? minAccuracyBasedProdimity : config.onTargetDistanceThreshold;
 
         return haversineDistance <= adjustedThreshold;
 
