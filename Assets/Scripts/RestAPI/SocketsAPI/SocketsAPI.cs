@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using Newtonsoft.Json;
 using WebSocketSharp;
+using UnityEngine.Events;
 
 public class SocketsAPI : MonoBehaviour
 {
@@ -9,11 +10,15 @@ public class SocketsAPI : MonoBehaviour
     private Route CurrentRoute;
 
     [SerializeField] private string ServerURL = "ws://localhost:8080";
+    [SerializeField] private bool EnableLocationSharing = false;
+
+
+    public UnityEvent OnConnectionSuccessful;
 
     private void Start()
     {
        
-        CurrentRoute = SessionData.Instance.GetData<Route>("SelectedRoute");
+        
 
         //ConnectToServer();
 
@@ -21,6 +26,9 @@ public class SocketsAPI : MonoBehaviour
 
     public void ConnectToServer()
     {
+        CurrentRoute = SessionData.Instance.GetData<Route>("SelectedRoute");
+
+        if (!EnableLocationSharing) return;
         try
         {
             ws = new WebSocket(ServerURL);
@@ -33,12 +41,16 @@ public class SocketsAPI : MonoBehaviour
             ws.OnOpen += (sender, e) =>
             {
                 Debug.Log("Connected to server.");
-                SendMessage(new
+
+                var connObj = new
                 {
                     type = "connect",
                     userId = AppState.CurrentUser.Id,
                     sessionId = CurrentRoute.Id
-                });
+                };
+
+                SendMessage(connObj);
+                
             };
 
             ws.ConnectAsync();
@@ -51,13 +63,25 @@ public class SocketsAPI : MonoBehaviour
 
     public void SendPathpointTrace(PathpointTraceMessage message, string eventType = null)
     {
+        if (!EnableLocationSharing) return;
+
         message.type = "pathpoint";
         message.eventType = eventType;
         SendMessage(message);
     }
 
+    public void SendRouteTrace(PathpointTraceMessage message)
+    {
+        if (!EnableLocationSharing) return;
+
+        message.type = "route";
+        SendMessage(message);
+    }
+
     private void SendMessage(object message)
     {
+        if (!EnableLocationSharing) return;
+
         if (ws == null || !ws.IsAlive)
         {
             Debug.Log("Not connected to server.");

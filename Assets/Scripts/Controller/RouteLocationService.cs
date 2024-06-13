@@ -3,6 +3,7 @@ using UnityEngine.Android;
 using System.Collections;
 using System;
 using UnityEngine.Events;
+using static PaganiniRestAPI;
 
 [System.Serializable]
 public class LocationEvent : UnityEvent<string>
@@ -15,15 +16,26 @@ public class RouteLocationService : MonoBehaviour
     /// Game Object to Display Geopositon Info in
     /// </summary>
     public RecordingStatus RecordingInfo;
-
     public PhoneCam PhoneCam;
 
     [Header(@"Events")]
     public LocationEvent OnLocationTrackingError;
     public UnityEvent OnLocationTrackingStarted;
 
+    [Header(@"Location Quality params")]
+    public LocationUtilsConfig config;
+
+    public double locQosExpectedGPSAccuracy = 15;    
+    public double locQosMaxAllowedAccuracy = 30;
+    public double locQosMaxAllowedSpeed = 10;
+    public int locQosSlidingWindowSize = 5;
+
     private Boolean running = false;
     private int maxLocationTrackingAttempts = 10;
+
+
+    private LocationQualityControl locationQualityControl;
+
 
     private void Awake()
     {
@@ -33,6 +45,9 @@ public class RouteLocationService : MonoBehaviour
     private void Start()
     {
         AppLogger.Instance.LogFromMethod(this.name, "Start", "Start RouteLocationService");
+
+        WalkingDetector walkingDetector = new WalkingDetector(config);
+        locationQualityControl = new LocationQualityControl(walkingDetector, config);
     }
 
     /// <summary>
@@ -163,6 +178,15 @@ public class RouteLocationService : MonoBehaviour
             Description = ""
         };
         punkt.Id = -(punkt.RouteId * 10000 + System.DateTime.Now.Minute * 1000 + System.DateTime.Now.Millisecond);
+
+
+        // We normalise the incoming location to correct for GPS innacuracies
+        (Pathpoint userLocation, double valAccuracy, double valSpeed) = locationQualityControl.ProcessLocation(punkt);
+
+        punkt.Longitude = userLocation.Latitude;
+        punkt.Longitude = userLocation.Longitude;
+        punkt.Altitude = userLocation.Altitude;
+
         return punkt;
     }
 

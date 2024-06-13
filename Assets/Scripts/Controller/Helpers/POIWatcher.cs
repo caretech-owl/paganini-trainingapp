@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using MathNet.Numerics;
+using UnityEditor;
 using UnityEngine;
 using static LocationUtils;
+using static PaganiniRestAPI;
 
 public class ValidationArgs: EventArgs
 {
@@ -100,9 +102,6 @@ public class SegmentCompletedArgs : EventArgs
         HasArrived = hasArrived;
         TargetPOI = targetPOI;
     }
-
-
-
 }
 
 public class EventArgs<T> : EventArgs
@@ -115,9 +114,6 @@ public class EventArgs<T> : EventArgs
     }
 
 }
-
-
-
 
 public class POIArgs : EventArgs
 {
@@ -152,6 +148,7 @@ public class LocationChangedArgs : EventArgs
 
     public Pathpoint Point;
     public SegmentDistanceAndBearing SegmentInfo;
+    public SegmentCompletedArgs SegmentStats;
     //public double MinDistanceToSegment { get; set; }
     //public double MinBearingDifference { get; set; }
     //public double UserHeading { get; set; }
@@ -160,7 +157,7 @@ public class LocationChangedArgs : EventArgs
     public bool IsWalking { get; set; }
     public double Pace { get; set; }
 
-    public LocationChangedArgs(Pathpoint point, SegmentDistanceAndBearing segmentInfo, bool isWalking, double pace)
+    public LocationChangedArgs(Pathpoint point, SegmentDistanceAndBearing segmentInfo, SegmentCompletedArgs segmentStats, bool isWalking, double pace)
     {
         Point = point;
         //MinDistanceToSegment = minDistanceToSegment;
@@ -169,6 +166,7 @@ public class LocationChangedArgs : EventArgs
         //SegmentHeading = segmentHeading;
         //ClosestSegmentIndex = closestSegmentIndex;
         SegmentInfo = segmentInfo;
+        SegmentStats = segmentStats;
         IsWalking = isWalking;
         Pace = pace;
     }
@@ -215,10 +213,12 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
     public bool IsWalking = false;
     private Pathpoint PreviousUserLocation;
 
-    public enum POIState { None, OnPOI, LeftPOI, OffTrack, OnTrack, Arrived, Invalid }
+    public enum POIState { None, OnPOI, LeftPOI, OffTrack, OnTrack, Arrived, Invalid, AtStart }
     private POIState currentState = POIState.None;
+    private POIState previousState = POIState.None;
     private int LocationCount = 0;
     private double TotalWalkingDistance;
+    private NavigationIssue? CurrentNavigationIssue;
 
     // Stats for events
     private ValidationArgs OfftrackStats;
@@ -228,14 +228,15 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
     private WalkingDetector walkingDetector;
     LocationQualityControl locationQualityControl;
 
-    public void InitialiseWatcher(LocationUtils routeValidation)
+    public void InitialiseWatcher(LocationUtils routeValidation, LocationUtilsConfig config)
     {
-        double expectedGPSAccuracy = 15;
         this.routeValidation = routeValidation;
-        walkingDetector = new WalkingDetector(expectedGPSAccuracy);
-        locationQualityControl = new LocationQualityControl(expectedGPSAccuracy: expectedGPSAccuracy, slidingWindowSize: 5, maxSpeed: 10, maxAccuracy: 30);
+        walkingDetector = new WalkingDetector(config);
+        //locationQualityControl = new LocationQualityControl(walkingDetector, slidingWindowSize: 5, maxSpeed: 10, maxAccuracy: 30);
+        locationQualityControl = new LocationQualityControl(walkingDetector, config); 
 
         currentState = POIState.None;
+        previousState = POIState.None;
         LocationCount = 0;
         CurrentPOIIndex = -1;
         CurrentTargetPOI = null;
@@ -258,10 +259,27 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
         CurrentTargetPOI = POIList[CurrentPOIIndex];
     }
 
+    public void SetStartingPoint(int startPOIIndex, POIState pOIState)
+    {
+        CurrentPOIIndex = startPOIIndex;
+        CurrentTargetPOI = POIList[CurrentPOIIndex];
+        currentState = pOIState;
+        previousState = POIState.None;
+    }
+
     public int GetLocationIndex()
     {
         return LocationCount;
-    }    
+    }
+
+    public bool IsUserAtStartingPoint(Pathpoint pathpoint)
+    {
+        (Pathpoint userLocation, double valAccuracy, double valSpeed) = locationQualityControl.ProcessLocation(pathpoint);
+
+        return userLocation != null && routeValidation.IsPathpointOnTarget(pathpoint, POIList[0]);
+
+    }
+
 
     public PathpointLog UpdateUserLocation(Pathpoint pathpoint)
     {
@@ -287,7 +305,8 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
         pathpointLog.SegPOIEndId = GetPathpointIdByIndex(CurrentPOIIndex);
 
         // Let's verify the walking status of the user
-        (isWalking, walkPace) = walkingDetector.IsWalking(pathpoint);
+        //(isWalking, walkPace) = walkingDetector.IsWalking(pathpoint);
+        isWalking = walkingDetector.IsWalkingBasedOnSpeed(pathpoint,out walkPace);
         // Did the walking status is different from the previous state (walking status changed?)
         if (IsWalking != isWalking)
         {
@@ -323,8 +342,8 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
                     OnSegmentEnd?.Invoke(this, SegmentStats);
                     SegmentStats = null; // we reset the statistics
                 }
-
-                currentState = POIState.Arrived;
+                
+                SetCurrentState(POIState.Arrived);
                 OnArrived?.Invoke(this, new POIArgs(userLocation, currentDistance));
             }
             // Have we just entered the target POI?
@@ -342,6 +361,12 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
                     OnOffTrackEnd?.Invoke(this, args);
                 }
 
+                // we had made an error leaving the POI and now we are coming back
+                if (previousState == POIState.OnPOI)
+                {
+                    SegmentStats = null; // we do not record the off-track walk as a segment
+                }
+
                 // We inform of a user decision about to be made
                 DecisionStats = new DecisionArgs(userLocation, CurrentTargetPOI, currentDistance, true);
                 DecisionStats.DecisionExpected = CurrentTargetPOI.Instruction;
@@ -356,12 +381,13 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
                     OnSegmentEnd?.Invoke(this, SegmentStats);
                     SegmentStats = null; // we reset the statistics
                 }
-                
-                currentState = POIState.OnPOI;
+                SetCurrentState(POIState.OnPOI);
                 OnEnteredPOI?.Invoke(this, new POIArgs(userLocation, currentDistance));
             }
 
             pathpointLog.TargetPOIId = CurrentTargetPOI.Id;
+
+            CurrentNavigationIssue = null;
 
             // We are still on the target POI (we entered before)
             OnLog?.Invoke(this, new EventArgs<string>($"Still on On Target: " + currentDistance));
@@ -372,18 +398,30 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
             if (currentState == POIState.OnPOI)
             {
                 justLeft = true;
-                currentState = POIState.LeftPOI;
+                SetCurrentState(POIState.LeftPOI);
                 //OnLeftPOI?.Invoke(this, new EventArgs<double>(d));
 
 
                 // We start the segment stats, and inform that a new segment is starting
                 // Segment: from POI_i leave -> POI_j enter
                 SegmentStats = new SegmentCompletedArgs(userLocation, currentDistance, false);
+                // we fill up the next segment. the client havent' moved the poi target, but for logging
+                // purposes we do it here so that it is recorded in the right segment
+                pathpointLog.SegPOIStartId = GetPathpointIdByIndex(CurrentPOIIndex);
+                pathpointLog.SegPOIEndId = GetPathpointIdByIndex(CurrentPOIIndex+1);
                 SegmentStats.SegPOIStartId = pathpointLog.SegPOIStartId;
                 SegmentStats.SegExpectedPOIEndId = pathpointLog.SegPOIEndId;
                 OnSegmentStart?.Invoke(this, SegmentStats);
 
             }
+        }
+
+        if (currentState == POIState.AtStart && SegmentStats == null)
+        {
+            SegmentStats = new SegmentCompletedArgs(userLocation, currentDistance, false);
+            SegmentStats.SegPOIStartId = pathpointLog.SegPOIStartId;
+            SegmentStats.SegExpectedPOIEndId = pathpointLog.SegPOIEndId;
+            OnSegmentStart?.Invoke(this, SegmentStats);
         }
 
         // Let's compute the walking distance increment from the previous location
@@ -402,7 +440,6 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
         //(double minDistanceToSegment, double minBearingDifference, double userHeading, double segmentHeading, int closestSegmentIndex) = routeValidation.CalculateMinDistanceAndBearing(userLocation);        
         var segmentInfo = routeValidation.CalculateMinDistanceAndBearing(userLocation);
 
-
         Debug.Log($"[{LocationCount}] {CurrentPOIIndex} (Acc ERW{Math.Round(pathpoint.Accuracy).ToString().PadLeft(2)}| User {Math.Round(userLocation.Accuracy).ToString().PadRight(2)})" +
                   $" - POI distance: {Math.Round(currentDistance, 3).ToString("F3").PadLeft(6)} Closest Seg Index: {segmentInfo.ClosestSegmentIndex} Distance to Seg: {Math.Round(segmentInfo.MinDistanceToSegment, 3).ToString("F3")} | Seg-Bear: {Math.Round(segmentInfo.SegmentHeading, 3).ToString("F3")} User-Bear: {Math.Round(segmentInfo.UserHeading, 3).ToString("F3")}  Diff-Bear: {Math.Round(segmentInfo.MinBearingDifference, 3).ToString("F3")} | isWalking: {isWalking} Pace: {Math.Round(walkPace, 3).ToString("F3")} |" +
                   $" Tot Walk Distance: {Math.Round(TotalWalkingDistance, 3).ToString("F3")}");
@@ -420,7 +457,26 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
 
         // Compute whether the user is off-track
         int? lastPOIIndex = justLeft ? CurrentPOIIndex : null;
-        (bool offTrackDetected, LocationUtils.NavigationIssue issue) = routeValidation.IsUserOffTrack(userLocation,segmentInfo, lastPOIIndex);
+        int? lastPathpointIndex = null;
+        // we calculate the index of the current POI to compute type of navigation issue (decision mistake),
+        // but only with decision points (landmarks)
+        if (justLeft && CurrentTargetPOI.POIType == Pathpoint.POIsType.Landmark)
+        {
+            lastPathpointIndex = routeValidation.GetPathpointIndexById(POIList[CurrentPOIIndex].Id);
+        }
+        //(bool offTrackDetected, LocationUtils.NavigationIssue issue) = routeValidation.IsUserOffTrack(userLocation,segmentInfo, lastPathpointIndex, currentState == POIState.OffTrack);
+
+        bool offTrackDetected;
+        LocationUtils.NavigationIssue issue = NavigationIssue.Deviation;
+        if (currentState == POIState.OffTrack)
+        {
+            offTrackDetected =  !routeValidation.IsUserOnTrack(userLocation, segmentInfo, (NavigationIssue)CurrentNavigationIssue);
+        }
+        else
+        {
+            (offTrackDetected, issue) = routeValidation.IsUserOffTrackNew(userLocation, segmentInfo, lastPathpointIndex, currentState == POIState.OffTrack);
+        }
+        
 
         // Let's assess if there are any issues
         if (currentState != POIState.OnPOI && currentState != POIState.Arrived)
@@ -441,7 +497,8 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
 
                 // Here we will keep stats of the offtrack state, which will be send once we are back on track.
                 OfftrackStats = new ValidationArgs();
-                currentState = POIState.OffTrack;
+                SetCurrentState(POIState.OffTrack);
+                CurrentNavigationIssue = issue;
                 var targetPOI = lastPOIIndex != null ? POIList[(int)lastPOIIndex] : null;
                 OnOffTrack?.Invoke(this, new ValidationArgs(userLocation, segmentInfo, false, issue, targetPOI));                
             }
@@ -480,12 +537,18 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
                 }                
 
                 // we are on track
-                currentState = POIState.OnTrack;
+                SetCurrentState(POIState.OnTrack);
                 OnAlongTrack?.Invoke(this, new ValidationArgs(userLocation, segmentInfo, true));
             }
-            else if(currentState == POIState.OnTrack && !offTrackDetected && landarkSkipped)
+            //else if (currentState == POIState.OnTrack &&
+            //    !offTrackDetected && landarkSkipped)
+            //{
+            else if (currentState == POIState.OnTrack && previousState != POIState.AtStart &&
+                !offTrackDetected && landarkSkipped)
             {
                 var closestPOI = routeValidation.IdentifyClosestUpcomingPOI(userLocation, 2);
+                // TODO: Check closest segment index. This is more robust than purely POI
+                //        Think of a zig zag thing.
 
                 if (closestPOI.Id != CurrentTargetPOI.Id)
                 {
@@ -540,8 +603,9 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
             }
         }
 
+
         // Let's inform that there is a new valid user location (curated)
-        OnUserLocationChanged?.Invoke(this, new LocationChangedArgs(userLocation, segmentInfo, isWalking, walkPace));
+        OnUserLocationChanged?.Invoke(this, new LocationChangedArgs(userLocation, segmentInfo, SegmentStats, isWalking, walkPace));
 
         //Debug.Log("Pathpoint Log: " + pathpointLog.ToString());
 
@@ -563,18 +627,34 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
         return index;
     }
 
+    private void SetCurrentState(POIState pOIState)
+    {
+        previousState = currentState;
+        currentState = pOIState; 
+    }
+
     private int? GetPathpointIdByIndex(int index)
     {
-        if (index >0 && POIList[index] != null)
+        if (index >=0 && POIList[index] != null)
         {
             return POIList[index].Id;
         }
         return null;
     }
 
+    public NavigationIssue? GetNavigationIssue()
+    {
+        return CurrentNavigationIssue;
+    }
+
     public POIState GetCurrentState()
     {
         return currentState;
+    }
+
+    public POIState GetPreviousState()
+    {
+        return previousState;
     }
 
     public Pathpoint GetCurrentTargetPathpoint()

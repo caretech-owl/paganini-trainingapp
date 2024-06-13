@@ -3,30 +3,36 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class DirectionIcon : MonoBehaviour
 {
+    [Header(@"Arrow Components")]
+    [SerializeField] private Color NormalColor = Color.yellow;
+    [SerializeField] private Color ActiveColor = Color.green;
+
+    [Header(@"Arrow Components")]
     [SerializeField] private GameObject WrongDirection;
-    [SerializeField] private GameObject CorrectDirection;
+    //[SerializeField] private GameObject CorrectDirection;
     [SerializeField] private GameObject Straight;
     [SerializeField] private GameObject RightTurn;
     [SerializeField] private GameObject LeftTurn;
 
     public enum DirectionType
     {
-        [Description("You're going the wrong way.")]
+        [Description("Das ist nicht der richtige Weg")]
         WrongDirection,
 
-        [Description("You're on the correct path.")]
-        CorrectDirection,
+        //[Description("Du bist auf dem richtigen Weg")]
+        //CorrectDirection,
 
-        [Description("Continue straight ahead.")]
+        [Description("Immer <color=blue>geradeaus</color> bleiben")]
         Straight,
 
-        [Description("Make a right turn.")]
+        [Description("Hier <color=blue>rechts</color> abbiegen")]
         RightTurn,
 
-        [Description("Make a left turn.")]
+        [Description("Hier <color=blue>links</color> abbiegen")]
         LeftTurn
     }
 
@@ -44,12 +50,32 @@ public class DirectionIcon : MonoBehaviour
 
     public void RenderDirection(DirectionType directionType)
     {
-        WrongDirection.SetActive(directionType == DirectionType.WrongDirection);
-        CorrectDirection.SetActive(directionType == DirectionType.CorrectDirection);
-        Straight.SetActive(directionType == DirectionType.Straight);
-        RightTurn.SetActive(directionType == DirectionType.RightTurn);
-        LeftTurn.SetActive(directionType == DirectionType.LeftTurn);
+        ApplyColorToBackground(NormalColor);
+        WrongDirection?.SetActive(directionType == DirectionType.WrongDirection);
+        //CorrectDirection?.SetActive(directionType == DirectionType.CorrectDirection);
+        Straight?.SetActive(directionType == DirectionType.Straight);
+        RightTurn?.SetActive(directionType == DirectionType.RightTurn);
+        LeftTurn?.SetActive(directionType == DirectionType.LeftTurn);
     }
+
+    public void SetConfirmationMode(bool active)
+    {
+        ApplyColorToBackground(active? ActiveColor : NormalColor);
+    }
+
+    private void ApplyColorToBackground(Color color)
+    {
+        Image[] backgroundComponents = gameObject.GetComponentsInChildren<Image>(true);
+
+        foreach (var component in backgroundComponents)
+        {
+            if (component.name == "Background")
+            {
+                component.color = color;
+            }
+        }
+    }
+
 
 }
 

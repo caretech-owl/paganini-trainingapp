@@ -8,6 +8,8 @@ using UnityEngine.Networking;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Linq;
+using System.IO;
+using System.IO.Compression;
 
 
 
@@ -32,6 +34,13 @@ public class RESTAPI : PersistentLazySingleton<RESTAPI>
     {
         string jsonData = JsonConvert.SerializeObject(resource, settings);
         PostRaw(endpoint, jsonData, successCallback, errorCallback, "application/json", headers);
+    }
+
+    public void PostCompressed<TResult>(string endpoint, BaseAPI resource, UnityAction<TResult> successCallback, UnityAction<string> errorCallback, Dictionary<string, string> headers = null)
+    {
+        string jsonData = JsonConvert.SerializeObject(resource, settings);
+        byte[] compressedData = Compress(Encoding.UTF8.GetBytes(jsonData));
+        PostRaw(endpoint, compressedData, successCallback, errorCallback, "application/gzip", headers);
     }
 
     public void PostMultipart<TResult>(string endpoint, BaseAPI resource, Dictionary<string, byte[]> files, UnityAction<TResult> successCallback, UnityAction<string> errorCallback, Dictionary<string, string> headers = null)
@@ -154,12 +163,37 @@ public class RESTAPI : PersistentLazySingleton<RESTAPI>
 
     }
 
+
+    private void PostRaw<TResult>(string endpoint, byte[] data, UnityAction<TResult> successCallback, UnityAction<string> errorCallback, string contentType, Dictionary<string, string> headers = null)
+    {
+        UnityWebRequest request = new UnityWebRequest(endpoint, "POST");
+        request.uploadHandler = (UploadHandler)new UploadHandlerRaw(data);
+        request.downloadHandler = (DownloadHandler)new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", contentType);
+        SetHeaders(request, headers);
+
+        StartCoroutine(PerformRequest<TResult>(request, successCallback, errorCallback));
+    }
+
     private byte[] Concatenate(List<byte> requestData, byte[] boundaryBytes)
     {
         List<byte> resultData = new List<byte>(requestData);
         resultData.AddRange(boundaryBytes);
         return resultData.ToArray();
     }
+
+    private byte[] Compress(byte[] data)
+    {
+        using (var compressedStream = new MemoryStream())
+        {
+            using (var zipStream = new GZipStream(compressedStream, CompressionMode.Compress))
+            {
+                zipStream.Write(data, 0, data.Length);
+            }
+            return compressedStream.ToArray();
+        }
+    }
+
 
 
     private class ForceAcceptAll : CertificateHandler

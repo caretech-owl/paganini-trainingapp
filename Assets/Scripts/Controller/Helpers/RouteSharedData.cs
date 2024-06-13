@@ -40,6 +40,8 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
         if (CurrentRoute == null)
         {
             SceneManager.LoadScene(SceneSwitcher.UserLoginScene);
+            Debug.Log("Downloading Cancelled - No session, going back go login scene.");
+            return;
         }
 
         CurrentWay = Way.Get(CurrentRoute.WayId);

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 using SQLite4Unity3d;
+using UnityEngine;
 
 public class Pathpoint : BaseModel<Pathpoint>
 {
@@ -19,11 +21,37 @@ public class Pathpoint : BaseModel<Pathpoint>
     public string Description { set; get; }
     public string Notes { set; get; }
     public string PhotoFilename { set; get; }
+    public string VideoFilename { set; get; } // This is temporary, for the study
     public NavDirection Instruction { set; get; }
     public double? TimeInVideo { set; get; }
     public POIFeedback CleaningFeedback { set; get; }
     public POIFeedback RelevanceFeedback { set; get; }
     public POIFeedback FamiliarityFeedback { set; get; }
+
+    // Temporal:Serialized string representation of CurrentInstructionMode
+    // TODO: Replace this code by the actual implementation of the
+    // adaptation definition
+    public string SerializedInstructionMode { get; set; }
+
+    [Ignore] // This will be ignored by SQLite
+    public InstructionMode CurrentInstructionMode
+    {
+        get
+        {
+            // Deserialize the serialized string to InstructionMode
+            if (!string.IsNullOrEmpty(SerializedInstructionMode))
+            {
+                return JsonConvert.DeserializeObject<InstructionMode>(SerializedInstructionMode);
+            }
+            return null;
+        }
+        set
+        {
+            // Serialize the InstructionMode object to a string
+            SerializedInstructionMode = JsonConvert.SerializeObject(value);
+        }
+    }
+
 
     [Ignore]
     public List<PathpointPhoto> Photos { get; set; }
@@ -74,6 +102,7 @@ public class Pathpoint : BaseModel<Pathpoint>
         POIType = (POIsType)pathpoint.ppoint_poitype;
         Description = pathpoint.ppoint_description;
         Notes = pathpoint.ppoint_notes;
+        VideoFilename = pathpoint.ppoint_video_filename;
 
         string direction = pathpoint.ppoint_instruction == "" || pathpoint.ppoint_instruction == null ? "None" : pathpoint.ppoint_instruction;
         Instruction = Enum.Parse<NavDirection>(direction);
@@ -88,6 +117,21 @@ public class Pathpoint : BaseModel<Pathpoint>
 
 
         TimeInVideo = pathpoint.ppoint_time_in_video == null ? null : Double.Parse(pathpoint.ppoint_time_in_video);
+
+        // temporal solution for the study
+        if (pathpoint.temp_instructionMode != null)
+        {
+            try {
+                var instructionModeAPI = JsonConvert.DeserializeObject<InstructionModeAPIResult>(pathpoint.temp_instructionMode);
+                CurrentInstructionMode = new InstructionMode(instructionModeAPI);
+                
+            }
+            catch (Exception e)
+            {
+                Debug.Log("Error deserialising the instruction mode. values: " + pathpoint.temp_instructionMode + " Error: " + e.Message);
+            }
+            
+        }
     }
 
     public static List<Pathpoint> GetPathpointListByRoute(int routeId, Func<Pathpoint, bool> whereCondition = null)
@@ -182,6 +226,7 @@ public class Pathpoint : BaseModel<Pathpoint>
         pp.ppoint_description = Description;
         pp.ppoint_notes = Notes;
         pp.ppoint_instruction = Instruction.ToString();
+        pp.ppoint_video_filename = VideoFilename;
         pp.ppoint_time_in_video = TimeInVideo != null ? TimeInVideo.Value.ToString("0.00", CultureInfo.InvariantCulture) : null;
 
         pp.ppoint_relevance_feedback = (int)RelevanceFeedback;

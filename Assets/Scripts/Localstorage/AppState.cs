@@ -36,4 +36,21 @@ public static class AppState
     public static SocialWorker CurrenSocialWorker = null;
     public static string SWAPIToken = null;
 
+    public static class Training
+    {
+        public enum DesignMode
+        {
+            Baseline,
+            Improved,
+            Adaptive
+        }
+        // Temporal Configurations
+        public static DesignMode ActiveDesignMode = DesignMode.Baseline;
+
+        public static int DecisionPointConfirmationDelay = 5;
+        public static int SafetyPointConfirmationDelay = 3;
+        public static int GotoConfirmationDelay = 3;
+    }
+    
+
 }

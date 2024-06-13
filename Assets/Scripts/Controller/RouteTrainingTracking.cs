@@ -24,16 +24,17 @@ public class RouteTrainingTracking : MonoBehaviour
     public bool SaveSimulatedWalk = false;
     [SerializeField] private int WalkSimulationId = -8;
     [SerializeField] private int SimulationUpdateInterval = 3; // Update interval in seconds
-    
+
 
     private Boolean running = false;
     public PathpointEvent OnLocationUpdated;
     private List<PathpointLog> walkLog;
 
-
+    public UnityEvent OnSimulationEnded;
 
     public void StartTracking()
-    {
+    {        
+
         if (!RunSimulation)
         {
             StartCoroutine(StartLocationService());
@@ -42,7 +43,21 @@ public class RouteTrainingTracking : MonoBehaviour
         {
             StartCoroutine(SimulateWalk());
         }
-        
+
+    }
+
+    public void StartSimulationTracking(int routeWalkId, int updateInternval)
+    {
+        // stop any running tracking
+        StopAllCoroutines();
+        running = false;        
+        RunSimulation = true;
+
+        // parameters
+        WalkSimulationId = routeWalkId;
+        SimulationUpdateInterval = updateInternval;
+
+        StartTracking();
     }
 
 
@@ -75,6 +90,9 @@ public class RouteTrainingTracking : MonoBehaviour
     private bool PauseSimulation = false;
     private IEnumerator SimulateWalk()
     {
+        simIndex = 0;
+        PauseSimulation = false;
+
         walkLog = PathpointLog.GetAll(l => l.RouteWalkId == WalkSimulationId)
                           .OrderBy(l => l.Timestamp)  // Order the log by timestamp
                           .ToList();
@@ -90,16 +108,19 @@ public class RouteTrainingTracking : MonoBehaviour
                 Accuracy = wl.Accuracy,
                 Altitude = wl.Altitude
             };
-
-            OnLocationUpdated.Invoke(pathpoint);
+            
 
             if (!PauseSimulation)
             {
+                OnLocationUpdated.Invoke(pathpoint);
                 simIndex = simIndex + 1;
             }
+            
 
             yield return new WaitForSeconds(SimulationUpdateInterval);
         }
+
+        OnSimulationEnded?.Invoke();
     }
 
     private double gpsLastUpdate = 0;
@@ -159,9 +180,9 @@ public class RouteTrainingTracking : MonoBehaviour
     /// <summary>
     /// Pause the simulation 
     /// </summary>
-    public void PauseSimulationTracking()
+    public void PauseSimulationTracking(bool pause)
     {
-        PauseSimulation = true;
+        PauseSimulation = pause;
     }
 
     /// <summary>

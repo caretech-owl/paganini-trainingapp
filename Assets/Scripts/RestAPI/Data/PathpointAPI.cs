@@ -14,12 +14,15 @@ public interface IPathpointAPI
     public string ppoint_timestamp { get; set; }
     public string ppoint_description { get; set; }
     public string ppoint_instruction { get; set; }
+    public string ppoint_video_filename { get; set; }
     public string ppoint_notes { get; set; }
     public string ppoint_time_in_video { get; set; }
     public int? ppoint_relevance_feedback { get; set; }
     public int? ppoint_familiarity_feedback { get; set; }
     public int? ppoint_cleaning_feedback { get; set; }
     public bool IsNew { get; set; }
+
+    public string temp_instructionMode { get; set; }
 
 }
 
@@ -33,11 +36,14 @@ public class PathpointAPIBase : BaseAPI
     public string ppoint_timestamp { get; set; }
     public string ppoint_description { get; set; }
     public string ppoint_instruction { get; set; }
+    public string ppoint_video_filename { get; set; }
     public string ppoint_notes { get; set; }
     public string ppoint_time_in_video { get; set; }
     public int? ppoint_relevance_feedback { get; set; }
     public int? ppoint_familiarity_feedback { get; set; }
     public int? ppoint_cleaning_feedback { get; set; }
+
+    public string temp_instructionMode { get; set; }
 }
 
 [System.Serializable]

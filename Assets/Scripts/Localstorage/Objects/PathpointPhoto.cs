@@ -56,7 +56,9 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
 
         // Query all Ways and their related Routes using sqlite-net's built-in mapping functionality
 
-        photos = conn.Table<PathpointPhoto>().Where(p => p.PathpointId == pathpointId)
+        photos = conn.Table<PathpointPhoto>().Where(p => p.PathpointId == pathpointId &&
+                                            p.CleaningFeedback != PhotoFeedback.Delete &&
+                                            p.DiscussionFeedback != PhotoFeedback.Delete)
             .OrderBy(item => item.Timestamp)
             .ThenByDescending(item => item.Id)
             .ToList();

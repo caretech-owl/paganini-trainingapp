@@ -9,6 +9,7 @@ public class UserAPI
     public bool user_canread;
     public bool user_activatetts;
     public bool user_vibration;
+    public string user_contact;
 }
 
 public class UserAPIList

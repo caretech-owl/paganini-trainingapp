@@ -118,16 +118,19 @@ public class SceneSwitcher : MonoBehaviour
 
     public void GotoMyRouteTraining()
     {
+        Screen.sleepTimeout = AppState.screenSleepTimeout;
         SceneManager.LoadScene(MyRouteTrainingScene);
     }
 
     public void GotoRouteTraining()
     {
         SceneManager.LoadScene(RouteTrainingScene);
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
     }
 
     public void GotoARDirectionBackground()
     {
         SceneManager.LoadScene(ARDirectionScene, LoadSceneMode.Additive);
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
     }
 }

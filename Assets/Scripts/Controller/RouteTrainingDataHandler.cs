@@ -13,6 +13,7 @@ public class RouteTrainingDataHandler : MonoBehaviour
 
     //TODO: get from parent
     public LoginManager LoginHandler;
+    public TMPro.TMP_Text GreetingText;
 
     [Header(@"List Configuration")]
     public GameObject WayListView;
@@ -28,11 +29,12 @@ public class RouteTrainingDataHandler : MonoBehaviour
     void Start()
     {
         WayListHandler = WayListView.GetComponent<WayList>();
-        AppState.SelectedWeg = -1;
+        AppState.SelectedWeg = -1;        
     }
 
     public void LoadRouteTrainings()
     {
+        GreetingText.text = GreetingText.text.Replace("{0}", AppState.CurrentUser.AppName);
         PaganiniRestAPI.Way.GetAll(GetWaySucceed, GetWegeFailed);
     }
 
@@ -154,7 +156,7 @@ public class RouteTrainingDataHandler : MonoBehaviour
     /// Fills out the Way List component
     /// </summary>
     private void DisplayWays()
-    {
+    {        
 
         if (this.ways == null || this.ways.Capacity == 0)
         {
@@ -166,7 +168,7 @@ public class RouteTrainingDataHandler : MonoBehaviour
 
             foreach (Way w in ways)
             {
-                WayListHandler.AddWayItem(w);
+                WayListHandler.AddWayDestination(w, w.Routes[0]);
             }
 
             WayListHandler.ShowWayList();

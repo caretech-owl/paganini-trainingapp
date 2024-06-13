@@ -21,6 +21,10 @@ public class Route : BaseModel<Route>
     public long? EndTimestamp { set; get; }
     public int SocialWorkerId { set; get; }
 
+    
+    public byte[] PhotoStart { set; get; }    
+    public byte[] PhotoDestination { set; get; }
+
     //[Indexed]
     public int WayId { get; set; }
 
@@ -66,6 +70,12 @@ public class Route : BaseModel<Route>
             this.Status = (RouteStatus)erw.status.erw_status_id;
         }
         this.FromAPI = true;
+
+        if (erw.photo_start != null && erw.photo_start.Trim() != "")
+            PhotoStart = Convert.FromBase64String(erw.photo_start);
+
+        if (erw.photo_destination != null && erw.photo_destination.Trim() != "")
+            PhotoDestination = Convert.FromBase64String(erw.photo_destination);
 
         LocalVideoResolution = erw.erw_video_resolution;
         StartTimestamp = DateUtils.ConvertUTCStringToTsMilliseconds(erw.erw_start_time, "yyyy-MM-dd'T'HH:mm:ss");

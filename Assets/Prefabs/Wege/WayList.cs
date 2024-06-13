@@ -54,6 +54,15 @@ public class WayList : MonoBehaviour
 
     }
 
+    public void AddWayDestination(Way w, Route r)
+    {
+        var neu = Instantiate(wayItemPrefab, content.transform);
+
+        WayItem item = neu.GetComponent<WayItem>();
+        item.FillWayDestination(w, r);
+        item.OnSelected = onWaySelected;        
+    }
+
     public void ClearList()
     {
         foreach (Transform child in content.transform)

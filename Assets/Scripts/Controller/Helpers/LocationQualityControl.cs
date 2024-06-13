@@ -6,17 +6,17 @@ public class LocationQualityControl
 {
     private List<Pathpoint> locationHistory;
     private WalkingDetector walkingDetector;
-    private int slidingWindowSize;
-    private double maxSpeed;
-    private double maxAccuracy;
+    //private int slidingWindowSize;
 
-    public LocationQualityControl(double expectedGPSAccuracy, int slidingWindowSize, double maxSpeed, double maxAccuracy)
+    public LocationUtilsConfig config;
+
+    public LocationQualityControl(WalkingDetector walkingDetector, LocationUtilsConfig config)
     {
         locationHistory = new List<Pathpoint>();
-        walkingDetector = new WalkingDetector(expectedGPSAccuracy);
-        this.slidingWindowSize = slidingWindowSize;
-        this.maxSpeed = maxSpeed;
-        this.maxAccuracy = maxAccuracy;
+        //walkingDetector = new WalkingDetector(expectedGPSAccuracy);
+        this.walkingDetector = walkingDetector;
+        //this.slidingWindowSize = slidingWindowSize;
+        this.config = config;
     }
 
     public (Pathpoint, double, double) ProcessLocation(Pathpoint rawLocation)
@@ -28,13 +28,13 @@ public class LocationQualityControl
         locationHistory.Add(smoothedLocation);
 
         // Keep only the last N locations
-        if (locationHistory.Count > slidingWindowSize)
+        if (locationHistory.Count > config.locationHistorySize)
         {
             locationHistory.RemoveAt(0);
         }
 
         // Apply the sliding window approach to average the last N smoothed locations
-        Pathpoint averagedLocation = AverageLastNLocations(slidingWindowSize);
+        Pathpoint averagedLocation = AverageLastNLocations(config.locationHistorySize);
         averagedLocation.Timestamp = rawLocation.Timestamp;
 
         //Debug.Log("Averaged Accuracy: " + averagedLocation.Accuracy);
@@ -80,7 +80,7 @@ public class LocationQualityControl
         bool isValid = true;
         double speed = 0;
         // Check GPS accuracy
-        if (location.Accuracy > maxAccuracy)
+        if (location.Accuracy > config.MaxValidGPSAccuracy)
         {
             isValid = false;
         }
@@ -92,7 +92,7 @@ public class LocationQualityControl
             speed = CalculateSpeed(previousLocation, location);
         }
 
-        return (isValid && speed < maxSpeed, location.Accuracy, speed);
+        return (isValid && speed < config.MaxWalkingSpeedThreshold, location.Accuracy, speed);
     }
 
     private double CalculateSpeed(Pathpoint p1, Pathpoint p2)

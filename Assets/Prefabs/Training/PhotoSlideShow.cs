@@ -9,6 +9,7 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
     public RectTransform slideContainer;    
     public GameObject visualIndicatorPrefab;
     public GameObject auditoryIndicatorPrefab;
+    public GameObject SlidePrefab;
     public float dragThreshold = 30f;
 
     private int currentSlideIndex;
@@ -16,7 +17,8 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
     private Vector2 startPosition;
     private bool isDragging;
     private List<PathpointPhoto> pathpointPhotos;
-    private List<Image> slides;
+    private List<GameObject> slides;
+    private List<Texture2D> texturesToFreeUp;
 
     private void Start()
     {        
@@ -100,16 +102,63 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
         }
     }
 
+    //private void GenerateSlides()
+    //{
+    //    slides = new List<Image>();
+
+    //    for (int i = 0; i < pathpointPhotos.Count; i++)
+    //    {
+    //        GameObject newSlide = new GameObject("Slide" + i);
+    //        newSlide.transform.SetParent(slideContainer, false);
+
+    //        Image slideImage = newSlide.AddComponent<Image>();
+    //        Texture2D texture = new Texture2D(2, 2);
+    //        texture.LoadImage(pathpointPhotos[i].Data.Photo);
+    //        slideImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+
+    //        // Set Preserve Aspect to true
+    //        slideImage.preserveAspect = true;
+
+    //        // Set anchors and pivot point
+    //        slideImage.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+    //        slideImage.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+    //        slideImage.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+    //        slideImage.rectTransform.sizeDelta = new Vector2(slideContainer.rect.width, slideContainer.rect.height);
+    //        slideImage.rectTransform.anchoredPosition = new Vector2(0, 0);
+
+    //        slides.Add(slideImage);
+    //    }
+    //}
+
     private void GenerateSlides()
     {
-        slides = new List<Image>();
+        slides = new List<GameObject>(); // Use GameObject as the list type
+        texturesToFreeUp = new List<Texture2D>();
 
         for (int i = 0; i < pathpointPhotos.Count; i++)
         {
+            // Create the parent GameObject for each slide
             GameObject newSlide = new GameObject("Slide" + i);
             newSlide.transform.SetParent(slideContainer, false);
 
-            Image slideImage = newSlide.AddComponent<Image>();
+            // Add Image component to the parent GameObject
+            Image background = newSlide.AddComponent<Image>();
+            background.color = Color.white; // Set the background color to white
+            background.raycastTarget = false; // Make the background non-interactable
+
+            // Set the RectTransform's size to match slideContainer
+            RectTransform newSlideRectTransform = background.GetComponent<RectTransform>();
+            newSlideRectTransform.sizeDelta = slideContainer.rect.size;
+
+
+            Mask mask = newSlide.AddComponent<Mask>();
+            mask.showMaskGraphic = false;
+
+            // Create a child GameObject for the image
+            GameObject imageContainer = new GameObject("ImageContainer");
+            imageContainer.transform.SetParent(newSlide.transform, false);
+
+            Image slideImage = imageContainer.AddComponent<Image>();
             Texture2D texture = new Texture2D(2, 2);
             texture.LoadImage(pathpointPhotos[i].Data.Photo);
             slideImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
@@ -117,14 +166,30 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
             // Set Preserve Aspect to true
             slideImage.preserveAspect = true;
 
-            // Set anchors and pivot point
+            // Set anchors and pivot point for the child Image
             slideImage.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            slideImage.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-            slideImage.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            slideImage.rectTransform.sizeDelta = new Vector2(slideContainer.rect.width, slideContainer.rect.height);
-            slideImage.rectTransform.anchoredPosition = new Vector2(0, 0);
+            slideImage.rectTransform.anchorMin = new Vector2(0f, 0f);
+            slideImage.rectTransform.anchorMax = new Vector2(1f, 1f);
 
-            slides.Add(slideImage);
+            // Container aspect ratio
+            float contAspectRatio = slideContainer.rect.width / (float)slideContainer.rect.height;
+
+            // Calculate the aspect ratio of the image
+            float aspectRatio = texture.width / (float)texture.height;
+
+            // Set the sizeDelta based on the aspect ratio for the child Image
+            if (contAspectRatio > aspectRatio) // Fit to width
+            {
+                //slideImage.rectTransform.sizeDelta = new Vector2(slideContainer.rect.width, slideContainer.rect.width / aspectRatio);
+                slideImage.rectTransform.sizeDelta = new Vector2(0, slideContainer.rect.width / aspectRatio);
+            }
+            else // Fit to height
+            {
+                slideImage.rectTransform.sizeDelta = new Vector2(slideContainer.rect.height * aspectRatio, 0);
+            }
+
+            slides.Add(newSlide);
+            texturesToFreeUp.Add(texture);
         }
     }
 
@@ -133,48 +198,31 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
     {
         if (slides != null)
         {
-            for (int i = 0; i < slides.Count; i++)
+            // Destroy textures first
+            foreach (var texture in texturesToFreeUp)
             {
-                Destroy(slides[i].gameObject);
+                DestroyImmediate(texture);
             }
+
+            // Then destroy the slides
+            foreach (var slide in slides)
+            {
+                Destroy(slide);
+            }
+
             slides.Clear();
+            texturesToFreeUp.Clear();
         }
-        
+
         currentSlideIndex = 0;
         isDragging = false;
-        //UpdateVisualIndicators();
     }
 
 
 
+    public void CleanUpView()
+    {
+        ResetSlides();
+    }
 
-    //private void UpdateVisualIndicators()
-    //{
-    //    foreach (Transform child in transform)
-    //    {
-    //        if (child.CompareTag("VisualIndicator"))
-    //        {
-    //            Destroy(child.gameObject);
-    //        }
-    //    }
-
-    //    for (int i = 0; i < slides.Count; i++)
-    //    {
-    //        GameObject indicator = Instantiate(visualIndicatorPrefab, transform);
-    //        if (i == currentSlideIndex)
-    //        {
-    //            indicator.GetComponent<Image>().color = Color.green; // Active slide indicator
-    //        }
-    //        else
-    //        {
-    //            indicator.GetComponent<Image>().color = Color.gray; // Inactive slide indicator
-    //        }
-    //    }
-
-    //    if (auditoryIndicatorPrefab != null)
-    //    {
-    //        GameObject auditoryIndicator = Instantiate(auditoryIndicatorPrefab, transform);
-    //        // Configure the auditory indicator based on the user's preferences and abilities.
-    //    }
-    //}
 }

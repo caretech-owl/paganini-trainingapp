@@ -1,6 +1,7 @@
 using System;
+using System.Collections.Generic;
 using MathNet.Numerics.LinearAlgebra;
-
+using UnityEngine;
 
 public class WalkingDetector
 {
@@ -13,9 +14,13 @@ public class WalkingDetector
 
     private double walkingThreshold; // This threshold should be defined according to the distance unit you are using
     private bool initialised = false;
+    private List<Pathpoint> gpsHistory;
 
-    public WalkingDetector(double expectedGPSAccuracy)
+    private LocationUtilsConfig config;
+
+    public WalkingDetector(LocationUtilsConfig config)
     {
+        this.config = config;
         // Initialize the Kalman filter
         state = Matrix<double>.Build.Dense(4, 1);
         errorCovariance = Matrix<double>.Build.DenseIdentity(4);
@@ -32,8 +37,9 @@ public class WalkingDetector
         //measurementNoise[0, 0] = 0.1;
         //measurementNoise[1, 1] = 0.1;
         // EXPERIMENTAL! Update the measurement noise matrix based on expected GPS accuracy
-        measurementNoise[0, 0] = Math.Pow(expectedGPSAccuracy / 100, 2);
-        measurementNoise[1, 1] = Math.Pow(expectedGPSAccuracy / 100, 2);
+        //measurementNoise[0, 0] = Math.Pow(expectedGPSAccuracy / 100, 2);
+        //measurementNoise[1, 1] = Math.Pow(expectedGPSAccuracy / 100, 2);
+        updateMeasurementNoise(config.ExpectedGPSAccuracy);
 
 
         // Set the transition matrix
@@ -49,7 +55,9 @@ public class WalkingDetector
         measurementMatrix[1, 1] = 1;
 
 
-        walkingThreshold = EstimateWalkingThreshold(expectedGPSAccuracy / 1000);
+        walkingThreshold = EstimateWalkingThreshold(config.ExpectedGPSAccuracy / 1000);
+
+        gpsHistory = new List<Pathpoint>();
     }
 
     public void SetInitialState(Pathpoint initialLocation)
@@ -72,8 +80,9 @@ public class WalkingDetector
         }
 
         // EXPERIMENTAL! Update the measurement noise matrix based on current GPS accuracy
-        measurementNoise[0, 0] = Math.Pow(rawLocation.Accuracy / 100, 2);
-        measurementNoise[1, 1] = Math.Pow(rawLocation.Accuracy / 100, 2);
+        //measurementNoise[0, 0] = Math.Pow(rawLocation.Accuracy / 100, 2);
+        //measurementNoise[1, 1] = Math.Pow(rawLocation.Accuracy / 100, 2);
+        updateMeasurementNoise(rawLocation.Accuracy);
 
         // Convert the raw location to the measurement matrix format
         var measurement = Matrix<double>.Build.Dense(2, 1);
@@ -104,6 +113,89 @@ public class WalkingDetector
         return filteredLocation;
     }
 
+    private void updateMeasurementNoise(double accuracy)
+    {
+        measurementNoise[0, 0] = Math.Pow(accuracy / 100, 2);
+        measurementNoise[1, 1] = Math.Pow(accuracy / 100, 2);
+
+        //measurementNoise[0, 0] = Math.Pow(accuracy /10, 2);
+        //measurementNoise[1, 1] = Math.Pow(accuracy /10, 2);
+    }
+
+    /// <summary>
+    /// Updates the history of GPS measurements with the given point, removing old measurements that fall outside the configured time window
+    /// and ensuring that the history does not exceed the configured maximum size.
+    /// </summary>
+    /// <param name="point">The new GPS measurement point to add to the history.</param>
+    private void UpdateHistoryMeasurement(Pathpoint point)
+    {
+        gpsHistory.Add(point);
+
+        // Remove old measurements that fall outside the time window
+        long cutoffTime = point.Timestamp - config.MaxWalkingGPSHistoryValidMilliseconds;
+        gpsHistory.RemoveAll(p => p.Timestamp < cutoffTime);
+
+        // Ensure that the history does not exceed the configured maximum size
+        if (gpsHistory.Count > config.WalkingGPSHistorySize)
+        {
+            int excessCount = gpsHistory.Count - config.WalkingGPSHistorySize;
+            gpsHistory.RemoveRange(0, excessCount);
+        }
+    }
+
+    /// <summary>
+    /// Calculates the average moving speed over the time window defined by the GPS history.
+    /// </summary>
+    /// <returns>The average moving speed in meters per second.</returns>
+    private double CalculateMovingSpeed()
+    {
+        // Calculate total distance and time elapsed over the time window
+        double totalDistance = 0;
+        double totalTime = 0;
+        for (int i = 1; i < gpsHistory.Count; i++)
+        {
+            Pathpoint prevPoint = gpsHistory[i - 1];
+            Pathpoint currPoint = gpsHistory[i];
+            double distance = LocationUtils.HaversineDistance(prevPoint, currPoint);
+            double timeElapsed = (currPoint.Timestamp - prevPoint.Timestamp) / 1000.0; // Convert milliseconds to seconds
+            totalDistance += distance;
+            totalTime += timeElapsed;
+        }
+
+        // Calculate average speed over the time window
+        double averageSpeed = totalDistance / totalTime;
+        return averageSpeed;
+    }
+
+
+    /// <summary>
+    /// Determines whether the user is walking based on the moving speed calculated from the GPS history.
+    /// </summary>
+    /// <param name="currentLocation">The current GPS measurement point.</param>
+    /// <param name="averageSpeed">Output parameter to store the calculated average speed.</param>
+    /// <returns>True if the user is walking; otherwise, false.</returns>
+    public bool IsWalkingBasedOnSpeed(Pathpoint currentLocation, out double averageSpeed)
+    {
+        // Add current GPS measurement to history
+        UpdateHistoryMeasurement(currentLocation);
+
+        //Debug.Log("Walking History: "+ gpsHistory.Count);
+
+        averageSpeed = -1;
+
+        // If there are not enough measurements in the history, return false
+        if (gpsHistory.Count < 2)
+            return false;
+
+        // Calculate average speed over the time window
+        averageSpeed = CalculateMovingSpeed();
+
+        // Determine if the user is walking based on average speed
+        bool walking = averageSpeed >= config.MinWalkingSpeedThreshold;
+
+        return walking;
+    }
+
 
 
     public (bool, double) IsWalking(Pathpoint currentLocation)
@@ -114,6 +206,8 @@ public class WalkingDetector
             initialised = true;
             return (false, 0);
         }
+
+        walkingThreshold = EstimateWalkingThreshold(currentLocation.Accuracy / 1000);
 
         // Predict the next state
         state = transitionMatrix * state;

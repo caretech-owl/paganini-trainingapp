@@ -1,0 +1,15 @@
+<svg width="194" height="193" viewBox="0 0 194 193" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Mask group">
+<mask id="mask0_1367_1909" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="97" y="28" width="97" height="69">
+<g id="Ellipse 88">
+<mask id="path-1-inside-1_1367_1909" fill="white">
+<path d="M193.389 96.658C193.389 84.0061 190.897 71.4781 186.055 59.7893C181.214 48.1005 174.117 37.4797 165.171 28.5335L97.0466 96.658H193.389Z"/>
+</mask>
+<path d="M193.389 96.658C193.389 84.0061 190.897 71.4781 186.055 59.7893C181.214 48.1005 174.117 37.4797 165.171 28.5335L97.0466 96.658H193.389Z" stroke="#3961E5" stroke-width="16" mask="url(#path-1-inside-1_1367_1909)"/>
+</g>
+</mask>
+<g mask="url(#mask0_1367_1909)">
+<circle id="Ellipse 89" cx="97.0466" cy="96.6584" r="92.3176" stroke="#FFBF00" stroke-width="6"/>
+</g>
+</g>
+</svg>

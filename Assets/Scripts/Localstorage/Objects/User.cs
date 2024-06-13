@@ -13,6 +13,7 @@ public class User : BaseModel<User>
     public bool Canread { set; get; }
     public bool Activatetts { set; get; }
     public bool Vibration { set; get; }
+    public string Contact { set; get; }
 
 
     public override string ToString()
@@ -31,6 +32,7 @@ public class User : BaseModel<User>
         this.Canread = profil.user_canread;
         this.Activatetts = profil.user_activatetts;
         this.Vibration = profil.user_vibration;
+        this.Contact = profil.user_contact;
 
     }
     public UserAPI ToAPI()
@@ -44,7 +46,8 @@ public class User : BaseModel<User>
             user_righthanded = this.Righthanded,
             user_canread = this.Canread,
             user_activatetts = this.Activatetts,
-            user_vibration = this.Vibration
+            user_vibration = this.Vibration,
+            user_contact = this.Contact
         };
         return user;
     }

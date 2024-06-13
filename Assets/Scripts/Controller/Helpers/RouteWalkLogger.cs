@@ -228,6 +228,8 @@ public class RouteWalkLogger : PersistentLazySingleton<RouteWalkLogger>
 public class WalkEventManager
 {
     private PathpointLog CurrentPathpointLog;
+    private RouteWalk CurrentRouteWalk;
+
     private WalkStoppedEvent CurrentWalkStoppedEvent;
     private OffTrackEvent CurrentOfftrackEvent;
     private DecisionMadeEvent CurrentDecisionEvent;
@@ -239,6 +241,11 @@ public class WalkEventManager
     public void SetCurrentPathpointLog(PathpointLog log)
     {
         CurrentPathpointLog = log;
+    }
+
+    public void SetCurrentRouteWalk(RouteWalk routeWalk)
+    {
+        CurrentRouteWalk = routeWalk;
     }
 
     private void LogEventStart(string eventName, RouteWalkEventLogBase walkEvent)
@@ -405,7 +412,7 @@ public class WalkEventManager
     {
         walkEvent.StartPathpointLogId = CurrentPathpointLog.Id;
         walkEvent.StartTimestamp = CurrentPathpointLog.Timestamp;
-        walkEvent.RouteWalkId = CurrentPathpointLog.RouteWalkId;
+        walkEvent.RouteWalkId = CurrentRouteWalk.Id;
         walkEvent.TargetPOIId = targetPOI?.Id;
     }
 

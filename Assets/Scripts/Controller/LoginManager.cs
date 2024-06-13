@@ -96,20 +96,17 @@ public class LoginManager : MonoBehaviour
     }
 
     private void GetUserProfileSucceed(UserAPI userApi)
-    {
-        User user = null;
+    {        
         var list = User.GetAll( u => u.Id == userApi.user_id);
 
+        User user = new User(userApi);
+
         // Keep the local copy if there is one
-        if (list.Capacity == 0)
+        if (list.Capacity > 0)
         {
-            user = new User(userApi);
-            user.Insert();
+            user.AppName = list[0].AppName;            
         }
-        else
-        {
-            user = list[0];
-        }
+        user.Insert();
 
         AppState.CurrentUser = user;
 
