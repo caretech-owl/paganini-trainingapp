@@ -6,6 +6,7 @@ public class WayGoToInstruction : MonoBehaviour
 {  
     public PhotoSlideShow SlideShow;
     public InstructionCard Card;
+    public InstructionCard ChallengeCard;
     public GameObject HideSupportPanel;    
 
     private Pathpoint POI;
@@ -48,9 +49,22 @@ public class WayGoToInstruction : MonoBehaviour
         Card.InstructionIconPOI.RenderIcon(pathtpoint, way);
         Card.RenderInstruction();
 
+        ChallengeCard.FillInstruction(title, subtitle, subtitle.Trim() != "");
+        ChallengeCard.InstructionIconPOI.RenderIcon(pathtpoint, way);
+        ChallengeCard.RenderInstruction();
+
+        // normal instruction card by default
+        RenderChallengeCard(false);
+
         cancelHideSupport = false;
         DelayHideInstruction();
         
+    }
+
+    public void RenderChallengeCard(bool isChallenge)
+    {
+        ChallengeCard.gameObject.SetActive(isChallenge);
+        Card.gameObject.SetActive(!isChallenge);
     }
 
     public void DelayHideInstruction()
@@ -63,6 +77,9 @@ public class WayGoToInstruction : MonoBehaviour
     public void LoadInstructionConfirmation()
     {
         HideSupportPanel.SetActive(false);
+
+        // confirmation from the default card
+        RenderChallengeCard(false);
         Card.RenderConfirmation();        
     }
 

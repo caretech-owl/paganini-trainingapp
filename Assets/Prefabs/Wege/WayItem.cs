@@ -55,8 +55,8 @@ public class WayItem : MonoBehaviour
 
     public void RenderLoading(bool doRender)
     {
-        LoadingPanel?.SetActive(doRender);
-        CardPanel?.SetActive(!doRender);
+        if (LoadingPanel!=null) LoadingPanel?.SetActive(doRender);
+        if (CardPanel != null) CardPanel?.SetActive(!doRender);
     }
 
     public void FillWayItem(Way w)

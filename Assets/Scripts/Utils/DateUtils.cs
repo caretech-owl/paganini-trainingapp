@@ -42,6 +42,24 @@ public static class DateUtils
 
     }
 
+    public static DateTime? ConvertUTCStringToUTCDate(string timeText, string[] dateFormats = null)
+    {
+        if (string.IsNullOrWhiteSpace(timeText)) return null;
+
+        // Define the date formats, including one with milliseconds
+        dateFormats = dateFormats ?? new string[] { "yyyy-MM-dd HH:mm:ss.fff", "yyyy-MM-dd HH:mm:ss" };
+
+        // Try to parse the date with the specified formats
+        DateTime parsedDate;
+        if (DateTime.TryParseExact(timeText, dateFormats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out parsedDate))
+        {
+            return parsedDate.ToUniversalTime();
+        }
+
+        // If parsing fails, return null
+        return null;
+    }
+
     public static string ConvertUTCDateToUTCString(DateTime dateTime, string dateFormat = "yyyy-MM-dd HH:mm:ss")
     {
         return dateTime.ToString(dateFormat);

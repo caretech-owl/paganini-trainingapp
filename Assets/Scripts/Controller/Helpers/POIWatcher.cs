@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using MathNet.Numerics;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Events;
 using static LocationUtils;
 using static PaganiniRestAPI;
 
@@ -205,13 +206,17 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
     public event EventHandler<PathpointInvalidArgs> OnInvalidPathpoint;
     public event EventHandler<EventArgs<string>> OnLog;
     public event EventHandler<LocationChangedArgs> OnUserLocationChanged;
-    
-    private Pathpoint CurrentTargetPOI;
+    public event EventHandler<EventArgs<Pathpoint>> OnPOITargetChange; // non muted
+
+    private Pathpoint CurrentTargetPOI;    
     private List<Pathpoint> POIList;
     private LocationUtils routeValidation;
     public int CurrentPOIIndex = -1;
     public bool IsWalking = false;
     private Pathpoint PreviousUserLocation;
+
+    private Pathpoint CurrentInstructionTargetPOI;
+    public bool WasPreviousMuted;
 
     public enum POIState { None, OnPOI, LeftPOI, OffTrack, OnTrack, Arrived, Invalid, AtStart }
     private POIState currentState = POIState.None;
@@ -255,8 +260,13 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
 
     public void NextPOI()
     {
+        WasPreviousMuted = IsCurrentPOIMuted();
+
         CurrentPOIIndex++;
         CurrentTargetPOI = POIList[CurrentPOIIndex];
+
+        // update target
+        GetUpcomingNonMutedTarget();
     }
 
     public void SetStartingPoint(int startPOIIndex, POIState pOIState)
@@ -265,6 +275,38 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
         CurrentTargetPOI = POIList[CurrentPOIIndex];
         currentState = pOIState;
         previousState = POIState.None;
+
+        // update target
+        GetUpcomingNonMutedTarget();
+    }
+
+    // We set a target for the instruction, different from the navigation
+    public Pathpoint GetUpcomingNonMutedTarget()
+    {
+        int index = CurrentPOIIndex;
+
+        var oldTarget = CurrentInstructionTargetPOI;
+
+        do {
+            CurrentInstructionTargetPOI = POIList[index];
+            index++;
+        }
+        while (CurrentInstructionTargetPOI.CurrentInstructionMode != null &&
+               CurrentInstructionTargetPOI.CurrentInstructionMode.AtPOIMode == PathpointPIM.SupportMode.Mute);
+
+
+        if (oldTarget != CurrentInstructionTargetPOI)
+        {
+            OnPOITargetChange?.Invoke(this, new EventArgs<Pathpoint>(CurrentInstructionTargetPOI));
+        }
+
+        return CurrentInstructionTargetPOI;
+    }
+
+    public bool IsCurrentPOIMuted()
+    {
+        return CurrentTargetPOI.CurrentInstructionMode != null &&
+            CurrentTargetPOI.CurrentInstructionMode.AtPOIMode == PathpointPIM.SupportMode.Mute;
     }
 
     public int GetLocationIndex()

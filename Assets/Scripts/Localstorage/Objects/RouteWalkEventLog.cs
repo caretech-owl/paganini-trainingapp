@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using SQLite4Unity3d;
 using static LocationUtils;
 using static Pathpoint;
@@ -27,6 +28,8 @@ public abstract class RouteWalkEventLogBase
     // basic stats
     public double DurationEvent { set; get; }
 
+    public bool? WasEventInterrupted { set; get; }
+
     /// <summary>
     /// Enumeration for event types.
     /// </summary>
@@ -43,7 +46,7 @@ public abstract class RouteWalkEventLogBase
 /// <summary>
 /// Represents a route walk event log.
 /// </summary>
-public class RouteWalkEventLog : BaseModel<RouteWalkEventLog> 
+public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
 {
 
     [PrimaryKey]
@@ -59,6 +62,9 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
     public long StartTimestamp { set; get; }
     public long EndTimestamp { set; get; }
 
+    // Was event not completed?
+    public bool? WasEventInterrupted { set; get; }
+
     // reference to the POI it is occuring around, if any
     public int? TargetPOIId { set; get; }
 
@@ -67,23 +73,31 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
 
     // performance stats
     public double? DistanceWalked { set; get; }
-    public double? WalkingPace { set; get; }    
+    public double? WalkingPace { set; get; }
 
     // stat for off-track
     public double? MaxDistanceFromTrack { set; get; }
+    //           RecoveryInstructionUsed
 
     // data for decisionMade
     public bool? IsCorrectDecision { set; get; }
+    //           NavIssue
+    //           NavInstructionUsed
+    //           DecisionExpected
 
     // SQLit has problems handling nullable enums, so a workaround for this:    
     public string NavIssueString { set; get; }
     public string DecisionExpectedString { set; get; }
+    public string NavInstructionUsedString { set; get; }
+    public string RecoveryInstructionUsedString { set; get; }
 
     // data for segment SegmentCompleted
     public int? SegPOIStartId { set; get; }
     public int? SegExpectedPOIEndId { set; get; }
     public int? SegReachedPOIEndId { set; get; }
     public double? DistanceCorrectlyWalked { set; get; }
+
+    public long? LastUpdate { set; get; }
 
     //TODO: Log skipped POI?
 
@@ -99,13 +113,43 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
         get => ConvertStringToNullableEnum<NavigationIssue>(NavIssueString);
         set => NavIssueString = ConvertNullableEnumToString(value);
     }
+    [Ignore]
+    public List<NavInstructionType> NavInstructionUsed
+    {
+        get => ConvertStringToEnumList<NavInstructionType>(NavInstructionUsedString);
+        set => NavInstructionUsedString = ConvertEnumListToString(value);
+    }
 
+    [Ignore]
+    public List<RecoveryInstructionType> RecoveryInstructionUsed
+    {
+        get => ConvertStringToEnumList<RecoveryInstructionType>(RecoveryInstructionUsedString);
+        set => RecoveryInstructionUsedString = ConvertEnumListToString(value);
+    }
 
-    public RouteWalkEventLog() {
+    public enum NavInstructionType
+    {
+        None = 0,
+        Picture = 1,
+        Video = 2,
+        Compass = 3
+    }
+
+    public enum RecoveryInstructionType
+    {
+        None = 0, // self-recovery
+        Compass = 1,
+        CallHelp = 2,
+        NoIssue = 3
+    }
+
+    public RouteWalkEventLog()
+    {
 
     }
 
-    public RouteWalkEventLog(DecisionMadeEvent walkEvent) {
+    public RouteWalkEventLog(DecisionMadeEvent walkEvent)
+    {
         populateEvent(walkEvent);
         EvenLogType = RouteWalkEventLogBase.RouteEvenLogType.DecisionMade;
         DistanceWalked = walkEvent.DistanceWalked;
@@ -113,6 +157,7 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
         IsCorrectDecision = walkEvent.IsCorrectDecision;
         NavIssue = walkEvent.NavIssue;
         DecisionExpected = walkEvent.DecisionExpected;
+        NavInstructionUsed = walkEvent.NavInstructionUsed;
     }
 
     public RouteWalkEventLog(OffTrackEvent walkEvent)
@@ -122,6 +167,7 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
         DistanceWalked = walkEvent.DistanceWalked;
         WalkingPace = walkEvent.WalkingPace;
         MaxDistanceFromTrack = walkEvent.MaxDistanceFromTrack;
+        RecoveryInstructionUsed = walkEvent.RecoveryInstructionUsed;
     }
 
     public RouteWalkEventLog(WalkStoppedEvent walkEvent)
@@ -156,7 +202,7 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
         EvenLogType = (RouteWalkEventLogBase.RouteEvenLogType)eventAPI.revent_type;
         StartPathpointLogId = eventAPI.start_rpath_id;
         EndPathpointLogId = eventAPI.end_rpath_id;
-        if (eventAPI.revent_start_time!= null)
+        if (eventAPI.revent_start_time != null)
         {
             StartTimestamp = (long)DateUtils.ConvertUTCStringToTsMilliseconds(eventAPI.revent_start_time, "yyyy-MM-dd'T'HH:mm:ss");
         }
@@ -164,15 +210,18 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
         {
             EndTimestamp = (long)DateUtils.ConvertUTCStringToTsMilliseconds(eventAPI.revent_end_time, "yyyy-MM-dd'T'HH:mm:ss");
         }
-        
+
         TargetPOIId = eventAPI.target_ppoint_id;
         DurationEvent = eventAPI.revent_duration;
+        WasEventInterrupted = eventAPI.revent_was_interrupted;
         DistanceWalked = eventAPI.revent_distance_walked;
         WalkingPace = eventAPI.revent_walking_pace;
         MaxDistanceFromTrack = eventAPI.revent_max_offtrack_distance;
         IsCorrectDecision = eventAPI.revent_decision_correct;
         NavIssueString = eventAPI.revent_decision_issue?.ToString();
         DecisionExpectedString = eventAPI.revent_decision_expected?.ToString();
+        NavInstructionUsedString = eventAPI.revent_instruction_used?.ToString();
+        RecoveryInstructionUsedString = eventAPI.revent_recovery_used?.ToString();
         SegPOIStartId = eventAPI.revent_seg_start_ppoint_id;
         SegExpectedPOIEndId = eventAPI.revent_seg_end_expected_ppoint_id;
         SegReachedPOIEndId = eventAPI.revent_seg_end_actual_ppoint_id;
@@ -192,12 +241,15 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
         eventAPI.revent_end_time = DateUtils.ConvertMillisecondsToUTCString(EndTimestamp, "yyyy-MM-dd'T'HH:mm:ss");
         eventAPI.target_ppoint_id = TargetPOIId;
         eventAPI.revent_duration = DurationEvent;
+        eventAPI.revent_was_interrupted = WasEventInterrupted;
         eventAPI.revent_distance_walked = DistanceWalked;
         eventAPI.revent_walking_pace = WalkingPace;
         eventAPI.revent_max_offtrack_distance = MaxDistanceFromTrack;
         eventAPI.revent_decision_correct = IsCorrectDecision;
         eventAPI.revent_decision_issue = NavIssue != null ? ((int)NavIssue).ToString() : null;
-        eventAPI.revent_decision_expected = DecisionExpected != null? ((int)DecisionExpected).ToString() : null;
+        eventAPI.revent_decision_expected = DecisionExpected != null ? ((int)DecisionExpected).ToString() : null;
+        eventAPI.revent_instruction_used = NavInstructionUsedString;
+        eventAPI.revent_recovery_used = RecoveryInstructionUsedString;
         eventAPI.revent_seg_start_ppoint_id = SegPOIStartId;
         eventAPI.revent_seg_end_expected_ppoint_id = SegExpectedPOIEndId;
         eventAPI.revent_seg_end_actual_ppoint_id = SegReachedPOIEndId;
@@ -212,7 +264,7 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
     {
         // Populate common properties from walkEventBase
         Id = walkEvent.Id;
-        RouteWalkId = walkEvent.RouteWalkId;        
+        RouteWalkId = walkEvent.RouteWalkId;
         StartPathpointLogId = walkEvent.StartPathpointLogId;
         EndPathpointLogId = walkEvent.EndPathpointLogId;
         StartTimestamp = walkEvent.StartTimestamp;
@@ -256,6 +308,36 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
         cmd.ExecuteNonQuery();
     }
 
+
+    public static long? GetLastUpdateByRoute(int routeId)
+    {
+
+        var conn = DBConnector.Instance.GetConnection();
+
+        // Query all PathpointPhotos and their related Pathpoints using sqlite-net's raw query
+        //string cmdText = @"SELECT max(pd.LastUpdate) maxlastUpdate FROM PhotoData pd
+        //                    JOIN PathpointPhoto pp ON pd.Id = pp.PhotoId
+        //                    JOIN Pathpoint p ON pp.PathpointId = p.Id
+        //                    WHERE p.RouteId = ?";
+
+        string cmdText = @"SELECT re.*
+            FROM RouteWalkEventLog re
+    JOIN RouteWalk rw ON rw.Id = re.RouteWalkId
+    WHERE rw.RouteId = ?
+    ORDER BY re.StartTimestamp DESC
+    LIMIT 1";
+
+        List<RouteWalkEventLog> maxLastUpdate = conn.Query<RouteWalkEventLog>(cmdText, routeId).ToList();
+
+        if (maxLastUpdate.Count > 0)
+        {
+            return maxLastUpdate[0].LastUpdate;
+        }
+
+        return null;
+    }
+
+
 }
 
 /// <summary>
@@ -271,6 +353,8 @@ public class DecisionMadeEvent : RouteWalkEventLogBase
     public bool? IsCorrectDecision { set; get; }
     public NavigationIssue? NavIssue { set; get; }
     public Pathpoint.NavDirection? DecisionExpected { set; get; }
+    public List<NavInstructionType> NavInstructionUsed;
+
 
 }
 
@@ -285,6 +369,7 @@ public class OffTrackEvent : RouteWalkEventLogBase
 
     // Stat for off-track
     public double MaxDistanceFromTrack { set; get; }
+    public List<RecoveryInstructionType> RecoveryInstructionUsed;
 
 }
 
@@ -300,6 +385,14 @@ public class WalkStoppedEvent : RouteWalkEventLogBase
 /// Represents an event when the user paused the tracking, extending <see cref="RouteWalkEventLogBase"/>.
 /// </summary>
 public class PausedEvent : RouteWalkEventLogBase
+{
+    // No additional properties specific to stopped events
+}
+
+/// <summary>
+/// Represents an event when the user paused the tracking, extending <see cref="RouteWalkEventLogBase"/>.
+/// </summary>
+public class AdaptationEvent : RouteWalkEventLogBase
 {
     // No additional properties specific to stopped events
 }

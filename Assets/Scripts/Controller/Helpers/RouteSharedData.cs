@@ -21,7 +21,12 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
 
     public Pathpoint PreparePOIData(int i)
     {
-        var item = POIList[i];
+        return PreparePOIData(POIList[i]);
+    }
+
+    public Pathpoint PreparePOIData(Pathpoint item)
+    {
+
         if (item.Photos == null)
         {
             item.Photos = PathpointPhoto.GetPathpointPhotoListByPOI(item.Id);

@@ -31,17 +31,18 @@ public class Pathpoint : BaseModel<Pathpoint>
     // Temporal:Serialized string representation of CurrentInstructionMode
     // TODO: Replace this code by the actual implementation of the
     // adaptation definition
+    public int? PathpointPIMId { set; get; }
     public string SerializedInstructionMode { get; set; }
 
     [Ignore] // This will be ignored by SQLite
-    public InstructionMode CurrentInstructionMode
+    public PathpointPIM CurrentInstructionMode 
     {
         get
         {
             // Deserialize the serialized string to InstructionMode
             if (!string.IsNullOrEmpty(SerializedInstructionMode))
             {
-                return JsonConvert.DeserializeObject<InstructionMode>(SerializedInstructionMode);
+                return JsonConvert.DeserializeObject<PathpointPIM>(SerializedInstructionMode);
             }
             return null;
         }
@@ -118,19 +119,11 @@ public class Pathpoint : BaseModel<Pathpoint>
 
         TimeInVideo = pathpoint.ppoint_time_in_video == null ? null : Double.Parse(pathpoint.ppoint_time_in_video);
 
-        // temporal solution for the study
-        if (pathpoint.temp_instructionMode != null)
+
+        PathpointPIMId = pathpoint.current_pim_id;
+        if (pathpoint.current_pim != null)
         {
-            try {
-                var instructionModeAPI = JsonConvert.DeserializeObject<InstructionModeAPIResult>(pathpoint.temp_instructionMode);
-                CurrentInstructionMode = new InstructionMode(instructionModeAPI);
-                
-            }
-            catch (Exception e)
-            {
-                Debug.Log("Error deserialising the instruction mode. values: " + pathpoint.temp_instructionMode + " Error: " + e.Message);
-            }
-            
+            CurrentInstructionMode = new PathpointPIM(pathpoint.current_pim);
         }
     }
 

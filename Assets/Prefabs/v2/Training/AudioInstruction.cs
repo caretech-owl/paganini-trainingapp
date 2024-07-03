@@ -140,6 +140,21 @@ public class AudioInstruction : MonoBehaviour
         PlaySound("TriviaGoTo-FeedbackCorrect");
     }
 
+    public void PlayChallengeGoToIntro()
+    {
+        PlaySound("ChallengeGoToIntro");
+    }
+
+    public void PlayChallengeGoToFeedbackOk()
+    {
+        PlaySound("ChallengeGoTo-FeedbackCorrect");
+    }
+
+    public void PlayChallengeGoToFeedbackWrong()
+    {
+        PlaySound("ChallengeGoTo-FeedbackWrong");
+    }
+
     public void PlayTriviaGoToFeedbackWrong()
     {
         PlaySound("TriviaGoTo-FeedbackWrong");
@@ -180,7 +195,7 @@ public class AudioInstruction : MonoBehaviour
         PlaySound("BackOnTrack-Confused");
     }
 
-    public void PlayBackOnTrackDowngradeMode(InstructionMode.SupportMode supportMode)
+    public void PlayBackOnTrackDowngradeMode(PathpointPIM.SupportMode supportMode)
     {
         PlaySound("BackOnTrack-" + supportMode);
     }

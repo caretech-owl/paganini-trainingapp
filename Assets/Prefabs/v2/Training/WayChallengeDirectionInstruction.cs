@@ -40,7 +40,7 @@ public class WayChallengeDirectionInstruction : MonoBehaviour
     public void LoadInstruction(Way way, Pathpoint pathtpoint, bool skipIntro = false)
     {
         
-        if (pathtpoint.CurrentInstructionMode.IsNewToUser && !skipIntro)
+        if (pathtpoint.CurrentInstructionMode.IsAtPOINewToUser && !skipIntro)
         {
             ShowTask(false);
             AuralInstruction.PlayChallengeDirectionIntro();

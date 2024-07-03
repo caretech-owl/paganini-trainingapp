@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using static InstructionMode;
+using static PathpointPIM;
 using static PaganiniRestAPI;
 
 public class WayDecisionModes : MonoBehaviour
@@ -25,7 +25,7 @@ public class WayDecisionModes : MonoBehaviour
     private Pathpoint CurrentPOI;
     private SupportMode CurrentMode;
 
-    private List<SupportMode> supportedModes = new List<SupportMode> { SupportMode.Instruction, SupportMode.TriviaDecision, SupportMode.ChallengeDecision };
+    private List<SupportMode> supportedModes = new List<SupportMode> { SupportMode.Instruction, SupportMode.Trivia, SupportMode.Challenge, SupportMode.Mute };
 
     // Start is called before the first frame update
     void Start()
@@ -47,7 +47,7 @@ public class WayDecisionModes : MonoBehaviour
 
         if (pathpoint.CurrentInstructionMode != null)
         {
-            supportMode = pathpoint.CurrentInstructionMode.Mode;
+            supportMode = pathpoint.CurrentInstructionMode.AtPOIMode;
         }
 
         if (EnableImprovedDesign && POIWatcher.Instance.GetPreviousState() == POIWatcher.POIState.OffTrack)
@@ -103,17 +103,17 @@ public class WayDecisionModes : MonoBehaviour
             mode = null;
         }
 
-        if (mode == SupportMode.TriviaDecision)
+        if (mode == SupportMode.Trivia)
         {
-            CurrentMode = SupportMode.TriviaDecision;
+            CurrentMode = SupportMode.Trivia;
             LoadTriviaMode(way, pathpoint, skipIntro);
             // we run normal mode in the background, to pre-load video we
             // use for confirmation            
             LoadBackgrondNormalMode(way, pathpoint);
         }
-        else if (mode == SupportMode.ChallengeDecision)
+        else if (mode == SupportMode.Challenge)
         {
-            CurrentMode = SupportMode.ChallengeDecision;
+            CurrentMode = SupportMode.Challenge;
             LoadChallengeDirectionMode(way, pathpoint, skipIntro);
             // we run normal mode in the background, to pre-load video we
             // use for confirmation            

@@ -22,7 +22,8 @@ public interface IPathpointAPI
     public int? ppoint_cleaning_feedback { get; set; }
     public bool IsNew { get; set; }
 
-    public string temp_instructionMode { get; set; }
+    public int? current_pim_id { get; set; }
+    public PathpointPIMAPI current_pim { get; set; }
 
 }
 
@@ -42,8 +43,8 @@ public class PathpointAPIBase : BaseAPI
     public int? ppoint_relevance_feedback { get; set; }
     public int? ppoint_familiarity_feedback { get; set; }
     public int? ppoint_cleaning_feedback { get; set; }
-
-    public string temp_instructionMode { get; set; }
+    
+    public PathpointPIMAPI current_pim { get; set; }
 }
 
 [System.Serializable]
@@ -54,6 +55,9 @@ public class PathpointAPI : PathpointAPIBase, IPathpointAPI
 
     [JsonIgnore]
     public int erw_id { get; set; }
+
+    [JsonIgnore]
+    public int? current_pim_id { get; set; }
 
 }
 
@@ -66,6 +70,9 @@ public class PathpointAPIResult : PathpointAPIBase, IPathpointAPI
     [JsonProperty]
     public int erw_id { get; set; }
 
+    [JsonProperty]
+    public int? current_pim_id { get; set; }
+
 }
 
 [System.Serializable]
@@ -77,6 +84,8 @@ public class PathpointAPIUpdate : PathpointAPIBase, IPathpointAPI
     [JsonIgnore]
     public int erw_id { get; set; }
 
+    [JsonIgnore]
+    public int? current_pim_id { get; set; }
 }
 
 

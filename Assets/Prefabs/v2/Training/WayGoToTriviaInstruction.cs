@@ -57,7 +57,7 @@ public class WayGoToTriviaInstruction : MonoBehaviour
         // init view
         ShowTask(false);        
 
-        if (okPathtpoint.CurrentInstructionMode.IsNewToUser && !skipIntro)
+        if (okPathtpoint.CurrentInstructionMode.IsAtPOINewToUser && !skipIntro)
         {            
             AuralInstruction.PlayTriviaGoToIntro();
             LoadTask(way, okPathtpoint, wrongPathpoint);

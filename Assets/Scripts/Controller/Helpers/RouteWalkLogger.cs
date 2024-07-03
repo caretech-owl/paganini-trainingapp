@@ -235,6 +235,7 @@ public class WalkEventManager
     private DecisionMadeEvent CurrentDecisionEvent;
     private SegmentCompletedEvent CurrentSegmentEvent;
 
+    public bool DisableLogging { get; set; }
 
     public WalkEventManager() { }
 
@@ -269,6 +270,8 @@ public class WalkEventManager
 
     public void ProcessWalkStatusChange(WalkingStatusArgs args)
     {
+        if (DisableLogging) return;
+
         // The user stopped
         if (CurrentWalkStoppedEvent == null && !args.IsWalking)
         {
@@ -300,6 +303,8 @@ public class WalkEventManager
 
     public void ProcessOfftrackStatusChange(ValidationArgs args)
     {
+        if (DisableLogging) return;
+
         // The user is off-track
         if (CurrentOfftrackEvent == null && !args.OnTrack)
         {
@@ -334,6 +339,8 @@ public class WalkEventManager
 
     public void ProcessDecisionStatusChange(DecisionArgs args)
     {
+        if (DisableLogging) return;
+
         // The user is off-track
         if (CurrentDecisionEvent == null && args.OnTargetPOI)
         {
@@ -372,6 +379,7 @@ public class WalkEventManager
 
     public void ProcessSegmentCompleteStatusChange(SegmentCompletedArgs args)
     {
+        if (DisableLogging) return;
 
         if (CurrentSegmentEvent == null && !args.HasArrived)
         {

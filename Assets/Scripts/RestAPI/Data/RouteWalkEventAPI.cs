@@ -12,12 +12,15 @@ public interface IRouteWalkEventAPI
     string revent_end_time { get; set; }
     int? target_ppoint_id { get; set; }
     double revent_duration { get; set; }
+    bool? revent_was_interrupted { get; set; }    
     double? revent_distance_walked { get; set; }
     double? revent_walking_pace { get; set; }
     double? revent_max_offtrack_distance { get; set; }
     bool? revent_decision_correct { get; set; }
     string revent_decision_issue { get; set; }
     string revent_decision_expected { get; set; }
+    string revent_instruction_used { get; set; }
+    string revent_recovery_used { get; set; }
     int? revent_seg_start_ppoint_id { get; set; }
     int? revent_seg_end_expected_ppoint_id { get; set; }
     int? revent_seg_end_actual_ppoint_id { get; set; }
@@ -33,12 +36,15 @@ public class RouteWalkEventBase : BaseAPI
     public string revent_end_time { get; set; }
     public int? target_ppoint_id { get; set; }
     public double revent_duration { get; set; }
+    public bool? revent_was_interrupted { get; set; }
     public double? revent_distance_walked { get; set; }
     public double? revent_walking_pace { get; set; }
     public double? revent_max_offtrack_distance { get; set; }
     public bool? revent_decision_correct { get; set; }
     public string revent_decision_issue { get; set; }
     public string revent_decision_expected { get; set; }
+    public string revent_instruction_used { get; set; }
+    public string revent_recovery_used { get; set; }
     public int? revent_seg_start_ppoint_id { get; set; }
     public int? revent_seg_end_expected_ppoint_id { get; set; }
     public int? revent_seg_end_actual_ppoint_id { get; set; }

@@ -4,14 +4,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using static InstructionMode;
+using static PaganiniRestAPI;
+using static PathpointPIM;
 
 public class WayGoToModes : MonoBehaviour
 {
     [Header("Instruction modes")]
     public WayGoToInstruction NormalMode;
     public WayGoToTriviaInstruction TriviaMode;
-    //public WayChallengeDirectionInstruction ChallengeDirectionMode;
+    public WayGoToChallengeInstruction ChallengeMode;
 
     [Header("Utils")]
     public AudioInstruction AuralInstruction;
@@ -23,13 +24,17 @@ public class WayGoToModes : MonoBehaviour
     private Pathpoint CurrentPOI;
     private SupportMode CurrentMode;
 
+    private POIWatcher POIWatch;
+    private RouteSharedData SharedData;
 
-    private List<SupportMode> supportedModes = new List<SupportMode>{ SupportMode.Instruction, SupportMode.TriviaGoto, SupportMode.ChallengeGoto };
+
+    private List<SupportMode> supportedModes = new List<SupportMode>{ SupportMode.Instruction, SupportMode.Trivia, SupportMode.Challenge };
 
     // Start is called before the first frame update
     void Start()
     {
-
+        POIWatch = POIWatcher.Instance;
+        SharedData = RouteSharedData.Instance;
     }
 
     // Update is called once per frame
@@ -38,19 +43,29 @@ public class WayGoToModes : MonoBehaviour
 
     }
 
-    public void LoadInstruction(Way way, Pathpoint pathpoint)
+    public void LoadInstruction(Way way, Pathpoint targetPathpoint)
     {
         CurrentWay = way;
-        CurrentPOI = pathpoint;
+        CurrentPOI = targetPathpoint;
         SupportMode? supportMode = null;
 
-        if (pathpoint.CurrentInstructionMode != null)
+
+        if (targetPathpoint.CurrentInstructionMode != null)
         {
-            supportMode = pathpoint.CurrentInstructionMode.Mode;
+            supportMode = targetPathpoint.CurrentInstructionMode.ToPOIMode;
         }
 
-        LoadInstructionByMode(way, pathpoint, supportMode);
+        if (EnableAdaptiveModes && POIWatch.GetPreviousState() == POIWatcher.POIState.OffTrack)
+        {
+            HandleBackOnTrackSupport(supportMode);
+        }
+        else
+        {
+            LoadInstructionByMode(way, targetPathpoint, supportMode);
+        }
+
     }
+
 
     public void LoadInstructionConfirmation()
     {
@@ -73,11 +88,31 @@ public class WayGoToModes : MonoBehaviour
         {
             AuralInstruction.PlayTriviaGoToTooLate();
         }
+
+        if (CurrentMode == SupportMode.Challenge)
+        {
+            AuralInstruction.PlayChallengeGoToFeedbackOk();
+        }
     }
 
     public void CancelHideSupport()
     {
         NormalMode.CancelHideSupport();
+    }
+
+    private void HandleBackOnTrackSupport(SupportMode? supportMode)
+    {
+        if (!EnableAdaptiveModes || supportMode == null || supportMode == SupportMode.Instruction ||
+            supportedModes.IndexOf((SupportMode)supportMode) < 0)
+        {
+            LoadInstructionByMode(CurrentWay, CurrentPOI, supportMode);
+        }
+        else if (EnableAdaptiveModes && supportMode == SupportMode.Challenge)
+        {
+            AuralInstruction.PlayBackOnTrackDowngradeMode((SupportMode)supportMode);
+            DownGradeInstructionMode();
+        }
+
     }
 
     private void LoadInstructionByMode(Way way, Pathpoint pathpoint, SupportMode? mode, bool skipIntro = false)
@@ -87,15 +122,15 @@ public class WayGoToModes : MonoBehaviour
             mode = null;
         }
 
-        if (mode == SupportMode.TriviaGoto)
+        if (mode == SupportMode.Trivia)
         {
-            CurrentMode = SupportMode.TriviaGoto;
+            CurrentMode = SupportMode.Trivia;
             LoadTriviaMode(way, pathpoint, skipIntro);
         }
-        else if (mode == SupportMode.ChallengeGoto)
+        else if (mode == SupportMode.Challenge)
         {
-            CurrentMode = SupportMode.ChallengeGoto;
-            LoadChallengeMode(way, pathpoint, skipIntro);
+            CurrentMode = SupportMode.Challenge;
+            LoadChallengeMode(pathpoint, skipIntro);
         }
         else // Instruction
         {
@@ -113,20 +148,58 @@ public class WayGoToModes : MonoBehaviour
         AuralInstruction.PlayRefuseTask();
 
         //downgrade one
-        var index = supportedModes.IndexOf(CurrentMode);
-        CurrentMode = supportedModes[index-1];
 
-        LoadInstructionByMode(CurrentWay, CurrentPOI, CurrentMode, true);
-        
+        DownGradeInstructionMode();
+
     }
 
-    public void LoadInstructionMode(Way way, Pathpoint pathpoint)
+    private void DownGradeInstructionMode()
+    {
+        //var index = supportedModes.IndexOf(CurrentMode);
+        //CurrentMode = supportedModes[index-1];
+
+        // update: we downgrade to simple instruction, to avoid confusion
+
+        CurrentMode = SupportMode.Instruction;
+
+        LoadInstructionByMode(CurrentWay, CurrentPOI, CurrentMode, true);
+
+        // let's temporarily save the downgraded mode, so we keep track of the user decision
+        // in case we need to show the instruction again
+        RememberDowngradedMode(CurrentPOI, CurrentMode);
+    }
+
+    private void RememberDowngradedMode(Pathpoint poi, SupportMode supportMode)
+    {
+        PathpointPIM mode = poi.CurrentInstructionMode;
+
+        if (mode != null)
+        {
+            mode.ToPOIMode = supportMode;
+
+            // if muted, we downgrade the atPOIMode as well
+            if (mode.AtPOIMode == SupportMode.Mute)
+            {
+                mode.AtPOIMode = SupportMode.Challenge;
+            }            
+        }
+
+        poi.CurrentInstructionMode = mode;
+
+
+    }
+
+    public void LoadInstructionMode(Way way, Pathpoint pathpoint, bool renderAsChallenge = false)
     {
         CleanUpView();
 
         RenderOnly(NormalMode.gameObject);
         NormalMode.LoadInstruction(way, pathpoint);
         NormalMode.OnTaskCompleted.AddListener(Instruction_OnTaskCompleted);
+
+
+        NormalMode.RenderChallengeCard(renderAsChallenge);
+
     }
 
     public void LoadTriviaMode(Way way, Pathpoint pathpoint, bool skipIntro)
@@ -145,20 +218,41 @@ public class WayGoToModes : MonoBehaviour
         TriviaMode.OnTaskCompleted.AddListener(Instruction_OnTriviaCompleted);
     }
 
-    public void LoadChallengeMode(Way way, Pathpoint pathpoint, bool skipIntro)
-    {
-        CleanUpView();
+    public void LoadChallengeMode(Pathpoint pathpoint, bool skipIntro)
+    {        
+        if (!skipIntro && pathpoint.CurrentInstructionMode != null && pathpoint.CurrentInstructionMode.IsToPOINewToUser)
+        {
+            CleanUpView();
 
-        //RenderOnly(ChallengeDirectionMode.gameObject);
-        //ChallengeDirectionMode.LoadInstruction(way, pathpoint, skipIntro);
-        //ChallengeDirectionMode.OnTaskCompleted.AddListener(Instruction_OnTaskCompleted);
+            RenderOnly(ChallengeMode.gameObject);
+            ChallengeMode.LoadInstruction(pathpoint);
+            ChallengeMode.OnTaskCompleted.AddListener(LoadUpcomingNotMutedPOI);
+        }
+        else
+        {
+            LoadUpcomingNotMutedPOI();
+        }
+                
+    }
+
+
+    public void LoadUpcomingNotMutedPOI()
+    {
+        // let's get the upcoming POI that is not muted as out target for the Goto instruction
+        var targetPOI = POIWatch.GetUpcomingNonMutedTarget();
+        // let's prepare the data needed for the instruction
+        targetPOI = SharedData.PreparePOIData(targetPOI);
+
+        // play the instruction mode
+        LoadInstructionMode(CurrentWay, targetPOI, renderAsChallenge: true);
+        AuralInstruction.PlayGotoInstruction(targetPOI);
     }
 
     public void CleanUpView()
     {
         NormalMode.OnTaskCompleted.RemoveListener(Instruction_OnTaskCompleted);
         TriviaMode.OnTaskCompleted.RemoveListener(Instruction_OnTriviaCompleted);
-        //ChallengeDirectionMode.OnTaskCompleted.RemoveListener(Instruction_OnTaskCompleted);
+        ChallengeMode.OnTaskCompleted.RemoveListener(LoadUpcomingNotMutedPOI);
 
         NormalMode.CleanUpView();
         TriviaMode.CleanupView();
@@ -169,7 +263,7 @@ public class WayGoToModes : MonoBehaviour
     {
         NormalMode.gameObject.SetActive(NormalMode.gameObject == panel);
         TriviaMode.gameObject.SetActive(TriviaMode.gameObject == panel);
-        //ChallengeMode.gameObject.SetActive(ChallengMode.gameObject == panel);
+        ChallengeMode.gameObject.SetActive(ChallengeMode.gameObject == panel);
     }
 
     private void OnDestroy()

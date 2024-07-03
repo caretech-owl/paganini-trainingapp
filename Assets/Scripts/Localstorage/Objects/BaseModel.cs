@@ -191,4 +191,38 @@ public class BaseModel<T> where T : BaseModel<T>, new()
     }
 
 
+    /// <summary>
+    /// Converts a list of enum values to a comma-separated string representation.
+    /// </summary>
+    /// <typeparam name="T">The enum type.</typeparam>
+    /// <param name="enumList">The list of enum values to convert.</param>
+    /// <returns>The comma-separated string representation of the enum list, or null if the list is null.</returns>
+    /// <remarks>
+    /// This method is useful for storing lists of enum values as strings in a database that does not natively support list or array types.
+    /// </remarks>
+    protected string ConvertEnumListToString<T>(List<T> enumList) where T : Enum
+    {
+        return enumList != null ? string.Join(",", enumList.Select(e => e.ToString())) : null;
+    }
+
+    /// <summary>
+    /// Converts a comma-separated string representation to a list of enum values.
+    /// </summary>
+    /// <typeparam name="T">The enum type.</typeparam>
+    /// <param name="enumString">The comma-separated string representation of the enum list.</param>
+    /// <returns>The list of enum values parsed from the string representation.</returns>
+    /// <remarks>
+    /// This method is useful for retrieving lists of enum values stored as strings in a database that does not natively support list or array types.
+    /// </remarks>
+    protected List<T> ConvertStringToEnumList<T>(string enumString) where T : Enum
+    {
+        if (string.IsNullOrEmpty(enumString))
+        {
+            return new List<T>();
+        }
+
+        return enumString.Split(',').Select(e => (T)Enum.Parse(typeof(T), e)).ToList();
+    }
+
+
 }

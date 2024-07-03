@@ -182,10 +182,12 @@ public class RouteLocationService : MonoBehaviour
 
         // We normalise the incoming location to correct for GPS innacuracies
         (Pathpoint userLocation, double valAccuracy, double valSpeed) = locationQualityControl.ProcessLocation(punkt);
-
-        punkt.Longitude = userLocation.Latitude;
-        punkt.Longitude = userLocation.Longitude;
-        punkt.Altitude = userLocation.Altitude;
+        if (userLocation != null)
+        {
+            punkt.Longitude = userLocation.Latitude;
+            punkt.Longitude = userLocation.Longitude;
+            punkt.Altitude = userLocation.Altitude;
+        }
 
         return punkt;
     }

@@ -99,6 +99,7 @@ public class RouteTrainingController : MonoBehaviour
         POIWatch.OnLog -= POIWatch_OnLog;
         POIWatch.OnInvalidPathpoint -= POIWatch_OnInvalidPathpoint;
         POIWatch.OnUserLocationChanged -= POIWatch_OnUserLocationChanged;
+        POIWatch.OnPOITargetChange -= POIWatch_OnPOITargetChange;
 
         POIWatch.OnEnteredPOI += POIWatch_OnEnteredPOI;        
         POIWatch.OnLeftPOI += POIWatch_OnLeftPOI;        
@@ -114,6 +115,7 @@ public class RouteTrainingController : MonoBehaviour
         POIWatch.OnLog += POIWatch_OnLog;        
         POIWatch.OnInvalidPathpoint += POIWatch_OnInvalidPathpoint;
         POIWatch.OnUserLocationChanged += POIWatch_OnUserLocationChanged;
+        POIWatch.OnPOITargetChange += POIWatch_OnPOITargetChange;
 
         SharedData = RouteSharedData.Instance;
         SharedData.OnDataDownloaded -= RouteSharedData_OnDataDownloaded;
@@ -130,7 +132,6 @@ public class RouteTrainingController : MonoBehaviour
 
 
         WalkEventHandler = new ();
-
     }
 
 
@@ -150,6 +151,7 @@ public class RouteTrainingController : MonoBehaviour
         POIWatch.OnLog -= POIWatch_OnLog;
         POIWatch.OnInvalidPathpoint -= POIWatch_OnInvalidPathpoint;
         POIWatch.OnUserLocationChanged -= POIWatch_OnUserLocationChanged;
+        POIWatch.OnPOITargetChange -= POIWatch_OnPOITargetChange;        
 
         SharedData.OnDataDownloaded -= RouteSharedData_OnDataDownloaded;
 
@@ -157,6 +159,12 @@ public class RouteTrainingController : MonoBehaviour
         DecisionInstruction.OnTaskCompleted.RemoveListener(LoadGoToInstruction);
         SafetyInstruction.OnTaskCompleted.RemoveListener(LoadGoToInstruction);
 
+    }
+
+    private void POIWatch_OnPOITargetChange(object sender, EventArgs<Pathpoint> e)
+    {
+        ReLoadProgressBar();
+        Debug.Log("Target changed: " + e.Data.Id);
     }
 
     private void POIWatch_OnUserLocationChanged(object sender, LocationChangedArgs e)
@@ -246,8 +254,10 @@ public class RouteTrainingController : MonoBehaviour
         else if (POIWatch.GetPreviousState() == POIWatcher.POIState.LeftPOI)
         {
             LoadPOIConfirmation();
-            AuralInstruction.PlayEffectLeavePOI();
-            HapticUtils.VibrateForNudge();
+
+            //TODO: Move sounds to instructions
+            //AuralInstruction.PlayEffectLeavePOI();
+            //HapticUtils.VibrateForNudge();
         }
 
         Debug.Log($"POIWatch_OnAlongTrack (prev {POIWatch.GetPreviousState()})");        
@@ -276,6 +286,8 @@ public class RouteTrainingController : MonoBehaviour
     {
         GPSDebugDisplay.Log($"{POIWatch.CurrentPOIIndex} POIWatch_OnLeftPOI distance {e.Distance}");
         // Let's watch out for the next POI along the route
+
+        //TODO: Modify next POI to search for that without mute.
         POIWatch.NextPOI();
         // Let's load the wayfinding instructions for the next
         //LoadGoToInstruction(POIWatch.CurrentPOIIndex);
@@ -424,7 +436,12 @@ public class RouteTrainingController : MonoBehaviour
             CurrentRouteWalk.RouteId = SharedData.CurrentRoute.Id;
             CurrentRouteWalk.InsertDirty();
         }
-
+        else
+        {
+            WalkEventHandler.DisableLogging = true;
+        }
+        
+        Debug.Log("Walk Event Logging Disable? : " + WalkEventHandler.DisableLogging);
 
         // last used local log id
         var lastLog = PathpointLog.GetWithMinId(x => x.Id);
@@ -583,8 +600,8 @@ public class RouteTrainingController : MonoBehaviour
         var item = SharedData.PreparePOIData(POIWatch.CurrentPOIIndex);
         ShowInstructionPanel(GoToInstruction.gameObject);
         GoToInstruction.LoadInstruction(SharedData.CurrentWay, item);
-        
 
+        ShowProgressBar(true);
         ReLoadProgressBar();
 
         //AuralInstruction.PlayGotoInstruction(item);
@@ -592,74 +609,88 @@ public class RouteTrainingController : MonoBehaviour
 
     private void LoadGoToConfirmation()
     {
-        // If the POIs are too close to each other, you might leave and enter directly the next
-        // POI. For consistency, let's load the GOTo in this case, so as to get confirmation
-        if (POIWatch.GetPreviousState() == POIWatcher.POIState.LeftPOI)
-        {
-            var item = SharedData.PreparePOIData(POIWatch.CurrentPOIIndex);
-            GoToInstruction.LoadInstruction(SharedData.CurrentWay, item);
-            ShowInstructionPanel(GoToInstruction.gameObject);
+        // We confirm only the actual goto completion
 
-            ReLoadProgressBar();
+        if (!POIWatch.IsCurrentPOIMuted()) { 
+
+            // If the POIs are too close to each other, you might leave and enter directly the next
+            // POI. For consistency, let's load the GOTo in this case, so as to get confirmation
+            if (POIWatch.GetPreviousState() == POIWatcher.POIState.LeftPOI)
+            {
+                var item = SharedData.PreparePOIData(POIWatch.CurrentPOIIndex);
+                GoToInstruction.LoadInstruction(SharedData.CurrentWay, item);
+                ShowInstructionPanel(GoToInstruction.gameObject);
+
+                ReLoadProgressBar();
+            }
+            GoToInstruction.CancelHideSupport();
+
+            AuralInstruction.PlayEffectEnterPOI();
+            GoToInstruction.LoadInstructionConfirmation();       // Make sure we load the right POI
         }
-        GoToInstruction.CancelHideSupport();
-
-        AuralInstruction.PlayEffectEnterPOI();
-        GoToInstruction.LoadInstructionConfirmation();       // Make sure we load the right POI  
     }
 
     private void LoadPOIInstruction()
     {
-        // If we are in the first landmark, the OnLeftPOI was not triggered (there was no previous POI)
-        // so let's load the instruction photos as well, not only the directions
-        var item = SharedData.PreparePOIData(POIWatch.CurrentPOIIndex);
-        Way way = SharedData.CurrentWay;
-
-        if (item.POIType == Pathpoint.POIsType.Landmark)
-        {            
-            ShowInstructionPanel(DecisionInstruction.gameObject);
-            //// test
-            //item.CurrentInstructionMode = new InstructionMode
-            //{
-            //    IsNewToUser = true,
-            //    Mode = InstructionMode.SupportMode.ChallengeDecision
-            //};
-
-            DecisionInstruction.LoadInstruction(way, item);
-            //AuralInstruction.PlayNavInstruction(item);
-        }
-        else if (item.POIType == Pathpoint.POIsType.Reassurance)
+        if (!POIWatch.IsCurrentPOIMuted())
         {
-            ShowInstructionPanel(SafetyInstruction.gameObject);
-            SafetyInstruction.LoadInstruction(item);            
-            AuralInstruction.PlaySafetyPointInstruction(item);
-        }
-        else if (item.POIType == Pathpoint.POIsType.WayStart)
-        {
-            ShowInstructionPanel(DecisionInstruction.gameObject);
-            DecisionInstruction.LoadInstruction(way,item);            
-            AuralInstruction.PlayStartInstruction(item);
-        }
+            // If we are in the first landmark, the OnLeftPOI was not triggered (there was no previous POI)
+            // so let's load the instruction photos as well, not only the directions
+            var item = SharedData.PreparePOIData(POIWatch.CurrentPOIIndex);
+            Way way = SharedData.CurrentWay;
 
-        //Wayfind.LoadInstructionDirection(POIWatch.CurrentPOIIndex == 0);
+            ShowProgressBar(false);
 
-        HapticUtils.VibrateForNudge();
+            if (item.POIType == Pathpoint.POIsType.Landmark)
+            {
+                ShowInstructionPanel(DecisionInstruction.gameObject);
+                //// test
+                //item.CurrentInstructionMode = new InstructionMode
+                //{
+                //    IsNewToUser = true,
+                //    Mode = InstructionMode.SupportMode.ChallengeDecision
+                //};
+
+                DecisionInstruction.LoadInstruction(way, item);
+                //AuralInstruction.PlayNavInstruction(item);
+            }
+            else if (item.POIType == Pathpoint.POIsType.Reassurance)
+            {
+                ShowInstructionPanel(SafetyInstruction.gameObject);
+                SafetyInstruction.LoadInstruction(item);
+                AuralInstruction.PlaySafetyPointInstruction(item);
+            }
+            else if (item.POIType == Pathpoint.POIsType.WayStart)
+            {
+                ShowInstructionPanel(DecisionInstruction.gameObject);
+                DecisionInstruction.LoadInstruction(way, item);
+                AuralInstruction.PlayStartInstruction(item);
+            }
+
+            //Wayfind.LoadInstructionDirection(POIWatch.CurrentPOIIndex == 0);
+
+            HapticUtils.VibrateForNudge();
+        }
     }
 
     private void LoadPOIConfirmation()
     {
-        if (DecisionInstruction.gameObject.activeSelf)
+        if (!POIWatch.WasPreviousMuted)
         {
-            DecisionInstruction.LoadInstructionConfirmation();
-        }
-        else
-        {
-            SafetyInstruction.LoadInstructionConfirmation();
+            if (DecisionInstruction.gameObject.activeSelf)
+            {
+                DecisionInstruction.LoadInstructionConfirmation();
+            }
+            else
+            {
+                SafetyInstruction.LoadInstructionConfirmation();
+            }
+
+            AuralInstruction.PlayEffectLeavePOI();
+            HapticUtils.VibrateForNudge();
+        
         }
 
-        //AuralInstruction.PlayEffectLeavePOI();
-
-        //RouteProgressBar.MarkAsComplete();
     }
 
     private void LoadStartingPoint()
@@ -695,9 +726,19 @@ public class RouteTrainingController : MonoBehaviour
     private void ReLoadProgressBar()
     {
         // progres bar
+        var targetPOI = POIWatch.GetUpcomingNonMutedTarget();
+        ReloadProgressBar(SharedData.POIList[POIWatch.CurrentPOIIndex - 1], targetPOI);
+    }
 
-        var poiStartIndex = FindPathointIndexById(SharedData.POIList[POIWatch.CurrentPOIIndex - 1].Id);
-        var poiEndIndex = FindPathointIndexById(SharedData.POIList[POIWatch.CurrentPOIIndex].Id);
+    private void ShowProgressBar(bool show)
+    {
+        RouteProgressBar.gameObject.SetActive(show);
+    }
+
+    private void ReloadProgressBar(Pathpoint p1, Pathpoint p2)
+    {
+        var poiStartIndex = FindPathointIndexById(p1.Id);
+        var poiEndIndex = FindPathointIndexById(p2.Id);
 
         RouteProgressBar.Initialise(poiStartIndex, poiEndIndex);
 

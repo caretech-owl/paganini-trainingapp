@@ -27,8 +27,11 @@ public class PhoneCam : MonoBehaviour
     public int videoWidth = 640;
     public int videoHeight = 480;
     public int fps = 12;
+    public int videoBitRate = 1_000_000;
     public int BestVideoWidth = 1280;
     public int BestVideoHeight = 720;
+    public bool RecordPortrait = false;
+    
     public bool recordMicrophone;
 
     [Header(@"UI Configuration")]
@@ -53,6 +56,7 @@ public class PhoneCam : MonoBehaviour
     private void Start()
     {
         CurrentRoute = Route.Get(AppState.SelectedBegehung);
+
     }
 
     public void StartCamera()
@@ -106,13 +110,15 @@ public class PhoneCam : MonoBehaviour
             yield break;
         }
 
-        AppLogger.Instance.LogFromMethod(this.name, "InitialiseCamera", $"We detected ({devices.Length}) cameras.");
+        AppLogger.Instance.LogFromMethod(this.name, "InitialiseCamera", $"We detected ({devices.Length}) cameras. Screen {Screen.orientation}");
+
         for (int i = 0; i < devices.Length; i++)
         {
             if (!devices[i].isFrontFacing)
             {
                 var res = GetSupportedResolution(devices[i]);
                 webCamTexture = new WebCamTexture(devices[i].name, res.width, res.height, fps);
+                AppLogger.Instance.LogFromMethod(this.name, "InitialiseCamera", $"Selected camera {devices[i].name} - Width ({res.width}) Height:{res.height}.");
             }
         }
 
@@ -127,8 +133,9 @@ public class PhoneCam : MonoBehaviour
         }
 
         webCamTexture.Play();
+        yield return new WaitUntil(() => webCamTexture.width > 16 && webCamTexture.height > 16); // workaround werid bug (according to natcorder)
         rawImage.texture = webCamTexture;
-        aspectRatioFitter.aspectRatio = (float)webCamTexture.width / webCamTexture.height;
+        aspectRatioFitter.aspectRatio = (float)webCamTexture.requestedWidth / webCamTexture.requestedHeight;
 
         AppLogger.Instance.LogFromMethod(this.name, "InitialiseCamera", $"Initialised camera with resolution - Width ({webCamTexture.width}) Height:{webCamTexture.height} AspectRatio: {aspectRatioFitter.aspectRatio}.");
 
@@ -160,7 +167,17 @@ public class PhoneCam : MonoBehaviour
     {
         // Get all available webcam devices.
         WebCamDevice[] devices = WebCamTexture.devices;
-        var defaultRes = new Resolution { height = videoWidth, width = videoHeight };
+
+
+        Resolution defaultRes = new Resolution { height = videoWidth, width = videoHeight };
+        int videoWidthToMath = BestVideoWidth;
+        int videoHeightToMath = BestVideoHeight;
+        if (RecordPortrait)
+        {
+            defaultRes = new Resolution { height = videoHeight, width = videoWidth };
+            videoWidthToMath =  BestVideoHeight;
+            videoHeightToMath = BestVideoWidth;
+        }
 
         // Iterate through each device to check supported resolutions.
 
@@ -170,8 +187,11 @@ public class PhoneCam : MonoBehaviour
             foreach (Resolution resolution in device.availableResolutions)
             {
                 Debug.Log("Supported Resolution: " + resolution.width + "x" + resolution.height);
-                if (resolution.width == BestVideoWidth && resolution.height == BestVideoHeight)
-                    return resolution;
+                if (resolution.width == videoWidthToMath && resolution.height == videoHeightToMath)
+                {                    
+                    return RecordPortrait? new Resolution { height = resolution.width, width =  resolution.height } : resolution;
+                }
+                    
                     //defaultRes = resolution;
             }
         }
@@ -255,10 +275,11 @@ public class PhoneCam : MonoBehaviour
                 clock = new RealtimeClock();
                 //recorder = new MP4Recorder(videoWidth, videoHeight, fps, sampleRate, channelCount, audioBitRate: 96_000);
                 //recorder = new HEVCRecorder(videoWidth, videoHeight, fps, sampleRate, channelCount, audioBitRate: 96_000, videoBitRate: 500_000);
-                recorder = new HEVCRecorder(webCamTexture.width, webCamTexture.height, fps, sampleRate, channelCount, videoBitRate: 500_000); 
+                recorder = new HEVCRecorder(webCamTexture.width, webCamTexture.height, fps, sampleRate, channelCount, videoBitRate: videoBitRate); 
 
                 // Create recording inputs
                 pixelBuffer = webCamTexture.GetPixels32();
+                rotatedPixelBuffer = webCamTexture.GetPixels32();
                 audioInput = recordMicrophone ? new AudioInput(recorder, clock, microphoneSource, true) : null;
                 // Unmute microphone
                 microphoneSource.mute = audioInput == null;
@@ -266,7 +287,7 @@ public class PhoneCam : MonoBehaviour
 
                 CurrentRoute.SocialWorkerId = AppState.CurrenSocialWorker.Id;
                 CurrentRoute.StartTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                CurrentRoute.LocalVideoResolution = $"{webCamTexture.width}x{webCamTexture.height}";
+                CurrentRoute.LocalVideoResolution = $"{webCamTexture.requestedWidth}x{webCamTexture.requestedHeight}:{webCamTexture.width}x{webCamTexture.height}";
                 CurrentRoute.InsertDirty();
 
                 AppLogger.Instance.LogFromMethod(this.name, "StartRecording", $"Recording started for Route ({CurrentRoute.Id}, {CurrentRoute.Name})");
@@ -348,7 +369,7 @@ public class PhoneCam : MonoBehaviour
 
     }
 
-
+    private Color32[] rotatedPixelBuffer;
     public async void TakePicture(string filename)
     {
         if (AppState.recording)
@@ -363,8 +384,10 @@ public class PhoneCam : MonoBehaviour
                     Directory.CreateDirectory(ImgDir);
                 }
 
-                JPGRecorder rec = new JPGRecorder(webCamTexture.width, webCamTexture.height);
-                rec.CommitFrame(pixelBuffer);
+                JPGRecorder rec = new JPGRecorder(webCamTexture.requestedWidth, webCamTexture.requestedHeight);
+                RotatePixelBuffer(pixelBuffer, rotatedPixelBuffer);
+                rec.CommitFrame(rotatedPixelBuffer);
+                //rec.CommitFrame(pixelBuffer);
                 var path = await rec.FinishWriting();
                 Debug.LogWarning($"Saved recording to: {path}");
                 string[] split = path.Split('/');
@@ -437,5 +460,38 @@ public class PhoneCam : MonoBehaviour
 
         OnRecordingError?.Invoke(appMessage);
     }
+
+    //private void RotatePixelBuffer(Color32[] input, Color32[] output)
+    //{
+    //    int width = webCamTexture.width;
+    //    int height = webCamTexture.height;
+
+    //    for (int y = 0; y < height; y++)
+    //    {
+    //        for (int x = 0; x < width; x++)
+    //        {
+    //            output[x * height + (height - y - 1)] = input[y * width + x];
+    //        }
+    //    }
+    //}
+
+    private void RotatePixelBuffer(Color32[] input, Color32[] output)
+    {
+        int width = webCamTexture.width;
+        int height = webCamTexture.height;
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                int newX = y;
+                int newY = width - x - 1;
+
+                output[newY * height + newX] = input[y * width + x];
+            }
+        }
+    }
+
+
 
 }
