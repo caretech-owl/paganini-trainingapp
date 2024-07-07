@@ -15,9 +15,12 @@ public class WayGoToChallengeInstruction : MonoBehaviour
     [Header("UI Components")]
     public AudioInstruction AuralInstruction;
 
+    [Header("Events")]
     public UnityEvent OnTaskCompleted;
+    public event EventHandler<EventArgs<AdaptationTaskArgs>> OnAdaptationEventChange;
 
 
+    private AdaptationTaskArgs CurrentAdaptationTask;
 
     // Start is called before the first frame update
     void Start()
@@ -33,17 +36,56 @@ public class WayGoToChallengeInstruction : MonoBehaviour
 
     public void LoadInstruction(Pathpoint pathtpoint, bool skipIntro = false)
     {
+        CurrentAdaptationTask = new ();
+        CurrentAdaptationTask.IsTaskStart = true;
+
         // init view
         if (pathtpoint.CurrentInstructionMode.IsAtPOINewToUser && !skipIntro)
         {            
             AuralInstruction.PlayChallengeGoToIntro();
             ShowTask(false);
+
+            CurrentAdaptationTask.AdaptationIntroShown = true;
+            SendAdaptationTaskData(); // partially send that we have shown the intro
+
         }
         else
-        {            
-            ShowTask(true);
+        {
+            CurrentAdaptationTask.AdaptationIntroShown = false;
+            SendAdaptationTaskData();
+
+            ShowTask(true);            
         }
 
+        
+    }
+
+    public void InformModeCancelled()
+    {
+        CurrentAdaptationTask.AdaptationTaskAccepted = false;  // update the intro      
+        SendAdaptationTaskData();
+
+        CurrentAdaptationTask.IsTaskStart = false;
+        CurrentAdaptationTask.AdaptationTaskCompleted = false;
+        SendAdaptationTaskData();
+
+        CurrentAdaptationTask = null;
+    }
+
+    public void InformTaskSuccessful()
+    {
+        CurrentAdaptationTask.IsTaskStart = false;
+        CurrentAdaptationTask.AdaptationTaskCompleted = true;
+        CurrentAdaptationTask.AdaptationTaskCorrect = true;
+        SendAdaptationTaskData();
+    }
+
+    public void TaskAcceptedByUser()
+    {
+        CurrentAdaptationTask.AdaptationTaskAccepted = true; // update the intro   
+        SendAdaptationTaskData();
+
+        ShowTask(true);       
     }
 
     public void ShowTask(bool show)
@@ -55,6 +97,12 @@ public class WayGoToChallengeInstruction : MonoBehaviour
             AuralInstruction.CancelCurrentPlayback();
             OnTaskCompleted.Invoke();
         }
+    }
+
+    private void SendAdaptationTaskData()
+    {
+        CurrentAdaptationTask.AdaptationSupportMode = PathpointPIM.SupportMode.Challenge;
+        OnAdaptationEventChange?.Invoke(this, new EventArgs<AdaptationTaskArgs>(CurrentAdaptationTask));
     }
 
 }

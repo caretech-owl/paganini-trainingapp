@@ -14,6 +14,8 @@ public class WayOfftrackInstruction : MonoBehaviour
     [SerializeField] private GameObject DeviationMessage;
 
 
+    public event EventHandler<EventArgs<RouteWalkEventLog.RecoveryInstructionType>> OnRecoveryInstructionUsed;
+
 
     private static Dictionary<NavigationIssue, string> messageMap = new Dictionary<NavigationIssue, string>
     {
@@ -44,6 +46,24 @@ public class WayOfftrackInstruction : MonoBehaviour
         DeviationMessage.SetActive(issue == NavigationIssue.Deviation);
     }
 
+    public void LogRecoveryCompass()
+    {
+        TriggerRecoveryUsed(RouteWalkEventLog.RecoveryInstructionType.Compass);
+    }
 
+    public void LogRecoveryPause()
+    {
+        TriggerRecoveryUsed(RouteWalkEventLog.RecoveryInstructionType.NoIssue);
+    }
+
+    public void LogRecoveryCall()
+    {
+        TriggerRecoveryUsed(RouteWalkEventLog.RecoveryInstructionType.CallHelp);
+    }
+
+    private void TriggerRecoveryUsed(RouteWalkEventLog.RecoveryInstructionType recoveryType)
+    {
+        OnRecoveryInstructionUsed.Invoke(this, new EventArgs<RouteWalkEventLog.RecoveryInstructionType>(recoveryType));
+    }
 
 }

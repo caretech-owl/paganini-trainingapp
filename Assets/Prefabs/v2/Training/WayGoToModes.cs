@@ -18,7 +18,10 @@ public class WayGoToModes : MonoBehaviour
     public AudioInstruction AuralInstruction;
     public bool EnableAdaptiveModes = true;
 
+    [Header("Events")]
     public UnityEvent OnTaskCompleted;
+    public event EventHandler<EventArgs<(bool IsHidden, bool WasAwakenByUser)>> OnInstructionHideChange;
+    public event EventHandler<EventArgs<AdaptationTaskArgs>> OnAdaptationEventChange;
 
     private Way CurrentWay;
     private Pathpoint CurrentPOI;
@@ -35,6 +38,16 @@ public class WayGoToModes : MonoBehaviour
     {
         POIWatch = POIWatcher.Instance;
         SharedData = RouteSharedData.Instance;
+
+        NormalMode.OnInstructionHideChange += NormalMode_OnInstructionHideChange;
+
+        ChallengeMode.OnAdaptationEventChange += Mode_OnAdaptationEventChange;
+        TriviaMode.OnAdaptationEventChange += Mode_OnAdaptationEventChange;
+    }
+
+    private void Mode_OnAdaptationEventChange(object sender, EventArgs<AdaptationTaskArgs> e)
+    {
+        OnAdaptationEventChange.Invoke(this, e);
     }
 
     // Update is called once per frame
@@ -69,11 +82,13 @@ public class WayGoToModes : MonoBehaviour
 
     public void LoadInstructionConfirmation()
     {
-        // we load the confirmation of the normal mode
-        // if not active, we activate it
+
         // This can happen if the user did not complete the trivia task in time
         // before reaching the destination
-        var wasTooLate = TriviaMode.gameObject.activeSelf && !TriviaMode.IsTaskDone();
+        var wasTriviaTooLate = TriviaMode.gameObject.activeSelf && !TriviaMode.IsTaskDone();
+
+        // we load the confirmation of the normal mode
+        // if not active, we activate it
 
         if (!NormalMode.gameObject.activeSelf)
         {
@@ -84,14 +99,17 @@ public class WayGoToModes : MonoBehaviour
 
         // if we did not finish the trivia, then we provide a feedback to the user
         // Time is out, we already arrived. Next time.
-        if (wasTooLate)
+        if (wasTriviaTooLate)
         {
             AuralInstruction.PlayTriviaGoToTooLate();
+            TriviaMode.InformTaskNotDone();
         }
 
         if (CurrentMode == SupportMode.Challenge)
         {
             AuralInstruction.PlayChallengeGoToFeedbackOk();
+            //OnAdaptationEventChange
+            ChallengeMode.InformTaskSuccessful();
         }
     }
 
@@ -269,6 +287,10 @@ public class WayGoToModes : MonoBehaviour
     private void OnDestroy()
     {
         CleanUpView();
+
+        NormalMode.OnInstructionHideChange -= NormalMode_OnInstructionHideChange;
+        ChallengeMode.OnAdaptationEventChange -= Mode_OnAdaptationEventChange;
+        TriviaMode.OnAdaptationEventChange -= Mode_OnAdaptationEventChange;
     }
 
     // Handlers
@@ -282,5 +304,11 @@ public class WayGoToModes : MonoBehaviour
     {
         LoadInstructionMode(CurrentWay, CurrentPOI);
     }
+
+    private void NormalMode_OnInstructionHideChange(object sender, EventArgs<(bool IsHidden, bool WasAwakenByUser)> e)
+    {
+        OnInstructionHideChange.Invoke(this, e);
+    }
+
 
 }

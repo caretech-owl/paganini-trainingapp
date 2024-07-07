@@ -19,10 +19,12 @@ public class WayChallengeDirectionInstruction : MonoBehaviour
     public InstructionCard Card;
     public AudioInstruction AuralInstruction;
 
-
+    [Header("Events")]
     public UnityEvent OnTaskCompleted;
+    public event EventHandler<EventArgs<AdaptationTaskArgs>> OnAdaptationEventChange;
 
     private Pathpoint POI;
+    private AdaptationTaskArgs CurrentAdaptationTask;
 
     // Start is called before the first frame update
     void Start()
@@ -39,11 +41,22 @@ public class WayChallengeDirectionInstruction : MonoBehaviour
 
     public void LoadInstruction(Way way, Pathpoint pathtpoint, bool skipIntro = false)
     {
+        CurrentAdaptationTask = new();
+        CurrentAdaptationTask.IsTaskStart = true;
         
+
         if (pathtpoint.CurrentInstructionMode.IsAtPOINewToUser && !skipIntro)
         {
             ShowTask(false);
             AuralInstruction.PlayChallengeDirectionIntro();
+
+            CurrentAdaptationTask.AdaptationIntroShown = true;
+            SendAdaptationTaskData(); // partially send that we have shown the intro
+        }
+        else
+        {
+            CurrentAdaptationTask.AdaptationIntroShown = false;
+            SendAdaptationTaskData();
         }
 
         LoadTask(way, pathtpoint);
@@ -75,7 +88,42 @@ public class WayChallengeDirectionInstruction : MonoBehaviour
         }
     }
 
-  
+
+    public void InformModeCancelled()
+    {
+        CurrentAdaptationTask.AdaptationTaskAccepted = false; // update intro
+        SendAdaptationTaskData();
+
+        CurrentAdaptationTask.IsTaskStart = false;
+        CurrentAdaptationTask.AdaptationTaskCompleted = false;
+        SendAdaptationTaskData();
+
+        CurrentAdaptationTask = null;
+    }
+
+    public void InformTaskSuccessful()
+    {
+        CurrentAdaptationTask.IsTaskStart = false;
+        CurrentAdaptationTask.AdaptationTaskCompleted = true;
+        CurrentAdaptationTask.AdaptationTaskCorrect = true;
+        SendAdaptationTaskData();
+    }
+
+    public void TaskAcceptedByUser()
+    {
+        CurrentAdaptationTask.AdaptationTaskAccepted = true; // update intro
+        SendAdaptationTaskData();
+
+        ShowTask(true);
+    }
+
+
+
+    private void SendAdaptationTaskData()
+    {
+        CurrentAdaptationTask.AdaptationSupportMode = PathpointPIM.SupportMode.Challenge;
+        OnAdaptationEventChange?.Invoke(this, new EventArgs<AdaptationTaskArgs>(CurrentAdaptationTask));
+    }
 
     private void OnDestroy()
     {

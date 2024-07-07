@@ -32,10 +32,14 @@ public class WayDecisionInstruction : MonoBehaviour
     public bool EnablePicturePoVConfirmation = true;
     public bool EnableOverlayOptions = true;
 
+    [Header("Events")]
+    public UnityEvent OnTaskCompleted;
+    public event EventHandler<EventArgs<RouteWalkEventLog.NavInstructionType>> OnNavInstructionUsed;
+
     private Pathpoint POI;
     private bool isARCompassEnabled = false;
 
-    public UnityEvent OnTaskCompleted;
+    
 
     // Start is called before the first frame update
     void Start()
@@ -50,7 +54,7 @@ public class WayDecisionInstruction : MonoBehaviour
 
     }
 
-    public void LoadInstruction(Way way, Pathpoint pathtpoint)
+    public void LoadInstruction(Way way, Pathpoint pathtpoint, bool asBackground = false)
     {
         POI = pathtpoint;
         isARCompassEnabled = false;
@@ -98,6 +102,10 @@ public class WayDecisionInstruction : MonoBehaviour
         Card.InstructionIconPOI.RenderIcon(pathtpoint, way);
         Card.RenderInstruction();
 
+        if (!asBackground)
+        {
+            OnNavInstructionUsed.Invoke(this, new EventArgs<RouteWalkEventLog.NavInstructionType>(RouteWalkEventLog.NavInstructionType.Picture));
+        }
     }
 
     public void RenderVideo()
@@ -118,11 +126,15 @@ public class WayDecisionInstruction : MonoBehaviour
         VideoOpen?.SetActive(false);
 
         VideoInstruction.OnPlayBackFinished.AddListener(PlaybackFinishedHandler);
+
+        OnNavInstructionUsed.Invoke(this, new EventArgs<RouteWalkEventLog.NavInstructionType>(RouteWalkEventLog.NavInstructionType.Video));
     }
 
     public void RenderARModeBackgroundSupport()
     {
         isARCompassEnabled = true;
+
+        OnNavInstructionUsed.Invoke(this, new EventArgs<RouteWalkEventLog.NavInstructionType>(RouteWalkEventLog.NavInstructionType.Compass));
     }
 
     public bool IsARCompassEnabled()

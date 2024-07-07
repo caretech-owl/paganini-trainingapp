@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using static PaganiniRestAPI;
+using static PathpointPIM;
 
 public class RouteWalkLogger : PersistentLazySingleton<RouteWalkLogger>
 {
@@ -229,11 +230,18 @@ public class WalkEventManager
 {
     private PathpointLog CurrentPathpointLog;
     private RouteWalk CurrentRouteWalk;
+   
 
     private WalkStoppedEvent CurrentWalkStoppedEvent;
     private OffTrackEvent CurrentOfftrackEvent;
     private DecisionMadeEvent CurrentDecisionEvent;
     private SegmentCompletedEvent CurrentSegmentEvent;
+    private PausedEvent CurrentPauseEvent;
+    private InstructionSleepEvent CurrentInstructionSleepEvent;
+    private AdaptationEvent CurrentAdaptationEvent;
+
+    private List<RouteWalkEventLog.RecoveryInstructionType> RecoveryInstructionUsedList;
+    private List<RouteWalkEventLog.NavInstructionType> NavInstructionUsedList;
 
     public bool DisableLogging { get; set; }
 
@@ -247,6 +255,54 @@ public class WalkEventManager
     public void SetCurrentRouteWalk(RouteWalk routeWalk)
     {
         CurrentRouteWalk = routeWalk;
+    }
+
+    // Capture contextual ui events
+    public void AddUIEvent_NavInstructionUsed(RouteWalkEventLog.NavInstructionType instructionType)
+    {
+        if (NavInstructionUsedList == null)
+        {
+            NavInstructionUsedList = new List<RouteWalkEventLog.NavInstructionType> { };
+        }
+
+        NavInstructionUsedList.Add(instructionType);
+    }
+
+    public void AddUIEvent_RecoveryInstructionUsed(RouteWalkEventLog.RecoveryInstructionType recoveryType)
+    {
+        if (RecoveryInstructionUsedList == null)
+        {
+            RecoveryInstructionUsedList = new List<RouteWalkEventLog.RecoveryInstructionType> { };
+        }
+
+        RecoveryInstructionUsedList.Add(recoveryType);
+    }
+
+    public void AddUIEvent_OfftrackShown()
+    {
+        if (CurrentAdaptationEvent != null)
+        {
+            // We close the Adaptation event, which interrupts the user 
+            PopulateEndEventBase(CurrentAdaptationEvent);
+
+            CurrentAdaptationEvent.AdaptationTaskCompleted = false;
+            //CurrentAdaptationEvent.AdaptationDowngradedBySystem = true;
+            //CurrentAdaptationEvent.AdaptationDowngradedByUser = false;
+
+            if (CurrentAdaptationEvent.AdaptationSupportMode != SupportMode.Trivia)
+            {
+                CurrentAdaptationEvent.AdaptationTaskCorrect = false;
+            }
+
+            var e = new RouteWalkEventLog(CurrentAdaptationEvent);
+            e.Id = GetLastRouteWalkEventLog();
+            e.InsertDirty();
+
+            LogEventEnd("CurrentAdaptationEvent", CurrentAdaptationEvent);
+
+            // we free the event
+            CurrentAdaptationEvent = null;
+        }
     }
 
     private void LogEventStart(string eventName, RouteWalkEventLogBase walkEvent)
@@ -301,6 +357,80 @@ public class WalkEventManager
 
     }
 
+    public void ProcessPauseStatusChange(PauseStatusArgs args)
+    {
+        if (DisableLogging) return;
+
+        // The user paused
+        if (CurrentPauseEvent == null && args.IsPaused)
+        {
+            CurrentPauseEvent = new PausedEvent();
+            PopulateStartEventBase(CurrentPauseEvent, args.TargetPOI);
+
+            // we overwrite the timestamp, since we don't get it from pathpoint log (we are not tracking)
+            CurrentPauseEvent.StartTimestamp = args.EventTimestamp;
+
+            LogEventStart("CurrentPauseEvent", CurrentPauseEvent);
+        }
+        // We are resuming 
+        else if (CurrentPauseEvent != null && !args.IsPaused)
+        {
+            PopulateEndEventBase(CurrentPauseEvent);
+
+            // we overwrite the timestamp, since we don't get it from pathpoint log (we are not tracking)
+            CurrentPauseEvent.EndTimestamp = args.EventTimestamp;
+            CurrentPauseEvent.DurationEvent = CurrentPauseEvent.EndTimestamp - CurrentPauseEvent.StartTimestamp;
+
+            var e = new RouteWalkEventLog(CurrentPauseEvent);
+            e.Id = GetLastRouteWalkEventLog();
+            e.InsertDirty();
+
+            LogEventEnd("CurrentPauseEvent", CurrentPauseEvent);
+
+            // we free the event
+            CurrentPauseEvent = null;
+        }
+        else
+        {
+            Debug.Log("CurrentPauseEvent: We need to handle better this case:" + args);
+        }
+
+    }
+
+    public void ProcessInstructionSleepStatusChange(InstructionSleepStatusArgs args)
+    {
+        if (DisableLogging) return; 
+
+        // The instruction screen is sleeping
+        if (CurrentInstructionSleepEvent == null && args.IsSleeping)
+        {
+            CurrentInstructionSleepEvent = new InstructionSleepEvent();
+            PopulateStartEventBase(CurrentInstructionSleepEvent, null);
+
+            LogEventStart("InstructionSleepEvent", CurrentInstructionSleepEvent);
+        }
+        // We are resuming 
+        else if (CurrentInstructionSleepEvent != null && !args.IsSleeping)
+        {
+            PopulateEndEventBase(CurrentInstructionSleepEvent);
+
+            var e = new RouteWalkEventLog(CurrentInstructionSleepEvent);
+            e.Id = GetLastRouteWalkEventLog();
+            e.WasAwakenByUser = args.WasAwakenByUser;
+            e.InsertDirty();
+
+            LogEventEnd("InstructionSleepEvent", CurrentInstructionSleepEvent);
+
+            // we free the event
+            CurrentInstructionSleepEvent = null;
+        }
+        else
+        {
+            Debug.Log("CurrentInstructionSleepEvent: We need to handle better this case:" + args);
+        }
+
+    }
+
     public void ProcessOfftrackStatusChange(ValidationArgs args)
     {
         if (DisableLogging) return;
@@ -324,12 +454,14 @@ public class WalkEventManager
 
             var e = new RouteWalkEventLog(CurrentOfftrackEvent);
             e.Id = GetLastRouteWalkEventLog();
+            e.RecoveryInstructionUsed = RecoveryInstructionUsedList;
             e.InsertDirty();
 
             LogEventEnd("CurrentOfftrackEvent", CurrentOfftrackEvent);
 
             // we free the event
             CurrentOfftrackEvent = null;
+            RecoveryInstructionUsedList = null;
         }
         else
         {
@@ -364,12 +496,14 @@ public class WalkEventManager
 
             var e = new RouteWalkEventLog(CurrentDecisionEvent);
             e.Id = GetLastRouteWalkEventLog();
+            e.NavInstructionUsed = NavInstructionUsedList;
             e.InsertDirty();
 
             LogEventEnd("CurrentDecisionEvent", CurrentDecisionEvent);
 
             // we free the event
             CurrentDecisionEvent = null;
+            NavInstructionUsedList = null;
         }
         else
         {
@@ -416,6 +550,120 @@ public class WalkEventManager
         }
     }
 
+    public void ProcessAdaptationTaskStatusChange(AdaptationTaskArgs args)
+    {
+        if (DisableLogging) return;
+
+        if (CurrentAdaptationEvent == null && args.IsTaskStart)
+        {
+            CurrentAdaptationEvent = new AdaptationEvent();
+            PopulateStartEventBase(CurrentAdaptationEvent, args.TargetPOI);
+            CurrentAdaptationEvent.SegPOIStartId = args.SegPOIStartId;
+            CurrentAdaptationEvent.SegExpectedPOIEndId = args.SegExpectedPOIEndId;
+
+            CurrentAdaptationEvent.AdaptationSupportMode = args.AdaptationSupportMode;
+            CurrentAdaptationEvent.AdaptationIntroShown = args.AdaptationIntroShown;
+            CurrentAdaptationEvent.AdaptationTaskAccepted = args.AdaptationTaskAccepted;
+
+            LogEventStart("CurrentSegmentEvent", CurrentAdaptationEvent);
+
+        }
+        // there is an update
+        else if (CurrentAdaptationEvent != null && args.IsTaskStart)
+        {
+            CurrentAdaptationEvent.AdaptationSupportMode = args.AdaptationSupportMode;
+            CurrentAdaptationEvent.AdaptationIntroShown = args.AdaptationIntroShown;
+            CurrentAdaptationEvent.AdaptationTaskAccepted = args.AdaptationTaskAccepted;
+
+            LogEventStart("CurrentSegmentEvent - Update", CurrentAdaptationEvent);
+        }
+
+        // We left the POI and made a decision
+        else if (CurrentAdaptationEvent != null && !args.IsTaskStart)
+        {
+            PopulateEndEventBase(CurrentAdaptationEvent);
+            CurrentAdaptationEvent.SegReachedPOIEndId = args.SegReachedPOIEndId;
+            CurrentAdaptationEvent.AdaptationTaskCompleted = args.AdaptationTaskCompleted;
+            CurrentAdaptationEvent.AdaptationTaskCorrect = args.AdaptationTaskCorrect;
+            CurrentAdaptationEvent.AdaptationDowngradedByUser = args.AdaptationDowngradedByUser;
+            CurrentAdaptationEvent.AdaptationDowngradedBySystem = args.AdaptationDowngradedBySystem;
+
+            var e = new RouteWalkEventLog(CurrentAdaptationEvent);
+            e.Id = GetLastRouteWalkEventLog();
+            e.InsertDirty();
+
+            LogEventEnd("CurrentAdaptationEvent", CurrentAdaptationEvent);
+
+            // we free the event
+            CurrentAdaptationEvent = null;
+        }
+        else
+        {
+            // Debug.Log("CurrentSegmentEvent: We need to handle better this case:" + args);
+        }
+    }
+
+    public void InterruptSegmentComplete(SegmentCompletedArgs args)
+    {
+        if (CurrentSegmentEvent != null)
+        {
+            PopulateEndEventBase(CurrentSegmentEvent);
+
+            CurrentSegmentEvent.DistanceWalked = args.DistanceWalked;
+            CurrentSegmentEvent.WalkingPace = args.WalkingPace;
+            CurrentSegmentEvent.SegReachedPOIEndId = args.SegReachedPOIEndId;
+            CurrentSegmentEvent.DistanceCorrectlyWalked = args.DistanceCorrectlyWalked;
+
+            CancelLog(new RouteWalkEventLog(CurrentSegmentEvent));
+        }
+    }
+
+    public void InterruptDecision(DecisionArgs args)
+    {
+        if (CurrentDecisionEvent != null)
+        {
+            PopulateEndEventBase(CurrentDecisionEvent);
+
+            CurrentDecisionEvent.DistanceWalked = args.DistanceWalked;
+            CurrentDecisionEvent.WalkingPace = args.WalkingPace;
+            CurrentDecisionEvent.IsCorrectDecision = args.IsCorrectDecision;
+            CurrentDecisionEvent.NavIssue = args.NavIssue;
+
+            CancelLog(new RouteWalkEventLog(CurrentDecisionEvent));
+        }
+    }
+
+    public void InterruptOfftrack(ValidationArgs args)
+    {
+        if (CurrentOfftrackEvent != null)
+        {
+            PopulateEndEventBase(CurrentOfftrackEvent);
+
+            CurrentOfftrackEvent.DistanceWalked = args.DistanceWalked;
+            CurrentOfftrackEvent.WalkingPace = args.WalkingPace;
+            CurrentOfftrackEvent.MaxDistanceFromTrack = args.MaxDistanceFromTrack;
+            CancelLog(new RouteWalkEventLog(CurrentOfftrackEvent));
+        }
+    }
+
+    public void InterruptWalkStatus()
+    {
+        if (CurrentWalkStoppedEvent != null)
+        {
+            PopulateEndEventBase(CurrentWalkStoppedEvent);
+            CancelLog(new RouteWalkEventLog(CurrentWalkStoppedEvent));
+        }
+    }
+
+    private void CancelLog(RouteWalkEventLog log)
+    {
+        if (DisableLogging) return;
+
+        log.Id = GetLastRouteWalkEventLog();
+        log.WasEventInterrupted = true;
+        log.InsertDirty();
+    }
+
     private void PopulateStartEventBase(RouteWalkEventLogBase walkEvent, Pathpoint targetPOI)
     {
         walkEvent.StartPathpointLogId = CurrentPathpointLog.Id;
@@ -437,5 +685,6 @@ public class WalkEventManager
         var lastLog = RouteWalkEventLog.GetWithMinId(x => x.Id);
         return (lastLog != null ? lastLog.Id : 0) - 1;
     }
+    
 
 }

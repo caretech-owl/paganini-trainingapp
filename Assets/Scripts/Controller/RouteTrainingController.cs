@@ -101,6 +101,13 @@ public class RouteTrainingController : MonoBehaviour
         POIWatch.OnUserLocationChanged -= POIWatch_OnUserLocationChanged;
         POIWatch.OnPOITargetChange -= POIWatch_OnPOITargetChange;
 
+        DecisionInstruction.OnNavInstructionUsed -= DecisionInstruction_OnNavInstructionUsed;
+        SafetyInstruction.OnNavInstructionUsed -= SafetyInstruction_OnNavInstructionUsed;
+        OfftrackInstruction.OnRecoveryInstructionUsed -= OfftrackInstruction_OnRecoveryInstructionUsed;
+        GoToInstruction.OnInstructionHideChange -= GoToInstruction_OnInstructionHideChange;
+        GoToInstruction.OnAdaptationEventChange -= GoToInstruction_OnAdaptationEventChange;
+        DecisionInstruction.OnAdaptationEventChange -= GoToInstruction_OnAdaptationEventChange;
+
         POIWatch.OnEnteredPOI += POIWatch_OnEnteredPOI;        
         POIWatch.OnLeftPOI += POIWatch_OnLeftPOI;        
         POIWatch.OnOffTrack += POIWatch_OnOffTrack;
@@ -117,6 +124,13 @@ public class RouteTrainingController : MonoBehaviour
         POIWatch.OnUserLocationChanged += POIWatch_OnUserLocationChanged;
         POIWatch.OnPOITargetChange += POIWatch_OnPOITargetChange;
 
+        DecisionInstruction.OnNavInstructionUsed += DecisionInstruction_OnNavInstructionUsed;
+        SafetyInstruction.OnNavInstructionUsed += SafetyInstruction_OnNavInstructionUsed;
+        OfftrackInstruction.OnRecoveryInstructionUsed += OfftrackInstruction_OnRecoveryInstructionUsed;
+        GoToInstruction.OnInstructionHideChange += GoToInstruction_OnInstructionHideChange;
+        GoToInstruction.OnAdaptationEventChange += GoToInstruction_OnAdaptationEventChange;
+        DecisionInstruction.OnAdaptationEventChange += GoToInstruction_OnAdaptationEventChange;
+
         SharedData = RouteSharedData.Instance;
         SharedData.OnDataDownloaded -= RouteSharedData_OnDataDownloaded;
         SharedData.OnDataDownloaded += RouteSharedData_OnDataDownloaded;
@@ -129,7 +143,7 @@ public class RouteTrainingController : MonoBehaviour
         GoToInstruction.OnTaskCompleted.AddListener(LoadPOIInstruction);
         DecisionInstruction.OnTaskCompleted.AddListener(LoadGoToInstruction);
         SafetyInstruction.OnTaskCompleted.AddListener(LoadGoToInstruction);
-
+       
 
         WalkEventHandler = new ();
     }
@@ -151,7 +165,14 @@ public class RouteTrainingController : MonoBehaviour
         POIWatch.OnLog -= POIWatch_OnLog;
         POIWatch.OnInvalidPathpoint -= POIWatch_OnInvalidPathpoint;
         POIWatch.OnUserLocationChanged -= POIWatch_OnUserLocationChanged;
-        POIWatch.OnPOITargetChange -= POIWatch_OnPOITargetChange;        
+        POIWatch.OnPOITargetChange -= POIWatch_OnPOITargetChange;
+
+        DecisionInstruction.OnNavInstructionUsed -= DecisionInstruction_OnNavInstructionUsed;
+        SafetyInstruction.OnNavInstructionUsed -= SafetyInstruction_OnNavInstructionUsed;
+        OfftrackInstruction.OnRecoveryInstructionUsed -= OfftrackInstruction_OnRecoveryInstructionUsed;
+        GoToInstruction.OnInstructionHideChange -= GoToInstruction_OnInstructionHideChange;
+        GoToInstruction.OnAdaptationEventChange -= GoToInstruction_OnAdaptationEventChange;
+        DecisionInstruction.OnAdaptationEventChange -= GoToInstruction_OnAdaptationEventChange;
 
         SharedData.OnDataDownloaded -= RouteSharedData_OnDataDownloaded;
 
@@ -159,6 +180,36 @@ public class RouteTrainingController : MonoBehaviour
         DecisionInstruction.OnTaskCompleted.RemoveListener(LoadGoToInstruction);
         SafetyInstruction.OnTaskCompleted.RemoveListener(LoadGoToInstruction);
 
+    }
+
+    // we track instructions used by the user during the navigation, and log them
+    private void DecisionInstruction_OnNavInstructionUsed(object sender, EventArgs<RouteWalkEventLog.NavInstructionType> e)
+    {
+        WalkEventHandler.AddUIEvent_NavInstructionUsed(e.Data);
+    }
+
+    private void SafetyInstruction_OnNavInstructionUsed(object sender, EventArgs<RouteWalkEventLog.NavInstructionType> e)
+    {
+        WalkEventHandler.AddUIEvent_NavInstructionUsed(e.Data);
+    }
+
+    private void OfftrackInstruction_OnRecoveryInstructionUsed(object sender, EventArgs<RouteWalkEventLog.RecoveryInstructionType> e)
+    {
+        WalkEventHandler.AddUIEvent_RecoveryInstructionUsed(e.Data);
+    }
+
+    private void GoToInstruction_OnInstructionHideChange(object sender, EventArgs<(bool IsHidden, bool WasAwakenByUser)> e)
+    {
+        InstructionSleepStatusArgs args = POIWatch.GetBaseInstructionSleepStats();
+        args.IsSleeping = e.Data.IsHidden;
+        args.WasAwakenByUser = e.Data.WasAwakenByUser;
+        WalkEventHandler.ProcessInstructionSleepStatusChange(args);
+    }
+
+    private void GoToInstruction_OnAdaptationEventChange(object sender, EventArgs<AdaptationTaskArgs> e)
+    {
+        AdaptationTaskArgs args = POIWatch.GetBaseAdaptationTaskStats(e.Data);
+        WalkEventHandler.ProcessAdaptationTaskStatusChange(args);
     }
 
     private void POIWatch_OnPOITargetChange(object sender, EventArgs<Pathpoint> e)
@@ -275,6 +326,8 @@ public class RouteTrainingController : MonoBehaviour
         HapticUtils.VibrateForAlert();
 
         SpeechUtils.Speak("You are off-track!");
+
+        WalkEventHandler.AddUIEvent_OfftrackShown();
     }
 
     private void POIWatch_OnOffTrackEnd(object sender, ValidationArgs e)
@@ -318,7 +371,8 @@ public class RouteTrainingController : MonoBehaviour
 
             LoadPOIInstruction();
 
-        } else if (POIWatch.CurrentPOIIndex != 0)
+        }
+        else if (POIWatch.CurrentPOIIndex != 0)
         {
             LoadGoToConfirmation();
         }
@@ -378,6 +432,11 @@ public class RouteTrainingController : MonoBehaviour
         GoToInstruction.CancelHideSupport();
 
         GPSTrackingStatus.UpdateGPSStatus(TrackingStatus.RunningStatus.Inactive, 0);
+
+        // Log pause
+        var pauseStats = POIWatch.GetBasePauseStats();
+        pauseStats.IsPaused = doPause;
+        WalkEventHandler.ProcessPauseStatusChange(pauseStats);
     }
 
     public void CancelTraining()
@@ -385,6 +444,8 @@ public class RouteTrainingController : MonoBehaviour
         // Did we start the route?
         if (CurrentRouteWalk != null)
         {
+            InterruptLogging();
+
             CurrentStatus = TrainingStatus.CANCELED;
             SaveRouteWalk(RouteWalk.RouteWalkCompletion.Cancelled, true);
         }
@@ -824,6 +885,15 @@ public class RouteTrainingController : MonoBehaviour
         CompletePanel.SetActive(CompletePanel == obj);
     }
 
+    private void InterruptLogging()
+    {
+        (ValidationArgs OfftrackStats, DecisionArgs DecisionStats, SegmentCompletedArgs SegmentStats) = POIWatch.GetNavigationStats();
+        WalkEventHandler.InterruptDecision(DecisionStats);
+        WalkEventHandler.InterruptOfftrack(OfftrackStats);
+        WalkEventHandler.InterruptSegmentComplete(SegmentStats);
+        WalkEventHandler.InterruptWalkStatus();
+    }
+
     // Terminate correctly the route.
     private void OnApplicationQuit()
     {
@@ -833,6 +903,9 @@ public class RouteTrainingController : MonoBehaviour
         if (CurrentRouteWalk.WalkCompletion != RouteWalk.RouteWalkCompletion.Completed)
         {
             SaveRouteWalk(RouteWalk.RouteWalkCompletion.Cancelled, false);
+
+            // We close all open events (if any) as interrupted
+            InterruptLogging();
         }
 
     }

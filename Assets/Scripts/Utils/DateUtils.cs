@@ -4,6 +4,12 @@ using System.Globalization;
 
 public static class DateUtils
 {
+
+    public static long UTCMilliseconds()
+    {
+        return new DateTimeOffset(DateTime.Now).ToUnixTimeMilliseconds();
+    }
+
     public static long? ConvertUTCStringToTsMilliseconds(string timeText, string dateFormat = "yyyy-MM-dd HH:mm:ss")
     {
         if (timeText == null || timeText.Trim() == "") return null;

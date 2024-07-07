@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
+using static PaganiniRestAPI;
 
 public class WayGoToInstruction : MonoBehaviour
 {  
@@ -11,7 +13,9 @@ public class WayGoToInstruction : MonoBehaviour
 
     private Pathpoint POI;
 
+    [Header("Events")]
     public UnityEvent OnTaskCompleted;
+    public event EventHandler<EventArgs<(bool IsHidden, bool WasAwakenByUser)>> OnInstructionHideChange;
 
     public float HideSupportDelaySeconds = 10;
     public bool EnableHideSupport { get; set; }
@@ -35,7 +39,6 @@ public class WayGoToInstruction : MonoBehaviour
     {
         POI = pathtpoint;
 
-
         SlideShow.LoadSlideShow(pathtpoint.Photos);
 
         string title = "Geh weiter, bis du das siehst";
@@ -52,6 +55,7 @@ public class WayGoToInstruction : MonoBehaviour
         ChallengeCard.FillInstruction(title, subtitle, subtitle.Trim() != "");
         ChallengeCard.InstructionIconPOI.RenderIcon(pathtpoint, way);
         ChallengeCard.RenderInstruction();
+        ChallengeCard.InstructionIconPOI.RenderChallenge();
 
         // normal instruction card by default
         RenderChallengeCard(false);
@@ -60,6 +64,7 @@ public class WayGoToInstruction : MonoBehaviour
         DelayHideInstruction();
         
     }
+
 
     public void RenderChallengeCard(bool isChallenge)
     {
@@ -71,7 +76,17 @@ public class WayGoToInstruction : MonoBehaviour
     {
         if (EnableHideSupport) {
             StartCoroutine(HideInstructionSupport());
-        }        
+        }
+
+    }
+
+    // User awaken the instructions that are hidden
+    public void SnoozeHideInstruction()
+    {
+        HideSupportPanel.SetActive(false);
+        OnInstructionHideChange.Invoke(this, new EventArgs<(bool IsHidden, bool WasAwakenByUser)>((IsHidden: false, WasAwakenByUser: true)));
+
+        DelayHideInstruction();
     }
 
     public void LoadInstructionConfirmation()
@@ -85,7 +100,13 @@ public class WayGoToInstruction : MonoBehaviour
 
     public void CancelHideSupport()
     {
-        cancelHideSupport = true;
+        cancelHideSupport = true;        
+
+        if (HideSupportPanel.activeSelf)
+        {
+            OnInstructionHideChange.Invoke(this, new EventArgs<(bool IsHidden, bool WasAwakenByUser)>((IsHidden: false, WasAwakenByUser: false)));
+        }
+
         HideSupportPanel.SetActive(false);
     }
 
@@ -106,6 +127,13 @@ public class WayGoToInstruction : MonoBehaviour
         yield return new WaitForSeconds(HideSupportDelaySeconds);
         
         HideSupportPanel.SetActive(!cancelHideSupport);
+
+        // We are informing that the instruction is now sleeping
+        if (!cancelHideSupport)
+        {
+            OnInstructionHideChange.Invoke(this, new EventArgs<(bool IsHidden, bool WasAwakenByUser)>((IsHidden: true, WasAwakenByUser: false)));
+        }
+        
 
     }
 

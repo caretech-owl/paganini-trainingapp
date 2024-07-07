@@ -19,7 +19,10 @@ public class WayDecisionModes : MonoBehaviour
     public bool EnableAdaptiveModes = true;
     public bool EnableImprovedDesign = true;
 
+    [Header("Events")]
     public UnityEvent OnTaskCompleted;
+    public event EventHandler<EventArgs<RouteWalkEventLog.NavInstructionType>> OnNavInstructionUsed;
+    public event EventHandler<EventArgs<AdaptationTaskArgs>> OnAdaptationEventChange;
 
     private Way CurrentWay;
     private Pathpoint CurrentPOI;
@@ -30,8 +33,17 @@ public class WayDecisionModes : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        NormalMode.OnNavInstructionUsed += NormalMode_OnNavInstructionUsed;
 
+        ChallengeDirectionMode.OnAdaptationEventChange += Mode_OnAdaptationEventChange;
+        TriviaMode.OnAdaptationEventChange += Mode_OnAdaptationEventChange;
     }
+
+    private void Mode_OnAdaptationEventChange(object sender, EventArgs<AdaptationTaskArgs> e)
+    {
+        OnAdaptationEventChange.Invoke(this, e);
+    }
+
 
     // Update is called once per frame
     void Update()
@@ -78,6 +90,8 @@ public class WayDecisionModes : MonoBehaviour
 
     public void LoadInstructionConfirmation()
     {
+        var wasTriviaTooLate = TriviaMode.gameObject.activeSelf && !TriviaMode.IsTaskDone();
+
         // we load the confirmation of the normal mode
         // if not active, we activate it
         //if (!NormalMode.gameObject.activeSelf)
@@ -92,8 +106,23 @@ public class WayDecisionModes : MonoBehaviour
             RenderOnly(NormalMode.gameObject);
         }
 
+        if (wasTriviaTooLate)
+        {
+            //AuralInstruction.PlayTriviaGoToTooLate();
+            TriviaMode.InformTaskNotDone();
+        }
+
         NormalMode.LoadInstructionConfirmation();
         AuralInstruction.PlayNavInstructionCorrect();
+
+
+        if (CurrentMode == SupportMode.Challenge)
+        {
+            //AuralInstruction.PlayChallengeGoToFeedbackOk();
+            //OnAdaptationEventChange
+            ChallengeDirectionMode.InformTaskSuccessful();
+        }
+
     }
 
     private void LoadInstructionByMode(Way way, Pathpoint pathpoint, SupportMode? mode, bool skipIntro = false)
@@ -155,7 +184,7 @@ public class WayDecisionModes : MonoBehaviour
     public void LoadBackgrondNormalMode(Way way, Pathpoint pathpoint)
     {
         NormalMode.gameObject.SetActive(true);
-        NormalMode.LoadInstruction(way, pathpoint);
+        NormalMode.LoadInstruction(way, pathpoint, asBackground: true);
         NormalMode.OnTaskCompleted.AddListener(Instruction_OnTaskCompleted);
         NormalMode.HideOverlayOptions();
     }
@@ -210,6 +239,10 @@ public class WayDecisionModes : MonoBehaviour
     private void OnDestroy()
     {
         CleanUpView();
+        NormalMode.OnNavInstructionUsed -= NormalMode_OnNavInstructionUsed;
+
+        ChallengeDirectionMode.OnAdaptationEventChange -= Mode_OnAdaptationEventChange;
+        TriviaMode.OnAdaptationEventChange -= Mode_OnAdaptationEventChange;
     }
 
     // Handlers
@@ -217,6 +250,11 @@ public class WayDecisionModes : MonoBehaviour
     {
         OnTaskCompleted?.Invoke();
         Debug.Log("DecisionModes - Task Completed");
+    }
+
+    private void NormalMode_OnNavInstructionUsed(object sender, EventArgs<RouteWalkEventLog.NavInstructionType> e)
+    {
+        OnNavInstructionUsed?.Invoke(this, e);
     }
 
 }

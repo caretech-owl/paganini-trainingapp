@@ -116,7 +116,7 @@ public class TrainingProgressBar : MonoBehaviour
         }
         prevClosestIndex = e.SegmentInfo.ClosestSegmentIndex;
 
-        Debug.Log($"POIWatch_OnUserLocationChanged: Index [{e.SegmentInfo.ClosestSegmentIndex}]");
+       // Debug.Log($"POIWatch_OnUserLocationChanged: Index [{e.SegmentInfo.ClosestSegmentIndex}]");
 
     }
 

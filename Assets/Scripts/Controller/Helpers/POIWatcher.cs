@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using static LocationUtils;
 using static PaganiniRestAPI;
+using static PathpointPIM;
 
 public class ValidationArgs: EventArgs
 {
@@ -105,6 +106,40 @@ public class SegmentCompletedArgs : EventArgs
     }
 }
 
+public class AdaptationTaskArgs : EventArgs
+{
+    public Pathpoint Point;
+    public bool IsTaskStart{ get; set; }    
+
+    // performance stats
+    public SupportMode? AdaptationSupportMode { set; get; }
+    public bool? AdaptationIntroShown { set; get; }
+    public bool? AdaptationTaskAccepted { set; get; }
+    public bool? AdaptationTaskCompleted { set; get; }
+    public bool? AdaptationTaskCorrect { set; get; }
+    public bool? AdaptationDowngradedByUser { set; get; }
+    public bool? AdaptationDowngradedBySystem { set; get; }
+
+    // data for segment, if in a segment (goto)
+    public int? SegPOIStartId { set; get; }
+    public int? SegExpectedPOIEndId { set; get; }
+    public int? SegReachedPOIEndId { set; get; }
+
+    // data for poi, if a decision instruction
+    public Pathpoint TargetPOI { get; set; }
+
+    public AdaptationTaskArgs()
+    {
+
+    }
+
+    public AdaptationTaskArgs(Pathpoint point, bool isTaskStart)
+    {
+        Point = point;
+        IsTaskStart = isTaskStart;
+    }
+}
+
 public class EventArgs<T> : EventArgs
 {
     public T Data { get; set; }
@@ -141,6 +176,36 @@ public class WalkingStatusArgs : EventArgs
         IsWalking = isWalking;
         Pace = pace;
         TargetPOI = targetPOI;
+    }
+}
+
+public class PauseStatusArgs : EventArgs
+{
+    public Pathpoint Point;
+    public bool IsPaused { get; set; }
+    public Pathpoint TargetPOI { get; set; }
+    public long EventTimestamp { get; set; }
+
+
+    public PauseStatusArgs(Pathpoint point, bool isPaused, Pathpoint targetPOI = null)
+    {
+        Point = point;
+        IsPaused = isPaused;
+        TargetPOI = targetPOI;
+    }
+}
+
+public class InstructionSleepStatusArgs : EventArgs
+{
+    public Pathpoint Point;
+    public bool IsSleeping { get; set; }
+    public bool WasAwakenByUser { get; set; }
+
+    public InstructionSleepStatusArgs(Pathpoint point, bool isSleeping, bool wasAwakenByuser = false)
+    {
+        Point = point;
+        IsSleeping = isSleeping;
+        WasAwakenByUser = wasAwakenByuser;
     }
 }
 
@@ -653,6 +718,60 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
 
 
         return pathpointLog;
+    }
+
+    public (ValidationArgs OfftrackStats, DecisionArgs DecisionStats, SegmentCompletedArgs SegmentStats) GetNavigationStats()
+    {
+        return (OfftrackStats, DecisionStats, SegmentStats);
+    }
+
+    public PauseStatusArgs GetBasePauseStats()
+    {
+        PauseStatusArgs args = new PauseStatusArgs (PreviousUserLocation, false);
+
+        if (currentState == POIState.OnPOI)
+        {
+            args.TargetPOI = CurrentTargetPOI;
+        }
+
+        args.EventTimestamp = DateUtils.UTCMilliseconds();
+
+        return args;
+    }
+
+    public InstructionSleepStatusArgs GetBaseInstructionSleepStats()
+    {
+        InstructionSleepStatusArgs args = new InstructionSleepStatusArgs(PreviousUserLocation, false);
+        return args;
+    }
+
+    public AdaptationTaskArgs GetBaseAdaptationTaskStats(AdaptationTaskArgs args)
+    {
+        args.Point = PreviousUserLocation;
+
+        // start - onPOI event
+        if (currentState == POIState.OnPOI && args.IsTaskStart)
+        {
+            args.TargetPOI = CurrentTargetPOI;
+        }
+        // end - onPOI events
+        else if (args.TargetPOI != null)
+        {
+            args.TargetPOI = CurrentTargetPOI;
+        }
+        // start - segment event 
+        else if (SegmentStats != null && args.IsTaskStart)
+        {
+            args.SegPOIStartId = SegmentStats.SegPOIStartId;
+            args.SegExpectedPOIEndId = SegmentStats.SegExpectedPOIEndId;               
+        }
+        // end - segment event 
+        else if (args.SegPOIStartId != null)
+        {
+            args.SegReachedPOIEndId = CurrentTargetPOI.Id;
+        }
+
+        return args;
     }
 
     public int GetPathpointIndexById(int pathpointId)

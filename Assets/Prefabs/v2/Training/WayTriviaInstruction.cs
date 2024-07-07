@@ -26,12 +26,16 @@ public class WayTriviaInstruction : MonoBehaviour
 
     //public GameObject VideoClose;
 
+    [Header("Events")]
     public UnityEvent OnTaskCompleted;
+    public event EventHandler<EventArgs<AdaptationTaskArgs>> OnAdaptationEventChange;
 
     private Pathpoint POI;
     private DirectionType option1;
     private DirectionType option2;
     private DirectionType correctDecision;
+    private bool isTaskDone;
+    private AdaptationTaskArgs CurrentAdaptationTask;
 
     // Start is called before the first frame update
     void Start()
@@ -51,6 +55,9 @@ public class WayTriviaInstruction : MonoBehaviour
 
     public void LoadInstruction(Way way, Pathpoint pathtpoint, bool skipIntro = false)
     {
+        CurrentAdaptationTask = new();
+        CurrentAdaptationTask.IsTaskStart = true;
+
         // init view
         ShowTask(false);
 
@@ -58,18 +65,64 @@ public class WayTriviaInstruction : MonoBehaviour
         {            
             AuralInstruction.PlayTriviaDirectionIntro();
             LoadTask(way, pathtpoint);
+
+            CurrentAdaptationTask.AdaptationIntroShown = true;
         }
         else
         {
             LoadTask(way, pathtpoint);
             ShowTask(true);
+
+            CurrentAdaptationTask.AdaptationIntroShown = false;
+            SendAdaptationTaskData();
         }
 
+    }
+
+    public void InformModeCancelled()
+    {
+        CurrentAdaptationTask.AdaptationTaskAccepted = false;
+        SendAdaptationTaskData();
+
+        CurrentAdaptationTask.IsTaskStart = false;
+        CurrentAdaptationTask.AdaptationTaskCompleted = false;
+        SendAdaptationTaskData();
+
+        CurrentAdaptationTask = null;
+    }
+
+    public void InformTaskNotDone()
+    {
+        // are we still awaiting confirmation? that means we didn't send the start of the event
+        if (CurrentAdaptationTask.AdaptationIntroShown == true &&
+            CurrentAdaptationTask.AdaptationTaskAccepted == null)
+        {
+            SendAdaptationTaskData();
+        }
+
+        CurrentAdaptationTask.IsTaskStart = false;
+        CurrentAdaptationTask.AdaptationTaskCompleted = false;
+        SendAdaptationTaskData();
+    }
+
+    public void TaskAcceptedByUser()
+    {
+        CurrentAdaptationTask.AdaptationTaskAccepted = true;
+        SendAdaptationTaskData();
+
+        ShowTask(true);
+
+    }
+
+    public bool IsTaskDone()
+    {
+        return isTaskDone;
     }
 
     public void LoadTask(Way way, Pathpoint pathtpoint)
     {
         POI = pathtpoint;
+        isTaskDone = false;
 
         // Load the picture 
         SlideShow.LoadSlideShow(pathtpoint.Photos);
@@ -188,6 +241,7 @@ public class WayTriviaInstruction : MonoBehaviour
     private void OnButtonOptionClicked(GameButton button)
     {
         bool success = false;
+        isTaskDone = true;
 
         if (button == DirectionOption1)
         {
@@ -217,6 +271,20 @@ public class WayTriviaInstruction : MonoBehaviour
         {
             AuralInstruction.PlayTriviaDirectionFeedbackWrong();
         }
+
+
+        // send information about performance
+        CurrentAdaptationTask.IsTaskStart = false;
+        CurrentAdaptationTask.AdaptationTaskCompleted = true;
+        CurrentAdaptationTask.AdaptationTaskCorrect = success;
+        SendAdaptationTaskData();
+
+    }
+
+    private void SendAdaptationTaskData()
+    {
+        CurrentAdaptationTask.AdaptationSupportMode = PathpointPIM.SupportMode.Trivia;
+        OnAdaptationEventChange?.Invoke(this, new EventArgs<AdaptationTaskArgs>(CurrentAdaptationTask));
     }
 
     // status: correct, incorrect, neutral (null)

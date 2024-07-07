@@ -12,8 +12,11 @@ public class WaySafetyInstruction : MonoBehaviour
     public bool EnableOverlayOptions { get; set; }
 
     private Pathpoint POI;
+    private bool isARCompassEnabled = false;
 
+    [Header("Events")]
     public UnityEvent OnTaskCompleted;
+    public event EventHandler<EventArgs<RouteWalkEventLog.NavInstructionType>> OnNavInstructionUsed;
 
     // Start is called before the first frame update
     void Start()
@@ -31,6 +34,7 @@ public class WaySafetyInstruction : MonoBehaviour
     public void LoadInstruction(Pathpoint pathtpoint)
     {
         POI = pathtpoint;
+        isARCompassEnabled = false;
         string name = pathtpoint.Description;
         string title = "Siehst du das";
 
@@ -51,6 +55,19 @@ public class WaySafetyInstruction : MonoBehaviour
         Card.InstructionIconPOI.RenderIcon(pathtpoint, null);
         Card.RenderInstruction();
 
+        OnNavInstructionUsed.Invoke(this, new EventArgs<RouteWalkEventLog.NavInstructionType>(RouteWalkEventLog.NavInstructionType.Picture));
+    }
+
+    public void RenderARModeBackgroundSupport()
+    {
+        isARCompassEnabled = true;
+
+        OnNavInstructionUsed.Invoke(this, new EventArgs<RouteWalkEventLog.NavInstructionType>(RouteWalkEventLog.NavInstructionType.Compass));
+    }
+
+    public bool IsARCompassEnabled()
+    {
+        return isARCompassEnabled;
     }
 
     public void ShowOverlayOptions(bool doShow)

@@ -3,6 +3,7 @@ using System.Linq;
 using SQLite4Unity3d;
 using static LocationUtils;
 using static Pathpoint;
+using static PathpointPIM;
 using static RouteWalkEventLog;
 
 /// <summary>
@@ -40,6 +41,8 @@ public abstract class RouteWalkEventLogBase
         Offtrack = 2,
         Stopped = 3,
         Paused = 4,
+        Sleep = 5,
+        Adaptation = 6
     }
 }
 
@@ -85,9 +88,22 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
     //           NavInstructionUsed
     //           DecisionExpected
 
+    // data for InstructionSleep
+    public bool? WasAwakenByUser { set; get; }
+
+
+    // data for Adaptation
+    public bool? AdaptationIntroShown { set; get; }
+    public bool? AdaptationTaskAccepted { set; get; }
+    public bool? AdaptationTaskCompleted { set; get; }
+    public bool? AdaptationTaskCorrect { set; get; }
+    public bool? AdaptationDowngradedByUser { set; get; }
+    public bool? AdaptationDowngradedBySystem { set; get; }
+
     // SQLit has problems handling nullable enums, so a workaround for this:    
     public string NavIssueString { set; get; }
     public string DecisionExpectedString { set; get; }
+    public string AdaptationSupportModeString { set; get; }
     public string NavInstructionUsedString { set; get; }
     public string RecoveryInstructionUsedString { set; get; }
 
@@ -112,6 +128,12 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
     {
         get => ConvertStringToNullableEnum<NavigationIssue>(NavIssueString);
         set => NavIssueString = ConvertNullableEnumToString(value);
+    }
+    [Ignore]
+    public SupportMode? AdaptationSupportMode
+    {
+        get => ConvertStringToNullableEnum<SupportMode>(AdaptationSupportModeString);
+        set => AdaptationSupportModeString = ConvertNullableEnumToString(value);
     }
     [Ignore]
     public List<NavInstructionType> NavInstructionUsed
@@ -182,6 +204,13 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
         EvenLogType = RouteWalkEventLogBase.RouteEvenLogType.Paused;
     }
 
+    public RouteWalkEventLog(InstructionSleepEvent sleepEvent)
+    {
+        populateEvent(sleepEvent);
+        WasAwakenByUser = sleepEvent.WasAwakenByUser;
+        EvenLogType = RouteWalkEventLogBase.RouteEvenLogType.Sleep;
+    }
+
     public RouteWalkEventLog(SegmentCompletedEvent walkEvent)
     {
         populateEvent(walkEvent);
@@ -193,6 +222,24 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
         SegExpectedPOIEndId = walkEvent.SegExpectedPOIEndId;
         SegReachedPOIEndId = walkEvent.SegReachedPOIEndId;
         DistanceCorrectlyWalked = walkEvent.DistanceCorrectlyWalked;
+    }
+
+    public RouteWalkEventLog(AdaptationEvent adaptationEvent)
+    {
+        populateEvent(adaptationEvent);
+        EvenLogType = RouteWalkEventLogBase.RouteEvenLogType.Adaptation;
+
+        AdaptationSupportMode = adaptationEvent.AdaptationSupportMode;
+        AdaptationIntroShown = adaptationEvent.AdaptationIntroShown;
+        AdaptationTaskAccepted = adaptationEvent.AdaptationTaskAccepted;
+        AdaptationTaskCompleted = adaptationEvent.AdaptationTaskCompleted;
+        AdaptationTaskCorrect = adaptationEvent.AdaptationTaskCorrect;
+        AdaptationDowngradedByUser = adaptationEvent.AdaptationDowngradedByUser;
+        AdaptationDowngradedBySystem = adaptationEvent.AdaptationDowngradedBySystem;
+
+        SegPOIStartId = adaptationEvent.SegPOIStartId;
+        SegExpectedPOIEndId = adaptationEvent.SegExpectedPOIEndId;
+        SegReachedPOIEndId = adaptationEvent.SegReachedPOIEndId;
     }
 
     public RouteWalkEventLog(IRouteWalkEventAPI eventAPI)
@@ -390,11 +437,32 @@ public class PausedEvent : RouteWalkEventLogBase
 }
 
 /// <summary>
+/// Represents an event when the instructions are turned off to manage user attention, extending <see cref="RouteWalkEventLogBase"/>.
+/// </summary>
+public class InstructionSleepEvent : RouteWalkEventLogBase
+{
+    
+    public bool WasAwakenByUser; // add to main 
+
+}
+
+/// <summary>
 /// Represents an event when the user paused the tracking, extending <see cref="RouteWalkEventLogBase"/>.
 /// </summary>
 public class AdaptationEvent : RouteWalkEventLogBase
 {
-    // No additional properties specific to stopped events
+    public SupportMode? AdaptationSupportMode { set; get; }
+    public bool? AdaptationIntroShown { set; get; }
+    public bool? AdaptationTaskAccepted { set; get; }
+    public bool? AdaptationTaskCompleted { set; get; }
+    public bool? AdaptationTaskCorrect { set; get; }
+    public bool? AdaptationDowngradedByUser { set; get; }
+    public bool? AdaptationDowngradedBySystem { set; get; }
+    //public Pathpoint.NavDirection? DecisionExpected { set; get; }
+
+    public int? SegPOIStartId { set; get; }
+    public int? SegExpectedPOIEndId { set; get; }
+    public int? SegReachedPOIEndId { set; get; }
 }
 
 /// <summary>
