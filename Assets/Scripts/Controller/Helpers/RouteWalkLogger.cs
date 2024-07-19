@@ -38,10 +38,20 @@ public class RouteWalkLogger : PersistentLazySingleton<RouteWalkLogger>
         else
         {
             TerminateOrContinueProcess();
-        }
-
-        
+        } 
     }
+
+    public void UploadPerformedRouteWalk(Route route, RouteWalk routeWalk)
+    {
+        CurrentRoute = route;
+        // Let's check the local route walks we have
+        CurrentRouteWalkList = new List<RouteWalk>();
+
+        Debug.Log($"UploadPerformedRouteWalk: We are uploading performed Routewalk");
+
+        UploadRouteWalk(routeWalk);
+    }
+
 
     private void UploadRouteWalk(RouteWalk routeWalk)
     {
@@ -454,6 +464,10 @@ public class WalkEventManager
 
             var e = new RouteWalkEventLog(CurrentOfftrackEvent);
             e.Id = GetLastRouteWalkEventLog();
+            if (RecoveryInstructionUsedList == null)
+            {
+                RecoveryInstructionUsedList = new List<RouteWalkEventLog.RecoveryInstructionType> { RouteWalkEventLog.RecoveryInstructionType.None };
+            }
             e.RecoveryInstructionUsed = RecoveryInstructionUsedList;
             e.InsertDirty();
 

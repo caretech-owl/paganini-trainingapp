@@ -45,11 +45,13 @@ public static class AppState
             Adaptive
         }
         // Temporal Configurations
-        public static DesignMode ActiveDesignMode = DesignMode.Baseline;
+        public static DesignMode ActiveDesignMode = DesignMode.Adaptive;
 
         public static int DecisionPointConfirmationDelay = 5;
         public static int SafetyPointConfirmationDelay = 3;
         public static int GotoConfirmationDelay = 3;
+
+        public static int GotoHideInstructionTutorialSegments = 2;
     }
     
 

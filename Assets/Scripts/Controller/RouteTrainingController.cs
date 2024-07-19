@@ -40,7 +40,8 @@ public class RouteTrainingController : MonoBehaviour
     public TrackingStatus GPSTrackingStatus;
 
     [Header("Configuration")]
-    public bool UploadRouteWalksEnabled;
+    public bool UploadChachedRouteWalksEnabled;
+    public bool UploadPerformedRouteWalkEnabled;
     public bool UseImprovedDesign;    
 
 
@@ -414,7 +415,7 @@ public class RouteTrainingController : MonoBehaviour
         SharedData.DownloadRouteDefinition();
 
         // We save any pending route walk
-        UploadLocalRouteWalk();
+        UploadCachedRouteWalk();
 
         // We initialite the clock
         clock = new RealtimeClock();
@@ -517,7 +518,8 @@ public class RouteTrainingController : MonoBehaviour
 
         // We put as first goal the second POI, as we are already in the first one (start POI)
         POIWatch.SetStartingPoint(1, POIWatcher.POIState.AtStart);
-        //AuralInstruction.PlayEffectLeavePOI();
+
+        AuralInstruction.CancelCurrentPlayback();
         LoadGoToInstruction();
 
     }
@@ -598,19 +600,13 @@ public class RouteTrainingController : MonoBehaviour
                     ShowMainPanel(StartPanel);
                     StartInstruction.EnableStartTraining();
                     AuralInstruction.PlayEffectEnterPOI();
+                    AuralInstruction.PlayStartArrived();
                     CurrentStatus = TrainingStatus.WAIT_CONFIRM;
                 }                
             }
             // else : what happens if we leave the starting point again?
         }
 
-        ////TODO: We should log the pause event
-        //if (CurrentStatus == TrainingStatus.PAUSED ||
-        //    CurrentStatus == TrainingStatus.CANCELED ||
-        //    CurrentStatus == TrainingStatus.ARRIVED)
-        //{
-        //    return;
-        //}
 
 
     }
@@ -779,6 +775,7 @@ public class RouteTrainingController : MonoBehaviour
         ShowInstructionPanel(OfftrackInstruction.gameObject);
         // off track audio instruction should have the reason
         AuralInstruction.PlayEffectOffTrack();
+        AuralInstruction.PlayEffectOffTrack();
         AuralInstruction.PlayOfftrackInstruction(issue);        
 
         OfftrackInstruction.LoadOfftrack(issue);        
@@ -809,19 +806,19 @@ public class RouteTrainingController : MonoBehaviour
 
     // additional utilities
 
-    private void SaveRouteWalk(RouteWalk.RouteWalkCompletion completion, bool upload)
+    private void SaveRouteWalk(RouteWalk.RouteWalkCompletion completion, bool upload )
     {
         if (!RouteTracking.RunSimulation || RouteTracking.SaveSimulatedWalk)
         {
             CurrentRouteWalk.WalkCompletion = completion;
             CurrentRouteWalk.EndDateTime = DateTime.Now;
             CurrentRouteWalk.InsertDirty();
-        }
 
-        if (upload)
-        {
-            // We save the local route walk data
-            UploadLocalRouteWalk();
+            if (upload)
+            {
+                // We save the local route walk data
+                UploadLocalRouteWalk();
+            }
         }
         
     }
@@ -839,10 +836,19 @@ public class RouteTrainingController : MonoBehaviour
 
     private void UploadLocalRouteWalk()
     {
-        if (UploadRouteWalksEnabled) {
+        if (UploadPerformedRouteWalkEnabled)
+        {
+            RouteWalkLog.UploadPerformedRouteWalk(SharedData.CurrentRoute, CurrentRouteWalk);
+        }
+
+    }
+
+    private void UploadCachedRouteWalk()
+    {
+        if (UploadChachedRouteWalksEnabled)
+        {
             RouteWalkLog.UploadRouteWalksForRoute(SharedData.CurrentRoute);
         }
-        
     }
 
     private int FindPathointIndexById(int pid)

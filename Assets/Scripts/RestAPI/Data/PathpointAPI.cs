@@ -45,6 +45,7 @@ public class PathpointAPIBase : BaseAPI
     public int? ppoint_cleaning_feedback { get; set; }
     
     public PathpointPIMAPI current_pim { get; set; }
+
 }
 
 [System.Serializable]

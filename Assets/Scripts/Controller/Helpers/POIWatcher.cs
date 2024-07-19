@@ -396,6 +396,7 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
 
         LocationCount++;
 
+        #region Check user location quality, and normalise it
         // Let's assess the quality of the incoming pathpoint
         (Pathpoint userLocation, double valAccuracy, double valSpeed) = locationQualityControl.ProcessLocation(pathpoint);
 
@@ -405,6 +406,9 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
             return null;
         }
 
+        #endregion
+
+        #region Initialise pathpointlog, and check walking
         // We initialise the pathpoint log, with the route segments (poi start, end)
         PathpointLog pathpointLog = new PathpointLog(userLocation);
         pathpointLog.Id = LocationCount;        
@@ -431,9 +435,13 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
         pathpointLog.IsWalking = isWalking;
         pathpointLog.WalkingPace = walkPace;
 
+        #endregion
+
+        #region User on a POI?
         // Let's calculate the distance to the Target POI
         var currentDistance = LocationUtils.HaversineDistance(userLocation, CurrentTargetPOI);
 
+        
         // Are we on the Target POI?
         if (routeValidation.IsPathpointOnTarget(userLocation, CurrentTargetPOI))
         {
@@ -522,6 +530,7 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
 
             }
         }
+        #endregion
 
         if (currentState == POIState.AtStart && SegmentStats == null)
         {
@@ -554,120 +563,130 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
 
         // We are not on a POI and we stopped. We do not check off-track then
         // Revisit this, to instead skip the off track and still do statistics
-        if (currentState != POIState.OnPOI && !isWalking && !justLeft)
-        {
-            return pathpointLog;
-        }
+        //if (currentState != POIState.OnPOI && !isWalking && !justLeft)
+        //{
+        //    return pathpointLog;
+        //}
 
-        // We check if the landmark has possibly been skipped
-        bool landarkSkipped = routeValidation.CheckLandmarkSkipped(currentDistance, CurrentPOIIndex);
 
-        // Compute whether the user is off-track
-        int? lastPOIIndex = justLeft ? CurrentPOIIndex : null;
-        int? lastPathpointIndex = null;
-        // we calculate the index of the current POI to compute type of navigation issue (decision mistake),
-        // but only with decision points (landmarks)
-        if (justLeft && CurrentTargetPOI.POIType == Pathpoint.POIsType.Landmark)
+        // We are not on a POI and we stopped. We do not check off-track then
+        // Revisit this, to instead skip the off track and still do statistics
+        if (currentState == POIState.OnPOI || isWalking || justLeft)
         {
-            lastPathpointIndex = routeValidation.GetPathpointIndexById(POIList[CurrentPOIIndex].Id);
-        }
-        //(bool offTrackDetected, LocationUtils.NavigationIssue issue) = routeValidation.IsUserOffTrack(userLocation,segmentInfo, lastPathpointIndex, currentState == POIState.OffTrack);
+            #region Off-track Checking
+            // We check if the landmark has possibly been skipped
+            bool landarkSkipped = routeValidation.CheckLandmarkSkipped(currentDistance, CurrentPOIIndex);
 
-        bool offTrackDetected;
-        LocationUtils.NavigationIssue issue = NavigationIssue.Deviation;
-        if (currentState == POIState.OffTrack)
-        {
-            offTrackDetected =  !routeValidation.IsUserOnTrack(userLocation, segmentInfo, (NavigationIssue)CurrentNavigationIssue);
-        }
-        else
-        {
-            (offTrackDetected, issue) = routeValidation.IsUserOffTrackNew(userLocation, segmentInfo, lastPathpointIndex, currentState == POIState.OffTrack);
-        }
+            // Compute whether the user is off-track
+            int? lastPOIIndex = justLeft ? CurrentPOIIndex : null;
+            int? lastPathpointIndex = null;
+            // we calculate the index of the current POI to compute type of navigation issue (decision mistake),
+            // but only with decision points (landmarks)
+            if (justLeft && CurrentTargetPOI.POIType == Pathpoint.POIsType.Landmark)
+            {
+                lastPathpointIndex = routeValidation.GetPathpointIndexById(POIList[CurrentPOIIndex].Id);
+            }
+            //(bool offTrackDetected, LocationUtils.NavigationIssue issue) = routeValidation.IsUserOffTrack(userLocation,segmentInfo, lastPathpointIndex, currentState == POIState.OffTrack);
+
+            bool offTrackDetected;
+            LocationUtils.NavigationIssue issue = NavigationIssue.Deviation;
+            if (currentState == POIState.OffTrack)
+            {
+                offTrackDetected =  !routeValidation.IsUserOnTrack(userLocation, segmentInfo, (NavigationIssue)CurrentNavigationIssue);
+            }
+            else
+            {
+                (offTrackDetected, issue) = routeValidation.IsUserOffTrackNew(userLocation, segmentInfo, lastPathpointIndex, currentState == POIState.OffTrack);
+            }
         
 
-        // Let's assess if there are any issues
-        if (currentState != POIState.OnPOI && currentState != POIState.Arrived)
-        {            
-            if (currentState != POIState.OffTrack && offTrackDetected)
-            {
-                // Did we make the incorrect decision leaving of a POI?
-                if (justLeft)
+            // Let's assess if there are any issues
+            if (currentState != POIState.OnPOI && currentState != POIState.Arrived)
+            {            
+                if (currentState != POIState.OffTrack && offTrackDetected)
+                {
+                    // Did we make the incorrect decision leaving of a POI?
+                    if (justLeft)
+                    {
+                        DecisionStats.DistanceFromPOI = currentDistance;
+                        DecisionStats.Point = userLocation;
+                        DecisionStats.OnTargetPOI = false;
+                        DecisionStats.IsCorrectDecision = false;
+                        DecisionStats.NavIssue = issue;
+
+                        OnDecisionEnd?.Invoke(this, DecisionStats);
+                    }
+
+                    // Here we will keep stats of the offtrack state, which will be send once we are back on track.
+                    OfftrackStats = new ValidationArgs();
+                    SetCurrentState(POIState.OffTrack);
+                    CurrentNavigationIssue = issue;
+                    var targetPOI = lastPOIIndex != null ? POIList[(int)lastPOIIndex] : null;
+                    OnOffTrack?.Invoke(this, new ValidationArgs(userLocation, segmentInfo, false, issue, targetPOI));                
+                }
+                // We left the POI and we are not off track
+                else if (justLeft && !offTrackDetected)
                 {
                     DecisionStats.DistanceFromPOI = currentDistance;
                     DecisionStats.Point = userLocation;
                     DecisionStats.OnTargetPOI = false;
-                    DecisionStats.IsCorrectDecision = false;
-                    DecisionStats.NavIssue = issue;
-
+                    DecisionStats.IsCorrectDecision = true;                
+                    DecisionStats.NavIssue = null; 
                     OnDecisionEnd?.Invoke(this, DecisionStats);
+
+                    OnLeftPOI?.Invoke(this, new POIArgs(userLocation, currentDistance));
                 }
+                // We are on track again
+                else if (currentState != POIState.OnTrack && !offTrackDetected)
+                {
+                    // We correct the current POI based on the closes upcoming one
+                    // since we might have skipped one, or gone around a POI
+                    if (currentState == POIState.OffTrack)
+                    {
+                        var closestPOI = routeValidation.IdentifyClosestUpcomingPOI(userLocation, 2);
+                        CurrentPOIIndex = GetPathpointIndexById(closestPOI.Id);
+                        CurrentTargetPOI = POIList[CurrentPOIIndex];
 
-                // Here we will keep stats of the offtrack state, which will be send once we are back on track.
-                OfftrackStats = new ValidationArgs();
-                SetCurrentState(POIState.OffTrack);
-                CurrentNavigationIssue = issue;
-                var targetPOI = lastPOIIndex != null ? POIList[(int)lastPOIIndex] : null;
-                OnOffTrack?.Invoke(this, new ValidationArgs(userLocation, segmentInfo, false, issue, targetPOI));                
-            }
-            // We left the POI and we are not off track
-            else if (justLeft && !offTrackDetected)
-            {
-                DecisionStats.DistanceFromPOI = currentDistance;
-                DecisionStats.Point = userLocation;
-                DecisionStats.OnTargetPOI = false;
-                DecisionStats.IsCorrectDecision = true;                
-                DecisionStats.NavIssue = null; 
-                OnDecisionEnd?.Invoke(this, DecisionStats);
 
-                OnLeftPOI?.Invoke(this, new POIArgs(userLocation, currentDistance));
-            }
-            // We are on track again
-            else if (currentState != POIState.OnTrack && !offTrackDetected)
-            {
-                // We correct the current POI based on the closes upcoming one
-                // since we might have skipped one, or gone around a POI
-                if (currentState == POIState.OffTrack)
+                        // we send the offtrack stats                
+                        var args = new ValidationArgs(userLocation, segmentInfo, true);
+                        args.DistanceWalked = OfftrackStats.DistanceWalked;
+                        args.WalkingSteps = OfftrackStats.WalkingSteps;
+                        args.WalkingPace = OfftrackStats.WalkingPace;
+                        args.MaxDistanceFromTrack = OfftrackStats.MaxDistanceFromTrack;
+
+                        OnOffTrackEnd?.Invoke(this, args);
+                    }                
+
+                    // we are on track
+                    SetCurrentState(POIState.OnTrack);
+                    OnAlongTrack?.Invoke(this, new ValidationArgs(userLocation, segmentInfo, true));
+                }
+                //else if (currentState == POIState.OnTrack &&
+                //    !offTrackDetected && landarkSkipped)
+                //{
+                else if (currentState == POIState.OnTrack && previousState != POIState.AtStart &&
+                    !offTrackDetected && landarkSkipped)
                 {
                     var closestPOI = routeValidation.IdentifyClosestUpcomingPOI(userLocation, 2);
-                    CurrentPOIIndex = GetPathpointIndexById(closestPOI.Id);
-                    CurrentTargetPOI = POIList[CurrentPOIIndex];
+                    // TODO: Check closest segment index. This is more robust than purely POI
+                    //        Think of a zig zag thing.
 
+                    if (closestPOI.Id != CurrentTargetPOI.Id)
+                    {
+                        CurrentPOIIndex = GetPathpointIndexById(closestPOI.Id);
+                        CurrentTargetPOI = POIList[CurrentPOIIndex];
 
-                    // we send the offtrack stats                
-                    var args = new ValidationArgs(userLocation, segmentInfo, true);
-                    args.DistanceWalked = OfftrackStats.DistanceWalked;
-                    args.WalkingSteps = OfftrackStats.WalkingSteps;
-                    args.WalkingPace = OfftrackStats.WalkingPace;
-                    args.MaxDistanceFromTrack = OfftrackStats.MaxDistanceFromTrack;
-
-                    OnOffTrackEnd?.Invoke(this, args);
-                }                
-
-                // we are on track
-                SetCurrentState(POIState.OnTrack);
-                OnAlongTrack?.Invoke(this, new ValidationArgs(userLocation, segmentInfo, true));
-            }
-            //else if (currentState == POIState.OnTrack &&
-            //    !offTrackDetected && landarkSkipped)
-            //{
-            else if (currentState == POIState.OnTrack && previousState != POIState.AtStart &&
-                !offTrackDetected && landarkSkipped)
-            {
-                var closestPOI = routeValidation.IdentifyClosestUpcomingPOI(userLocation, 2);
-                // TODO: Check closest segment index. This is more robust than purely POI
-                //        Think of a zig zag thing.
-
-                if (closestPOI.Id != CurrentTargetPOI.Id)
-                {
-                    CurrentPOIIndex = GetPathpointIndexById(closestPOI.Id);
-                    CurrentTargetPOI = POIList[CurrentPOIIndex];
-
-                    Debug.Log($"ARE WE Skipping POI? CurrentPOIIndex: {CurrentPOIIndex}");
-                }
+                        Debug.Log($"ARE WE Skipping POI? CurrentPOIIndex: {CurrentPOIIndex}");
+                    }
                 
+                }
             }
+
+            #endregion            
         }
 
+        #region Compute statistics
         // We keep some statistics
         if (currentState == POIState.OffTrack)
         {
@@ -710,12 +729,10 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
             }
         }
 
+        #endregion
 
         // Let's inform that there is a new valid user location (curated)
         OnUserLocationChanged?.Invoke(this, new LocationChangedArgs(userLocation, segmentInfo, SegmentStats, isWalking, walkPace));
-
-        //Debug.Log("Pathpoint Log: " + pathpointLog.ToString());
-
 
         return pathpointLog;
     }

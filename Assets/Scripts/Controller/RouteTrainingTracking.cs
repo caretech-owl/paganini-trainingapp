@@ -22,6 +22,7 @@ public class RouteTrainingTracking : MonoBehaviour
     [Header(@"Simulation Options")]
     public bool RunSimulation = false;
     public bool SaveSimulatedWalk = false;
+    public bool SimulatedWalkWithCurrentTimestamps = false;
     [SerializeField] private int WalkSimulationId = -8;
     [SerializeField] private int SimulationUpdateInterval = 3; // Update interval in seconds
 
@@ -108,7 +109,11 @@ public class RouteTrainingTracking : MonoBehaviour
                 Accuracy = wl.Accuracy,
                 Altitude = wl.Altitude
             };
-            
+
+            if (SimulatedWalkWithCurrentTimestamps)
+            {
+                pathpoint.Timestamp = DateUtils.UTCMilliseconds();
+            }
 
             if (!PauseSimulation)
             {
