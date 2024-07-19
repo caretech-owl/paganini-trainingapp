@@ -9,7 +9,8 @@ public class WayGoToInstruction : MonoBehaviour
     public PhotoSlideShow SlideShow;
     public InstructionCard Card;
     public InstructionCard ChallengeCard;
-    public GameObject HideSupportPanel;    
+    public GameObject HideSupportPanel;
+    public AudioInstruction AuralInstruction;
 
     private Pathpoint POI;
 
@@ -21,6 +22,14 @@ public class WayGoToInstruction : MonoBehaviour
     public bool EnableHideSupport { get; set; }
 
     private bool cancelHideSupport { get; set; }
+    private bool _wasHideSupportPlayedInSegment; // was it play in the current segemnt
+    private int _totHideSupportPlayedSegments; // how many segments this was played in
+
+    private void Awake()
+    {
+        _wasHideSupportPlayedInSegment = false;
+        _totHideSupportPlayedSegments = 0;
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -38,6 +47,7 @@ public class WayGoToInstruction : MonoBehaviour
     public void LoadInstruction(Way way, Pathpoint pathtpoint)
     {
         POI = pathtpoint;
+        _wasHideSupportPlayedInSegment = false;
 
         SlideShow.LoadSlideShow(pathtpoint.Photos);
 
@@ -83,6 +93,8 @@ public class WayGoToInstruction : MonoBehaviour
     // User awaken the instructions that are hidden
     public void SnoozeHideInstruction()
     {
+        AuralInstruction.PlayPayAttention();
+
         HideSupportPanel.SetActive(false);
         OnInstructionHideChange.Invoke(this, new EventArgs<(bool IsHidden, bool WasAwakenByUser)>((IsHidden: false, WasAwakenByUser: true)));
 
@@ -130,7 +142,19 @@ public class WayGoToInstruction : MonoBehaviour
 
         // We are informing that the instruction is now sleeping
         if (!cancelHideSupport)
-        {
+        {            
+            bool playTutorial = false;
+            if (!_wasHideSupportPlayedInSegment &&
+                _totHideSupportPlayedSegments < AppState.Training.GotoHideInstructionTutorialSegments)
+            {
+                playTutorial = true;                
+            }
+            AuralInstruction.CancelCurrentPlayback();
+            AuralInstruction.PlayPayAttentionStart(playTutorial);
+
+            _totHideSupportPlayedSegments += !_wasHideSupportPlayedInSegment ? 1 : 0;
+            _wasHideSupportPlayedInSegment = true;
+
             OnInstructionHideChange.Invoke(this, new EventArgs<(bool IsHidden, bool WasAwakenByUser)>((IsHidden: true, WasAwakenByUser: false)));
         }
         

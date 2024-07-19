@@ -89,6 +89,7 @@ public class AudioInstruction : MonoBehaviour
             PlaySound(directionType.ToString());
         }        
     }
+    
 
     public void PlayNavInstructionCorrect()
     {
@@ -180,6 +181,11 @@ public class AudioInstruction : MonoBehaviour
         PlaySound("Start");
     }
 
+    public void PlayStartArrived()
+    {
+        PlaySound("Start-Correct");
+    }
+
     public void PlayArrivedInstruction(Pathpoint point)
     {
         PlaySound("Arrived");
@@ -213,6 +219,19 @@ public class AudioInstruction : MonoBehaviour
     public void PlayCompassGPSIssues()
     {
         PlaySound("Compass-GPSIssue");
+    }
+
+    public void PlayPayAttentionStart(bool verbose)
+    {
+        if (verbose)
+        {
+            PlaySound("Attention_Start-Long");
+        }
+        else
+        {
+            PlaySound("Attention_Start-Short");
+        }
+        
     }
 
     public void PlayPayAttention()
