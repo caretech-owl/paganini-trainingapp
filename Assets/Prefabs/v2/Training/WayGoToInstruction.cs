@@ -93,6 +93,7 @@ public class WayGoToInstruction : MonoBehaviour
     // User awaken the instructions that are hidden
     public void SnoozeHideInstruction()
     {
+        AuralInstruction.CancelCurrentPlayback();
         AuralInstruction.PlayPayAttention();
 
         HideSupportPanel.SetActive(false);

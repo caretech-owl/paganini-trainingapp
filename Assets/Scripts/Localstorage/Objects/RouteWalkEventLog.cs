@@ -274,9 +274,10 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
         SegExpectedPOIEndId = eventAPI.revent_seg_end_expected_ppoint_id;
         SegReachedPOIEndId = eventAPI.revent_seg_end_actual_ppoint_id;
         DistanceCorrectlyWalked = eventAPI.revent_seg_distance_walked_correctly;
-        
-        
+
+
         WasAwakenByUser = eventAPI.revent_was_awaken_byuser;
+        AdaptationSupportModeString = eventAPI.revent_adapt_support_mode;
         AdaptationIntroShown = eventAPI.revent_adapt_intro_shown;
         AdaptationTaskAccepted = eventAPI.revent_adapt_task_accepted;
         AdaptationTaskCompleted = eventAPI.revent_adapt_task_completed;
@@ -313,12 +314,14 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
         eventAPI.revent_seg_distance_walked_correctly = DistanceCorrectlyWalked;
 
         eventAPI.revent_was_awaken_byuser = WasAwakenByUser;
+        eventAPI.revent_adapt_support_mode = AdaptationSupportMode != null ? ((int)AdaptationSupportMode).ToString() : null;
         eventAPI.revent_adapt_intro_shown = AdaptationIntroShown;
         eventAPI.revent_adapt_task_accepted = AdaptationTaskAccepted;
         eventAPI.revent_adapt_task_completed = AdaptationTaskCompleted;
         eventAPI.revent_adapt_task_correct = AdaptationTaskCorrect;
         eventAPI.revent_adapt_downgraded_byuser = AdaptationDowngradedByUser;
         eventAPI.revent_adapt_downgraded_bysystem = AdaptationDowngradedBySystem;
+
 
         return eventAPI;
     }

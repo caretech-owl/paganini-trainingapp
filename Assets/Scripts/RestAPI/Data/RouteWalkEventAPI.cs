@@ -12,7 +12,7 @@ public interface IRouteWalkEventAPI
     string revent_end_time { get; set; }
     bool? revent_was_interrupted { get; set; }
     int? target_ppoint_id { get; set; }
-    double revent_duration { get; set; }       
+    double revent_duration { get; set; }
     double? revent_distance_walked { get; set; }
     double? revent_walking_pace { get; set; }
     double? revent_max_offtrack_distance { get; set; }
@@ -23,6 +23,7 @@ public interface IRouteWalkEventAPI
     string revent_recovery_used { get; set; }
 
     bool? revent_was_awaken_byuser { set; get; }
+    string revent_adapt_support_mode { get; set; }
     bool? revent_adapt_intro_shown { set; get; }
     bool? revent_adapt_task_accepted { set; get; }
     bool? revent_adapt_task_completed { set; get; }
@@ -60,6 +61,7 @@ public class RouteWalkEventBase : BaseAPI
     public double? revent_seg_distance_walked_correctly { get; set; }
 
     public bool? revent_was_awaken_byuser { set; get; }
+    public string revent_adapt_support_mode { get; set; }
     public bool? revent_adapt_intro_shown { set; get; }
     public bool? revent_adapt_task_accepted { set; get; }
     public bool? revent_adapt_task_completed { set; get; }
