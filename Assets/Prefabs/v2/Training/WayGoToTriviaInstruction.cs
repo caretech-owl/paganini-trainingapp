@@ -59,6 +59,7 @@ public class WayGoToTriviaInstruction : MonoBehaviour
     {
         CurrentAdaptationTask = new();
         CurrentAdaptationTask.IsTaskStart = true;
+        CurrentAdaptationTask.IsAtPOIMode = false;
 
         // init view
         ShowTask(false);        
@@ -68,7 +69,7 @@ public class WayGoToTriviaInstruction : MonoBehaviour
             AuralInstruction.PlayTriviaGoToIntro();
             LoadTask(way, okPathtpoint, wrongPathpoint);
 
-            CurrentAdaptationTask.AdaptationIntroShown = true;
+            CurrentAdaptationTask.AdaptationIntroShown = true;            
         }
         else
         {

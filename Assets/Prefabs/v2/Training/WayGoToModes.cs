@@ -79,10 +79,8 @@ public class WayGoToModes : MonoBehaviour
 
     }
 
-
-    public void LoadInstructionConfirmation()
+    public void LoadInstructionConfirmation(bool backgroundMode = false)
     {
-
         // This can happen if the user did not complete the trivia task in time
         // before reaching the destination
         var wasTriviaTooLate = TriviaMode.gameObject.activeSelf && !TriviaMode.IsTaskDone();
@@ -113,9 +111,44 @@ public class WayGoToModes : MonoBehaviour
         }
     }
 
+    // Silent way of confirming that the user arrived, and closing the segment
+    public void InformSegmentCompletedSilently()
+    {
+        // This can happen if the user did not complete the trivia task in time
+        // before reaching the destination
+        var wasTriviaTooLate = TriviaMode.gameObject.activeSelf && !TriviaMode.IsTaskDone();
+
+        // if we did not finish the trivia, then we provide a feedback to the user
+        // Time is out, we already arrived. Next time.
+        if (wasTriviaTooLate)
+        {
+            TriviaMode.InformTaskNotDone();
+        }
+
+        if (CurrentMode == SupportMode.Challenge)
+        {
+            ChallengeMode.InformTaskSuccessful();
+        }
+    }
+
+
     public void CancelHideSupport()
     {
         NormalMode.CancelHideSupport();
+    }
+
+    public void CancelIfChalengeNotAccepted()
+    {
+        if (CurrentMode == SupportMode.Challenge)
+        {
+            bool accepted = ChallengeMode.InformIfTaskNotAccepted();
+
+            if (!accepted) {
+                CurrentMode = SupportMode.Instruction;
+                RememberDowngradedMode(CurrentPOI, SupportMode.Instruction);
+            }
+        }
+        
     }
 
     private void HandleBackOnTrackSupport(SupportMode? supportMode)
@@ -198,7 +231,7 @@ public class WayGoToModes : MonoBehaviour
             // if muted, we downgrade the atPOIMode as well
             if (mode.AtPOIMode == SupportMode.Mute)
             {
-                mode.AtPOIMode = SupportMode.Challenge;
+                mode.AtPOIMode = SupportMode.Instruction;
             }            
         }
 
@@ -248,7 +281,8 @@ public class WayGoToModes : MonoBehaviour
         }
         else
         {
-            LoadUpcomingNotMutedPOI();
+            ChallengeMode.LoadInstruction(pathpoint, skipIntro : true);
+            LoadUpcomingNotMutedPOI();            
         }
                 
     }

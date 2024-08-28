@@ -22,7 +22,7 @@ EditorBuildSettings:
     guid: 7246c601b7fb943b897287c7bc28eb04
   - enabled: 1
     path: Assets/Scenes/UserSettings.unity
-    guid: 1eaeb5f23d9d746019572516c0d1e236
+    guid: edd7061ca9a1b444781240ae734bb327
   - enabled: 1
     path: Assets/Scenes/RouteTraining.unity
     guid: 631fc2d882788440685cffe34beb224e
@@ -34,5 +34,11 @@ EditorBuildSettings:
       type: 2}
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 94009097ddd01a74cb199a2bee03b1c0,
       type: 2}
+    UnityEditor.XR.ARKit.ARKitSettings: {fileID: 11400000, guid: 4329254b73159462bbe8a8116f7e22ff,
+      type: 2}
+    com.unity.xr.magicleap.magic_leap_settings: {fileID: 11400000, guid: 27b930e3cbdc14134a141359522bf60c,
+      type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 95df8a23d8b0bc74d822457ff5d97cc1,
+      type: 2}
+    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 8540b4c82eede4192b885790972ae27a,
       type: 2}

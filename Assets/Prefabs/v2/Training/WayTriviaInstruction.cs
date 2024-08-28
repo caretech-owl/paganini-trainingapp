@@ -4,9 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using UnityEngine.XR.ARSubsystems;
 using static DirectionIcon;
-using static PaganiniRestAPI;
 
 public class WayTriviaInstruction : MonoBehaviour
 {
@@ -57,6 +55,7 @@ public class WayTriviaInstruction : MonoBehaviour
     {
         CurrentAdaptationTask = new();
         CurrentAdaptationTask.IsTaskStart = true;
+        CurrentAdaptationTask.IsAtPOIMode = true;
 
         // init view
         ShowTask(false);
@@ -67,6 +66,7 @@ public class WayTriviaInstruction : MonoBehaviour
             LoadTask(way, pathtpoint);
 
             CurrentAdaptationTask.AdaptationIntroShown = true;
+            SendAdaptationTaskData();
         }
         else
         {

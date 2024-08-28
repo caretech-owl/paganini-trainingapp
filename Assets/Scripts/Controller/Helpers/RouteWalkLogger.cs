@@ -249,6 +249,8 @@ public class WalkEventManager
     private PausedEvent CurrentPauseEvent;
     private InstructionSleepEvent CurrentInstructionSleepEvent;
     private AdaptationEvent CurrentAdaptationEvent;
+    private AdaptationEvent BackgroundAdaptationEventSeg;
+    private AdaptationEvent BackgroundAdaptationEventPOI;
 
     private List<RouteWalkEventLog.RecoveryInstructionType> RecoveryInstructionUsedList;
     private List<RouteWalkEventLog.NavInstructionType> NavInstructionUsedList;
@@ -290,28 +292,60 @@ public class WalkEventManager
 
     public void AddUIEvent_OfftrackShown()
     {
-        if (CurrentAdaptationEvent != null)
+        //if (CurrentAdaptationEvent != null)
+        //{
+        //    // We close the Adaptation event, which interrupts the user 
+        //    PopulateEndEventBase(CurrentAdaptationEvent);
+
+        //    CurrentAdaptationEvent.AdaptationTaskCompleted = false;
+        //    //CurrentAdaptationEvent.AdaptationDowngradedBySystem = true;
+        //    //CurrentAdaptationEvent.AdaptationDowngradedByUser = false;
+
+        //    if (CurrentAdaptationEvent.AdaptationSupportMode != SupportMode.Trivia)
+        //    {
+        //        CurrentAdaptationEvent.AdaptationTaskCorrect = false;
+        //    }
+
+        //    var e = new RouteWalkEventLog(CurrentAdaptationEvent);
+        //    e.Id = GetLastRouteWalkEventLog();
+        //    e.InsertDirty();
+
+        //    LogEventEnd("CurrentAdaptationEvent", CurrentAdaptationEvent);
+
+        //    // we free the event
+        //    CurrentAdaptationEvent = null;
+        //}
+
+        ConcludeAdaptationAsFailed(CurrentAdaptationEvent);
+        ConcludeAdaptationAsFailed(BackgroundAdaptationEventSeg);
+        ConcludeAdaptationAsFailed(BackgroundAdaptationEventPOI);
+
+        CurrentAdaptationEvent = null;
+        BackgroundAdaptationEventSeg = null;
+        BackgroundAdaptationEventPOI = null;
+    }
+
+    private void ConcludeAdaptationAsFailed(AdaptationEvent adaptationEvent)
+    {
+        if (adaptationEvent != null)
         {
             // We close the Adaptation event, which interrupts the user 
-            PopulateEndEventBase(CurrentAdaptationEvent);
+            PopulateEndEventBase(adaptationEvent);
 
-            CurrentAdaptationEvent.AdaptationTaskCompleted = false;
+            adaptationEvent.AdaptationTaskCompleted = false;
             //CurrentAdaptationEvent.AdaptationDowngradedBySystem = true;
             //CurrentAdaptationEvent.AdaptationDowngradedByUser = false;
 
-            if (CurrentAdaptationEvent.AdaptationSupportMode != SupportMode.Trivia)
+            if (adaptationEvent.AdaptationSupportMode != SupportMode.Trivia)
             {
-                CurrentAdaptationEvent.AdaptationTaskCorrect = false;
+                adaptationEvent.AdaptationTaskCorrect = false;
             }
 
-            var e = new RouteWalkEventLog(CurrentAdaptationEvent);
+            var e = new RouteWalkEventLog(adaptationEvent);
             e.Id = GetLastRouteWalkEventLog();
             e.InsertDirty();
 
-            LogEventEnd("CurrentAdaptationEvent", CurrentAdaptationEvent);
-
-            // we free the event
-            CurrentAdaptationEvent = null;
+            LogEventEnd("CurrentAdaptationEvent", adaptationEvent);
         }
     }
 
@@ -564,58 +598,140 @@ public class WalkEventManager
         }
     }
 
+    //public void ProcessAdaptationTaskStatusChange(AdaptationTaskArgs args)
+    //{
+    //    if (DisableLogging) return;
+
+    //    if (CurrentAdaptationEvent == null && args.IsTaskStart)
+    //    {
+    //        CurrentAdaptationEvent = new AdaptationEvent();
+    //        PopulateStartEventBase(CurrentAdaptationEvent, args.TargetPOI);
+    //        CurrentAdaptationEvent.SegPOIStartId = args.SegPOIStartId;
+    //        CurrentAdaptationEvent.SegExpectedPOIEndId = args.SegExpectedPOIEndId;
+
+    //        CurrentAdaptationEvent.AdaptationSupportMode = args.AdaptationSupportMode;
+    //        CurrentAdaptationEvent.AdaptationIntroShown = args.AdaptationIntroShown;
+    //        CurrentAdaptationEvent.AdaptationTaskAccepted = args.AdaptationTaskAccepted;
+
+    //        LogEventStart("CurrentSegmentEvent", CurrentAdaptationEvent);
+
+    //    }
+    //    // there is an update
+    //    else if (CurrentAdaptationEvent != null && args.IsTaskStart)
+    //    {
+    //        CurrentAdaptationEvent.AdaptationSupportMode = args.AdaptationSupportMode;
+    //        CurrentAdaptationEvent.AdaptationIntroShown = args.AdaptationIntroShown;
+    //        CurrentAdaptationEvent.AdaptationTaskAccepted = args.AdaptationTaskAccepted;
+
+    //        LogEventStart("CurrentSegmentEvent - Update", CurrentAdaptationEvent);
+    //    }
+
+    //    // We left the POI and made a decision
+    //    else if (CurrentAdaptationEvent != null && !args.IsTaskStart)
+    //    {
+    //        PopulateEndEventBase(CurrentAdaptationEvent);
+    //        CurrentAdaptationEvent.SegReachedPOIEndId = args.SegReachedPOIEndId;
+    //        CurrentAdaptationEvent.AdaptationTaskCompleted = args.AdaptationTaskCompleted;
+    //        CurrentAdaptationEvent.AdaptationTaskCorrect = args.AdaptationTaskCorrect;
+    //        CurrentAdaptationEvent.AdaptationDowngradedByUser = args.AdaptationDowngradedByUser;
+    //        CurrentAdaptationEvent.AdaptationDowngradedBySystem = args.AdaptationDowngradedBySystem;
+
+    //        var e = new RouteWalkEventLog(CurrentAdaptationEvent);
+    //        e.Id = GetLastRouteWalkEventLog();
+    //        e.InsertDirty();
+
+    //        LogEventEnd("CurrentAdaptationEvent", CurrentAdaptationEvent);
+
+    //        // we free the event
+    //        CurrentAdaptationEvent = null;
+    //    }
+    //    else
+    //    {
+    //        // Debug.Log("CurrentSegmentEvent: We need to handle better this case:" + args);
+    //    }
+    //}
+
     public void ProcessAdaptationTaskStatusChange(AdaptationTaskArgs args)
     {
         if (DisableLogging) return;
 
-        if (CurrentAdaptationEvent == null && args.IsTaskStart)
+        CurrentAdaptationEvent = ProcessAdaptationTaskStatusChange(args, CurrentAdaptationEvent);
+    }
+
+    public void ProcessAdaptationTaskBackground(AdaptationTaskArgs args, bool isPOI, bool forceLogReset = false)
+    {
+        if (DisableLogging) return;
+
+        if (isPOI)
         {
-            CurrentAdaptationEvent = new AdaptationEvent();
-            PopulateStartEventBase(CurrentAdaptationEvent, args.TargetPOI);
-            CurrentAdaptationEvent.SegPOIStartId = args.SegPOIStartId;
-            CurrentAdaptationEvent.SegExpectedPOIEndId = args.SegExpectedPOIEndId;
+            BackgroundAdaptationEventPOI = forceLogReset ? null : BackgroundAdaptationEventPOI;
+            BackgroundAdaptationEventPOI = ProcessAdaptationTaskStatusChange(args, BackgroundAdaptationEventPOI);
+        }
+        else
+        {
+            BackgroundAdaptationEventSeg = forceLogReset ? null : BackgroundAdaptationEventSeg;
+            BackgroundAdaptationEventSeg = ProcessAdaptationTaskStatusChange(args, BackgroundAdaptationEventSeg);
+        }
+        
+    }
 
-            CurrentAdaptationEvent.AdaptationSupportMode = args.AdaptationSupportMode;
-            CurrentAdaptationEvent.AdaptationIntroShown = args.AdaptationIntroShown;
-            CurrentAdaptationEvent.AdaptationTaskAccepted = args.AdaptationTaskAccepted;
 
-            LogEventStart("CurrentSegmentEvent", CurrentAdaptationEvent);
+    public AdaptationEvent ProcessAdaptationTaskStatusChange(AdaptationTaskArgs args, AdaptationEvent adaptationEvent)
+    {        
+
+        if (adaptationEvent == null && args.IsTaskStart)
+        {
+            adaptationEvent = new AdaptationEvent();
+            PopulateStartEventBase(adaptationEvent, args.TargetPOI);
+            adaptationEvent.SegPOIStartId = args.SegPOIStartId;
+            adaptationEvent.SegExpectedPOIEndId = args.SegExpectedPOIEndId;
+
+            adaptationEvent.AdaptationSupportMode = args.AdaptationSupportMode;
+            adaptationEvent.AdaptationIntroShown = args.AdaptationIntroShown;
+            adaptationEvent.AdaptationTaskAccepted = args.AdaptationTaskAccepted;
+
+            adaptationEvent.AdaptationPIMId = args.AdaptationPIMId;
+
+            LogEventStart("CurrentSegmentEvent", adaptationEvent);
 
         }
         // there is an update
-        else if (CurrentAdaptationEvent != null && args.IsTaskStart)
+        else if (adaptationEvent != null && args.IsTaskStart)
         {
-            CurrentAdaptationEvent.AdaptationSupportMode = args.AdaptationSupportMode;
-            CurrentAdaptationEvent.AdaptationIntroShown = args.AdaptationIntroShown;
-            CurrentAdaptationEvent.AdaptationTaskAccepted = args.AdaptationTaskAccepted;
+            adaptationEvent.AdaptationSupportMode = args.AdaptationSupportMode;
+            adaptationEvent.AdaptationIntroShown = args.AdaptationIntroShown;
+            adaptationEvent.AdaptationTaskAccepted = args.AdaptationTaskAccepted;
 
-            LogEventStart("CurrentSegmentEvent - Update", CurrentAdaptationEvent);
+            LogEventStart("CurrentSegmentEvent - Update", adaptationEvent);
         }
 
         // We left the POI and made a decision
-        else if (CurrentAdaptationEvent != null && !args.IsTaskStart)
+        else if (adaptationEvent != null && !args.IsTaskStart)
         {
-            PopulateEndEventBase(CurrentAdaptationEvent);
-            CurrentAdaptationEvent.SegReachedPOIEndId = args.SegReachedPOIEndId;
-            CurrentAdaptationEvent.AdaptationTaskCompleted = args.AdaptationTaskCompleted;
-            CurrentAdaptationEvent.AdaptationTaskCorrect = args.AdaptationTaskCorrect;
-            CurrentAdaptationEvent.AdaptationDowngradedByUser = args.AdaptationDowngradedByUser;
-            CurrentAdaptationEvent.AdaptationDowngradedBySystem = args.AdaptationDowngradedBySystem;
+            PopulateEndEventBase(adaptationEvent);
+            adaptationEvent.SegReachedPOIEndId = args.SegReachedPOIEndId;
+            adaptationEvent.AdaptationTaskCompleted = args.AdaptationTaskCompleted;
+            adaptationEvent.AdaptationTaskCorrect = args.AdaptationTaskCorrect;
+            adaptationEvent.AdaptationDowngradedByUser = args.AdaptationDowngradedByUser;
+            adaptationEvent.AdaptationDowngradedBySystem = args.AdaptationDowngradedBySystem;
 
-            var e = new RouteWalkEventLog(CurrentAdaptationEvent);
+            var e = new RouteWalkEventLog(adaptationEvent);
             e.Id = GetLastRouteWalkEventLog();
             e.InsertDirty();
 
-            LogEventEnd("CurrentAdaptationEvent", CurrentAdaptationEvent);
+            LogEventEnd("CurrentAdaptationEvent", adaptationEvent);
 
             // we free the event
-            CurrentAdaptationEvent = null;
+            return null;
         }
         else
         {
             // Debug.Log("CurrentSegmentEvent: We need to handle better this case:" + args);
         }
+
+        return adaptationEvent;
     }
+
 
     public void InterruptSegmentComplete(SegmentCompletedArgs args)
     {

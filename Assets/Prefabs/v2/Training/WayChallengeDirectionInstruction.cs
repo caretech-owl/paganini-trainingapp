@@ -4,9 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using UnityEngine.XR.ARSubsystems;
 using static DirectionIcon;
-using static PaganiniRestAPI;
 
 public class WayChallengeDirectionInstruction : MonoBehaviour
 {
@@ -43,7 +41,7 @@ public class WayChallengeDirectionInstruction : MonoBehaviour
     {
         CurrentAdaptationTask = new();
         CurrentAdaptationTask.IsTaskStart = true;
-        
+        CurrentAdaptationTask.IsAtPOIMode = true;
 
         if (pathtpoint.CurrentInstructionMode.IsAtPOINewToUser && !skipIntro)
         {

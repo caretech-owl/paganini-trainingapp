@@ -99,6 +99,7 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
     public bool? AdaptationTaskCorrect { set; get; }
     public bool? AdaptationDowngradedByUser { set; get; }
     public bool? AdaptationDowngradedBySystem { set; get; }
+    public int? AdaptationPIMId { set; get; }
 
     // SQLit has problems handling nullable enums, so a workaround for this:    
     public string NavIssueString { set; get; }
@@ -237,6 +238,7 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
         AdaptationTaskCorrect = adaptationEvent.AdaptationTaskCorrect;
         AdaptationDowngradedByUser = adaptationEvent.AdaptationDowngradedByUser;
         AdaptationDowngradedBySystem = adaptationEvent.AdaptationDowngradedBySystem;
+        AdaptationPIMId = adaptationEvent.AdaptationPIMId;
 
         SegPOIStartId = adaptationEvent.SegPOIStartId;
         SegExpectedPOIEndId = adaptationEvent.SegExpectedPOIEndId;
@@ -321,6 +323,7 @@ public class RouteWalkEventLog : BaseModel<RouteWalkEventLog>
         eventAPI.revent_adapt_task_correct = AdaptationTaskCorrect;
         eventAPI.revent_adapt_downgraded_byuser = AdaptationDowngradedByUser;
         eventAPI.revent_adapt_downgraded_bysystem = AdaptationDowngradedBySystem;
+        eventAPI.revent_adapt_pim_id = AdaptationPIMId;
 
 
         return eventAPI;
@@ -479,7 +482,7 @@ public class AdaptationEvent : RouteWalkEventLogBase
     public bool? AdaptationTaskCorrect { set; get; }
     public bool? AdaptationDowngradedByUser { set; get; }
     public bool? AdaptationDowngradedBySystem { set; get; }
-    //public Pathpoint.NavDirection? DecisionExpected { set; get; }
+    public int? AdaptationPIMId { set; get; }
 
     public int? SegPOIStartId { set; get; }
     public int? SegExpectedPOIEndId { set; get; }

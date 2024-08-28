@@ -232,21 +232,90 @@ public class RouteTrainingController : MonoBehaviour
     private void POIWatch_OnDecisionEnd(object sender, DecisionArgs e)
     {
         WalkEventHandler.ProcessDecisionStatusChange(e);
+
+        // Are we currently muting?
+        if (POIWatch.IsCurrentPOIMuted())
+        {
+            AdaptationTaskArgs args = new AdaptationTaskArgs
+            {
+                TargetPOI = e.TargetPOI,
+                AdaptationSupportMode = PathpointPIM.SupportMode.Mute,
+                AdaptationIntroShown = false,
+                IsTaskStart = false,
+                AdaptationTaskCorrect = e.IsCorrectDecision,
+                AdaptationTaskCompleted = true
+            };
+
+            WalkEventHandler.ProcessAdaptationTaskBackground(args, isPOI: true);
+            Debug.Log("POIWatch_OnDecisionEnd Mute");
+        }
     }
 
     private void POIWatch_OnDecisionStart(object sender, DecisionArgs e)
     {
         WalkEventHandler.ProcessDecisionStatusChange(e);
+
+        // Are we currently muting?
+        if (POIWatch.IsCurrentPOIMuted())
+        {
+            AdaptationTaskArgs args = new AdaptationTaskArgs
+            {
+                TargetPOI = e.TargetPOI,
+                AdaptationSupportMode = PathpointPIM.SupportMode.Mute,
+                AdaptationIntroShown = false,
+                //AdaptPIM = e.TargetPOI.CurrentInstructionMode,
+                IsTaskStart = true
+            };
+
+            WalkEventHandler.ProcessAdaptationTaskBackground(args, isPOI: true, forceLogReset: true);
+            Debug.Log("POIWatch_OnDecisionStart Mute");
+        }
     }
 
     private void POIWatch_OnSegmentEnd(object sender, SegmentCompletedArgs e)
     {
         WalkEventHandler.ProcessSegmentCompleteStatusChange(e);
+
+        // Are we currently muting?
+        if (POIWatch.IsPreviousPOIMuted()) 
+        {
+            AdaptationTaskArgs args = new AdaptationTaskArgs
+            {
+                SegPOIStartId = e.SegPOIStartId,
+                SegExpectedPOIEndId = e.SegExpectedPOIEndId,
+                SegReachedPOIEndId = e.SegReachedPOIEndId,
+                AdaptationSupportMode = PathpointPIM.SupportMode.Mute,
+                AdaptationIntroShown = false,
+                IsTaskStart = false,
+                AdaptationTaskCorrect = true,
+                AdaptationTaskCompleted = true
+            };
+
+            WalkEventHandler.ProcessAdaptationTaskBackground(args, isPOI: false);
+            Debug.Log("POIWatch_OnSegmentEnd Mute");
+        }
     }
 
     private void POIWatch_OnSegmentStart(object sender, SegmentCompletedArgs e)
     {
         WalkEventHandler.ProcessSegmentCompleteStatusChange(e);
+
+        // Are we currently muting?
+        if (POIWatch.IsCurrentPOIMuted())
+        {
+            AdaptationTaskArgs args = new AdaptationTaskArgs
+            {
+                SegPOIStartId = e.SegPOIStartId,
+                SegExpectedPOIEndId = e.SegExpectedPOIEndId,
+                AdaptationSupportMode = PathpointPIM.SupportMode.Mute,
+                AdaptationIntroShown = false,
+                //AdaptationPIMId = POIWatch.GetCurrentTargetPathpoint().PathpointPIMId,
+                IsTaskStart = true
+            };
+
+            WalkEventHandler.ProcessAdaptationTaskBackground(args, isPOI: false, forceLogReset: true);
+            Debug.Log("POIWatch_OnSegmentStart Mute");
+        }
     }
 
     private void POIWatch_OnInvalidPathpoint(object sender, PathpointInvalidArgs e)
@@ -666,8 +735,14 @@ public class RouteTrainingController : MonoBehaviour
 
     private void LoadGoToConfirmation()
     {
-        // We confirm only the actual goto completion
+        // Ok, was the challenge, if any, accepted?
+        if (POIWatch.IsCurrentPOIMuted())
+        {
+            // we cancel the muting,
+            GoToInstruction.CancelIfChalengeNotAccepted();
+        }
 
+        // no we check again, and confirm only the actual goto completion
         if (!POIWatch.IsCurrentPOIMuted()) { 
 
             // If the POIs are too close to each other, you might leave and enter directly the next
@@ -675,7 +750,7 @@ public class RouteTrainingController : MonoBehaviour
             if (POIWatch.GetPreviousState() == POIWatcher.POIState.LeftPOI)
             {
                 var item = SharedData.PreparePOIData(POIWatch.CurrentPOIIndex);
-                GoToInstruction.LoadInstruction(SharedData.CurrentWay, item);
+                GoToInstruction.LoadInstruction(SharedData.CurrentWay, item); // here we select the upcoming not muted one
                 ShowInstructionPanel(GoToInstruction.gameObject);
 
                 ReLoadProgressBar();
@@ -762,6 +837,9 @@ public class RouteTrainingController : MonoBehaviour
     {        
         ShowMainPanel(CompletePanel);
         var item = SharedData.PreparePOIData(POIWatch.CurrentPOIIndex);
+
+        GoToInstruction.InformSegmentCompletedSilently();        
+
         EndInstruction.LoadCompleted(SharedData.CurrentWay, item);
         AuralInstruction.PlayArrivedInstruction(item);
         AuralInstruction.PlayEffectArrived();
@@ -774,6 +852,7 @@ public class RouteTrainingController : MonoBehaviour
 
         ShowInstructionPanel(OfftrackInstruction.gameObject);
         // off track audio instruction should have the reason
+        AuralInstruction.CancelCurrentPlayback();
         AuralInstruction.PlayEffectOffTrack();
         AuralInstruction.PlayEffectOffTrack();
         AuralInstruction.PlayOfftrackInstruction(issue);        

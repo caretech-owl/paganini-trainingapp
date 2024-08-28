@@ -203,7 +203,7 @@ public class AudioInstruction : MonoBehaviour
 
     public void PlayBackOnTrackDowngradeMode(PathpointPIM.SupportMode supportMode)
     {
-        PlaySound("BackOnTrack-" + supportMode);
+        PlaySound("BackOnTrack-Downgrade-" + supportMode);
     }
 
     public void PlayOfftrackInstruction(NavigationIssue navigationIssue)

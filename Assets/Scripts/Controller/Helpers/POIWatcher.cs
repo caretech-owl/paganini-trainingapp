@@ -109,7 +109,9 @@ public class SegmentCompletedArgs : EventArgs
 public class AdaptationTaskArgs : EventArgs
 {
     public Pathpoint Point;
-    public bool IsTaskStart{ get; set; }    
+    
+    public bool IsTaskStart{ get; set; }
+    public bool IsAtPOIMode { get; set; }
 
     // performance stats
     public SupportMode? AdaptationSupportMode { set; get; }
@@ -119,6 +121,7 @@ public class AdaptationTaskArgs : EventArgs
     public bool? AdaptationTaskCorrect { set; get; }
     public bool? AdaptationDowngradedByUser { set; get; }
     public bool? AdaptationDowngradedBySystem { set; get; }
+    public int? AdaptationPIMId;
 
     // data for segment, if in a segment (goto)
     public int? SegPOIStartId { set; get; }
@@ -374,6 +377,15 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
             CurrentTargetPOI.CurrentInstructionMode.AtPOIMode == PathpointPIM.SupportMode.Mute;
     }
 
+    public bool IsPreviousPOIMuted()
+    {
+        if (CurrentPOIIndex == 0) return false;
+
+        Pathpoint PreviousTargetPOI = POIList[CurrentPOIIndex - 1];
+        return PreviousTargetPOI.CurrentInstructionMode != null &&
+            PreviousTargetPOI.CurrentInstructionMode.AtPOIMode == PathpointPIM.SupportMode.Mute;
+    }
+
     public int GetLocationIndex()
     {
         return LocationCount;
@@ -482,11 +494,6 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
                     SegmentStats = null; // we do not record the off-track walk as a segment
                 }
 
-                // We inform of a user decision about to be made
-                DecisionStats = new DecisionArgs(userLocation, CurrentTargetPOI, currentDistance, true);
-                DecisionStats.DecisionExpected = CurrentTargetPOI.Instruction;
-                OnDecisionStart.Invoke(this, DecisionStats);
-
                 // We send segment stats, and inform that the segment is ending
                 // Segment: from POI_i leave -> POI_j enter
                 if (SegmentStats!= null)
@@ -496,6 +503,12 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
                     OnSegmentEnd?.Invoke(this, SegmentStats);
                     SegmentStats = null; // we reset the statistics
                 }
+
+                // We inform of a user decision about to be made
+                DecisionStats = new DecisionArgs(userLocation, CurrentTargetPOI, currentDistance, true);
+                DecisionStats.DecisionExpected = CurrentTargetPOI.Instruction;
+                OnDecisionStart.Invoke(this, DecisionStats);
+
                 SetCurrentState(POIState.OnPOI);
                 OnEnteredPOI?.Invoke(this, new POIArgs(userLocation, currentDistance));
             }
@@ -767,23 +780,26 @@ public class POIWatcher : PersistentLazySingleton<POIWatcher>
         args.Point = PreviousUserLocation;
 
         // start - onPOI event
-        if (currentState == POIState.OnPOI && args.IsTaskStart)
+        if (args.IsAtPOIMode && args.IsTaskStart)
         {
             args.TargetPOI = CurrentTargetPOI;
+            args.AdaptationPIMId = CurrentTargetPOI.PathpointPIMId;
         }
         // end - onPOI events
-        else if (args.TargetPOI != null)
+        else if (args.IsAtPOIMode)
         {
-            args.TargetPOI = CurrentTargetPOI;
+            //args.TargetPOI = CurrentTargetPOI;
         }
         // start - segment event 
-        else if (SegmentStats != null && args.IsTaskStart)
+        else if (!args.IsAtPOIMode && args.IsTaskStart && SegmentStats != null)
         {
             args.SegPOIStartId = SegmentStats.SegPOIStartId;
-            args.SegExpectedPOIEndId = SegmentStats.SegExpectedPOIEndId;               
+            //args.SegExpectedPOIEndId = SegmentStats.SegExpectedPOIEndId;
+            args.SegExpectedPOIEndId = CurrentInstructionTargetPOI.Id;
+            args.AdaptationPIMId = CurrentTargetPOI.PathpointPIMId;
         }
         // end - segment event 
-        else if (args.SegPOIStartId != null)
+        else if (!args.IsAtPOIMode && !args.IsTaskStart)
         {
             args.SegReachedPOIEndId = CurrentTargetPOI.Id;
         }

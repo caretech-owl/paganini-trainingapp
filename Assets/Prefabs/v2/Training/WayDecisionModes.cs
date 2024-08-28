@@ -30,8 +30,8 @@ public class WayDecisionModes : MonoBehaviour
 
     private List<SupportMode> supportedModes = new List<SupportMode> { SupportMode.Instruction, SupportMode.Trivia, SupportMode.Challenge, SupportMode.Mute };
 
-    // Start is called before the first frame update
-    void Start()
+    
+    void Awake()
     {
         NormalMode.OnNavInstructionUsed += NormalMode_OnNavInstructionUsed;
 

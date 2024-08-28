@@ -30,6 +30,7 @@ public interface IRouteWalkEventAPI
     bool? revent_adapt_task_correct { set; get; }
     bool? revent_adapt_downgraded_byuser { set; get; }
     bool? revent_adapt_downgraded_bysystem { set; get; }
+    int? revent_adapt_pim_id { get; set; }
 
     int? revent_seg_start_ppoint_id { get; set; }
     int? revent_seg_end_expected_ppoint_id { get; set; }
@@ -68,6 +69,7 @@ public class RouteWalkEventBase : BaseAPI
     public bool? revent_adapt_task_correct { set; get; }
     public bool? revent_adapt_downgraded_byuser { set; get; }
     public bool? revent_adapt_downgraded_bysystem { set; get; }
+    public int? revent_adapt_pim_id { get; set; }
 }
 
 [System.Serializable]

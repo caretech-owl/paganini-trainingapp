@@ -38,6 +38,7 @@ public class WayGoToChallengeInstruction : MonoBehaviour
     {
         CurrentAdaptationTask = new ();
         CurrentAdaptationTask.IsTaskStart = true;
+        CurrentAdaptationTask.IsAtPOIMode = false;
 
         // init view
         if (pathtpoint.CurrentInstructionMode.IsAtPOINewToUser && !skipIntro)
@@ -88,6 +89,28 @@ public class WayGoToChallengeInstruction : MonoBehaviour
         ShowTask(true);       
     }
 
+    // return whether the task was accepted
+    public bool InformIfTaskNotAccepted()
+    {
+        if (CurrentAdaptationTask == null) return true;
+
+        bool accepted = true;
+        // are we still awaiting confirmation? that means we didn't send the start of the event
+        if (CurrentAdaptationTask.AdaptationIntroShown == true &&
+            CurrentAdaptationTask.AdaptationTaskAccepted == null)
+        {
+            SendAdaptationTaskData();
+
+            CurrentAdaptationTask.IsTaskStart = false;
+            CurrentAdaptationTask.AdaptationTaskCompleted = false;
+            SendAdaptationTaskData();
+
+            accepted = false;
+        }
+
+        return accepted;
+    }
+
     public void ShowTask(bool show)
     {
         IntroPanel.SetActive(!show);
@@ -95,7 +118,7 @@ public class WayGoToChallengeInstruction : MonoBehaviour
         if (show)
         {
             AuralInstruction.CancelCurrentPlayback();
-            OnTaskCompleted.Invoke();
+            OnTaskCompleted?.Invoke();
         }
     }
 
