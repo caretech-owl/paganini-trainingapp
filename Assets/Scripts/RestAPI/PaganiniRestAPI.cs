@@ -92,7 +92,7 @@ public class PaganiniRestAPI
             RESTAPI.Instance.Get<AuthTokenAPI>(Path.SWAuthenticate, successCallback, errorCallback, headers);
         }
 
-        public static void GetProfile(UnityAction<SocialWorkerAPI> successCallback, UnityAction<string> errorCallback)
+        public static void GetProfile(UnityAction<SocialWorkerAPIResult> successCallback, UnityAction<string> errorCallback)
         {
             Dictionary<string, string> headers = new Dictionary<string, string>
             {
@@ -101,7 +101,7 @@ public class PaganiniRestAPI
 
             string url = Path.SwProfile;
 
-            RESTAPI.Instance.Get<SocialWorkerAPI>(url, successCallback, errorCallback, headers);
+            RESTAPI.Instance.Get<SocialWorkerAPIResult>(url, successCallback, errorCallback, headers);
         }
 
     }

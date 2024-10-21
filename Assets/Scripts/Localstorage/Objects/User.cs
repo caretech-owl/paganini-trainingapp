@@ -14,6 +14,11 @@ public class User : BaseModel<User>
     public bool Activatetts { set; get; }
     public bool Vibration { set; get; }
     public string Contact { set; get; }
+    public int WorkshopId { set; get; }
+    // This is a local variable that is not sent to the API
+    public byte[] ProfilePic { set; get; }
+    [Ignore]
+    public Workshop AtWorkshop { set; get; }
 
 
     public override string ToString()
@@ -22,7 +27,7 @@ public class User : BaseModel<User>
     }
 
     public User() { }
-    public User(UserAPI profil)
+    public User(IUserAPI profil)
     {
         this.Id = profil.user_id;
         this.Mnemonic_token = profil.user_mnemonic_token;
@@ -34,7 +39,13 @@ public class User : BaseModel<User>
         this.Vibration = profil.user_vibration;
         this.Contact = profil.user_contact;
 
+        if (profil.user_workshop != null)
+        {
+            AtWorkshop = new Workshop(profil.user_workshop);
+            WorkshopId = AtWorkshop.Id;        
+        }        
     }
+
     public UserAPI ToAPI()
     {
         UserAPI user = new UserAPI

@@ -1,4 +1,5 @@
-﻿using SQLite4Unity3d;
+﻿using System;
+using SQLite4Unity3d;
 using UnityEngine.Profiling;
 
 public class SocialWorker : BaseModel<SocialWorker>
@@ -8,12 +9,10 @@ public class SocialWorker : BaseModel<SocialWorker>
     public string Username { set; get; }
     public string Firstname { set; get; }
     public string Surname { set; get; }
-    public string PhotoURL { set; get; }
-    public string WorksName { set; get; }
-    public string WorksStreet { set; get; }
-    public string WorksCity { set; get; }
-    public string WorksZip { set; get; }
+    [Ignore]
+    public Workshop AtWorkshop { set; get; }
 
+    public byte[] ProfilePic { set; get; }
 
     public override string ToString()
     {
@@ -21,18 +20,16 @@ public class SocialWorker : BaseModel<SocialWorker>
     }
 
     public SocialWorker() { }
-    public SocialWorker(SocialWorkerAPI profil)
+    public SocialWorker(ISocialWorkerAPI profile)
     {
-        Id = profil.socialw_id;
-        Username = profil.socialw_username;
-        Firstname = profil.socialw_firstname;
-        Surname = profil.socialw_sirname;
-        PhotoURL = profil.socialw_photo;
+        Id = profile.socialw_id;
+        Username = profile.socialw_username;
+        Firstname = profile.socialw_firstname;
+        Surname = profile.socialw_sirname;
+    
+        AtWorkshop = new Workshop(profile.socialw_workshop);
 
-        WorksName = profil.works_name;
-        WorksStreet = profil.works_street;
-        WorksCity = profil.works_city;
-        WorksZip = profil.works_zip;
+        ProfilePic = PictureUtils.ConvertBase64ToByteArray(profile.socialw_photo);
     }
 
     public SocialWorkerAPI ToAPI()
@@ -42,13 +39,10 @@ public class SocialWorker : BaseModel<SocialWorker>
             socialw_id = Id,
             socialw_username = Username,
             socialw_firstname = Firstname,
-            socialw_sirname = Surname,
-            socialw_photo = PhotoURL,
-            works_name = WorksName,
-            works_street = WorksStreet,
-            works_city = WorksCity,
-            works_zip = WorksZip
+            socialw_sirname = Surname
         };
+
+        user.socialw_photo = PictureUtils.ConvertByteArrayToBase64(ProfilePic);
 
         return user;
     }

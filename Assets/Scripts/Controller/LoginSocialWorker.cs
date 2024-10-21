@@ -63,7 +63,7 @@ public class LoginSocialWorker : MonoBehaviour
         PaganiniRestAPI.SocialWorker.GetProfile(GetProfileSucceed, GetAuthFailed);  
     }
 
-    private void GetProfileSucceed(SocialWorkerAPI profile)
+    private void GetProfileSucceed(SocialWorkerAPIResult profile)
     {
         AppState.CurrenSocialWorker = new SocialWorker(profile);
         OnLoginSucceed?.Invoke();
